@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資產追蹤儀表板</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -319,7 +318,7 @@
 
 <script>
 const ARCHIVE_SEED={};  // 歷史快照將從備份還原
-const TREND_SEED=[];
+const TREND_SEED=[{"label": "260128", "date": "2026-01-28", "total": 3129285}, {"label": "260221", "date": "2026-02-21", "total": 3401964}, {"label": "260329", "date": "2026-03-29", "total": 3408374}, {"label": "260415", "date": "2026-04-15", "total": 3544407}, {"label": "260520", "date": "2026-05-20", "total": 3785791}];
 
 const SEED = [];  // 請用「⬆ 匯入」載入你的備份資料
 const DCA_DEFAULT=[];  // 請在 DCA 快捷區自行設定
@@ -513,29 +512,35 @@ function renderCharts(){
   const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9aa3b5',font:{size:11},padding:12,usePointStyle:true}}}};
   const arr=curData();
 
-  // 淨資產走勢：用真實日期座標，間距反映實際時間
+  // 淨資產走勢：X 軸用距起點的天數(linear)反映真實間距，不需 date adapter
   const pts={};
   TREND_SEED.forEach(t=>pts[t.label]=t.total);
   Object.keys(archives).forEach(l=>{pts[l]=totals(archives[l]).total;});
   if(isLive())pts['__now']=totals(data).total;
   const sortKeys=Object.keys(pts).sort((a,b)=>(a==='__now'?'999999':a).localeCompare(b==='__now'?'999999':b));
-  // convert label to ISO date for time axis
   function labelToDate(k){
-    if(k==='__now')return new Date().toISOString().slice(0,10);
-    if(/^\d{6}$/.test(k))return `20${k.slice(0,2)}-${k.slice(2,4)}-${k.slice(4,6)}`;
-    return k;
+    if(k==='__now')return new Date();
+    if(/^\d{6}$/.test(k))return new Date(`20${k.slice(0,2)}-${k.slice(2,4)}-${k.slice(4,6)}`);
+    return new Date(k);
   }
-  const trendPts=sortKeys.map(k=>({x:labelToDate(k),y:pts[k]}));
-  charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:trendPts,
+  function fmtDate(d){return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
+  const dates=sortKeys.map(labelToDate);
+  const t0=dates[0].getTime();
+  const ms=86400000;
+  const trendPts=sortKeys.map((k,i)=>({x:Math.round((dates[i].getTime()-t0)/ms),y:pts[k],lbl:k==='__now'?'現在':fmtDate(dates[i])}));
+  // build x-tick map: day offset → display label
+  const tickMap={};
+  trendPts.forEach(p=>tickMap[p.x]=p.lbl);
+  charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:trendPts.map(p=>({x:p.x,y:p.y})),
     borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
     pointBackgroundColor:sortKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),pointRadius:5,borderWidth:2,
     pointHoverRadius:7}]},
     options:{...base,plugins:{legend:{display:false},
-      tooltip:{callbacks:{title:i=>i[0].raw.x,label:c=>' '+fmt(c.raw.y)+' TWD'}}},
+      tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
+        label:c=>' '+fmt(c.parsed.y)+' TWD'}}},
       scales:{
-        x:{type:'time',time:{unit:'day',tooltipFormat:'yyyy/MM/dd',displayFormats:{day:'MM/dd',month:'yyyy/MM'}},
-          adapters:{date:{}},
-          ticks:{color:'#9aa3b5',font:{size:10},maxTicksLimit:12},grid:{display:false}},
+        x:{type:'linear',ticks:{color:'#9aa3b5',font:{size:10},
+          callback:v=>tickMap[v]||''},grid:{display:false}},
         y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
