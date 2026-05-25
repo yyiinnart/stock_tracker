@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資產追蹤儀表板</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -326,8 +327,11 @@ let CAL=[];    // 配息行事曆，從備份還原
 let YIELD=[];  // 殖利率追蹤，從備份還原
 
 const KEY='portfolioDemo_v3';
+const URL_KEY='portfolio_sheetUrl';   // 獨立存，不跟主資料混在一起
 let store=loadStore();
-let data=store.live, dca=store.dca, archives=store.archives, sheetUrl=store.sheetUrl;
+let data=store.live, dca=store.dca, archives=store.archives;
+// sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
+let sheetUrl=localStorage.getItem(URL_KEY)||store.sheetUrl||'';
 CAL=store.cal; YIELD=store.yield;
 let filter='全部', editIdx=-1, mode='add', tab='hold', charts={};
 let viewKey='live';            // 'live' or an archive label
@@ -339,7 +343,12 @@ function loadStore(){
   return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD}));}catch(e){}}
+function save(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD}));
+    if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);   // 獨立備份網址
+  }catch(e){}
+}
 
 const fmt=n=>n==null||isNaN(n)?"—":Math.round(n).toLocaleString();
 const pct=n=>n==null||isNaN(n)?"—":(n*100).toFixed(2)+"%";
@@ -388,13 +397,10 @@ function todayLabel(){const d=new Date();const y=String(d.getFullYear()).slice(2
 function archiveNow(){
   if(!isLive()){alert('請先回到「即時」再歸檔');return;}
   const lbl=todayLabel();
-  const ym=lbl.slice(0,4);                       // 同月份偵測（YYMM）
-  const existing=archLabels().find(l=>l.slice(0,4)===ym);
-  if(existing){
-    if(!confirm(`${ym.slice(0,2)}年${ym.slice(2,4)}月 已有快照（${fmtLabel(existing)}），要以今天的資料覆蓋嗎？`))return;
-    delete archives[existing];                    // 同月只留一份，移除舊的
+  if(archives[lbl]){
+    if(!confirm(`今天（${fmtLabel(lbl)}）已有快照，要覆蓋嗎？`))return;
   }
-  archives[lbl]=clone(data);                       // freeze full positions incl. prices
+  archives[lbl]=clone(data);
   save();renderViewSel();
   alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。`);
   if(tab==='analy')renderCharts();
@@ -507,20 +513,30 @@ function renderCharts(){
   const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9aa3b5',font:{size:11},padding:12,usePointStyle:true}}}};
   const arr=curData();
 
-  // monthly net asset trend: seed trend + all archives + (live now)
+  // 淨資產走勢：用真實日期座標，間距反映實際時間
   const pts={};
   TREND_SEED.forEach(t=>pts[t.label]=t.total);
   Object.keys(archives).forEach(l=>{pts[l]=totals(archives[l]).total;});
   if(isLive())pts['__now']=totals(data).total;
   const sortKeys=Object.keys(pts).sort((a,b)=>(a==='__now'?'999999':a).localeCompare(b==='__now'?'999999':b));
-  const labels=sortKeys.map(k=>k==='__now'?'現在':fmtLabel(k));
-  const vals=sortKeys.map(k=>pts[k]);
-  charts.lt=new Chart(lineTrend,{type:'line',data:{labels,datasets:[{data:vals,
+  // convert label to ISO date for time axis
+  function labelToDate(k){
+    if(k==='__now')return new Date().toISOString().slice(0,10);
+    if(/^\d{6}$/.test(k))return `20${k.slice(0,2)}-${k.slice(2,4)}-${k.slice(4,6)}`;
+    return k;
+  }
+  const trendPts=sortKeys.map(k=>({x:labelToDate(k),y:pts[k]}));
+  charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:trendPts,
     borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
-    pointBackgroundColor:sortKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),pointRadius:4,borderWidth:2}]},
-    options:{...base,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.parsed.y)+' TWD'}}},
-      scales:{x:{ticks:{color:'#9aa3b5',font:{size:10}},grid:{display:false}},
-        y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(1)+'M'},grid:{color:'#272c38'}}}}});
+    pointBackgroundColor:sortKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),pointRadius:5,borderWidth:2,
+    pointHoverRadius:7}]},
+    options:{...base,plugins:{legend:{display:false},
+      tooltip:{callbacks:{title:i=>i[0].raw.x,label:c=>' '+fmt(c.raw.y)+' TWD'}}},
+      scales:{
+        x:{type:'time',time:{unit:'day',tooltipFormat:'yyyy/MM/dd',displayFormats:{day:'MM/dd',month:'yyyy/MM'}},
+          adapters:{date:{}},
+          ticks:{color:'#9aa3b5',font:{size:10},maxTicksLimit:12},grid:{display:false}},
+        y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
   charts.pc=new Chart(pieClass,{type:'doughnut',data:{labels:Object.keys(byCls),
@@ -766,6 +782,14 @@ function exportXLSX(){
 
 function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy')renderCharts();}
 render();
+// 頁面載入後自動更新股價（如已設定 Sheet 網址）
+if(sheetUrl){
+  setTimeout(()=>{
+    const btn=document.getElementById('syncBtn');
+    if(btn)btn.textContent='🔄 自動更新中…';
+    syncPrices();
+  },800);
+}
 </script>
 </body>
 </html>
