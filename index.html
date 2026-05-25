@@ -531,6 +531,7 @@ function renderCharts(){
   // build x-tick map: day offset → display label
   const tickMap={};
   trendPts.forEach(p=>tickMap[p.x]=p.lbl);
+  const tickVals=trendPts.map(p=>p.x);
   charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:trendPts.map(p=>({x:p.x,y:p.y})),
     borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
     pointBackgroundColor:sortKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),pointRadius:5,borderWidth:2,
@@ -539,8 +540,10 @@ function renderCharts(){
       tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
         label:c=>' '+fmt(c.parsed.y)+' TWD'}}},
       scales:{
-        x:{type:'linear',ticks:{color:'#9aa3b5',font:{size:10},
-          callback:v=>tickMap[v]||''},grid:{display:false}},
+        x:{type:'linear',min:tickVals[0],max:tickVals[tickVals.length-1],
+          afterBuildTicks:axis=>{axis.ticks=tickVals.map(v=>({value:v}));},
+          ticks:{color:'#9aa3b5',font:{size:10},autoSkip:false,maxRotation:45,minRotation:45,
+            callback:v=>tickMap[v]||''},grid:{display:false}},
         y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
