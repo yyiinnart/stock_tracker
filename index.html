@@ -279,7 +279,13 @@
         <div class="fg"><label>匯率（台股填 1）</label><input id="f_fx" type="number" step="any" value="1"></div>
         <div class="fg"><label>平均成本</label><input id="f_avg" type="number" step="any"></div>
       </div>
-      <div class="fg"><label>總投入本金 (TWD)</label><input id="f_prin" type="number" step="any"></div>
+      <div class="fg"><label>總投入本金 <span id="prinUnit">(TWD)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="f_prin" type="number" step="any" style="flex:1" oninput="prinHint()">
+          <select id="f_prinCur" onchange="prinHint()" style="width:84px"><option value="TWD">台幣</option><option value="USD">美元</option></select>
+        </div>
+        <div class="hint" id="prinHint"></div>
+      </div>
       <div class="fg"><label>備註</label><input id="f_note"></div>
     </div>
     <div class="modal-actions">
@@ -650,7 +656,17 @@ function swapBlocks(){
   document.getElementById('blockEdit').style.display=(mode==='edit')?'block':'none';}
 function fillEdit(r){
   f_code.value=r.code;f_name.value=r.name;f_cls.value=r.cls;f_shares.value=r.shares;
-  f_price.value=r.price;f_fx.value=r.fx;f_avg.value=r.avg;f_prin.value=r.prin??'';f_note.value=r.note||'';}
+  f_price.value=r.price;f_fx.value=r.fx;f_avg.value=r.avg;f_prin.value=r.prin??'';f_note.value=r.note||'';
+  document.getElementById('f_prinCur').value='TWD';prinHint();}
+function prinHint(){
+  const cur=document.getElementById('f_prinCur').value;
+  const fx=parseFloat(f_fx.value)||1;
+  const v=parseFloat(f_prin.value);
+  document.getElementById('prinUnit').textContent=`(${cur})`;
+  const h=document.getElementById('prinHint');
+  if(cur==='USD'&&!isNaN(v)){h.textContent=`≈ ${fmt(v*fx)} TWD（用匯率 ${fx} 換算後存檔）`;}
+  else{h.textContent='儲存後一律以台幣記錄';}
+}
 function prev(){
   if(editIdx<0)return;const r=data[editIdx];
   const pv=document.getElementById('addPrev');
@@ -701,9 +717,13 @@ function saveRow(){
     }
     r.shares+=addSh;r.prin=(r.prin||0)+costThis;r.avg=r.prin/((r.fx||1)*r.shares);r.lastUp=curMonth();
   }else{
+    const fxv=parseFloat(f_fx.value)||1;
+    const prinCur=document.getElementById('f_prinCur').value;
+    let prinTWD=f_prin.value===''?null:parseFloat(f_prin.value);
+    if(prinTWD!=null&&prinCur==='USD')prinTWD=prinTWD*fxv;   // 美元→台幣
     const r={code:f_code.value.trim(),name:f_name.value.trim(),cls:f_cls.value,
-      shares:parseFloat(f_shares.value)||0,fx:parseFloat(f_fx.value)||1,price:parseFloat(f_price.value)||0,
-      avg:parseFloat(f_avg.value)||0,prin:f_prin.value===''?null:parseFloat(f_prin.value),note:f_note.value.trim()};
+      shares:parseFloat(f_shares.value)||0,fx:fxv,price:parseFloat(f_price.value)||0,
+      avg:parseFloat(f_avg.value)||0,prin:prinTWD,note:f_note.value.trim()};
     if(!r.code){alert('請填代碼');return;}
     if(editIdx>=0)data[editIdx]=r;else data.push(r);
   }
