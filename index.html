@@ -250,9 +250,17 @@
       <button id="segEdit" onclick="setMode('edit')">直接編輯</button>
     </div>
     <div id="blockAdd">
-      <div class="frow">
-        <div class="fg"><label>本次買進股數 ＋</label><input id="a_shares" type="number" step="any" oninput="prev()" placeholder="例 123"></div>
-        <div class="fg"><label>成交價（可留空）</label><input id="a_price" type="number" step="any" oninput="prev()"><div class="hint">留空＝用現價估算花費</div></div>
+      <!-- 現金：直接填新餘額 -->
+      <div id="addCash" style="display:none">
+        <div class="fg"><label>現金新餘額 (TWD)</label><input id="a_cash" type="number" step="any" oninput="prev()" placeholder="直接填現在的總額"><div class="hint">現金沒有股價變化，直接覆蓋成新數字</div></div>
+      </div>
+      <!-- 一般 / DCA -->
+      <div id="addNormal">
+        <div class="frow">
+          <div class="fg"><label>本次買進股數 ＋</label><input id="a_shares" type="number" step="any" oninput="prev()" placeholder="例 123"></div>
+          <div class="fg" id="fgPrice"><label>成交價（可留空）</label><input id="a_price" type="number" step="any" oninput="prev()"><div class="hint">留空＝用現價估算花費</div></div>
+          <div class="fg" id="fgCost" style="display:none"><label>本次花費 (TWD)</label><input id="a_cost" type="number" step="any" oninput="prev()"><div class="hint">定期定額固定金額，只要填股數</div></div>
+        </div>
       </div>
       <div class="preview" id="addPrev"></div>
     </div>
@@ -348,6 +356,8 @@ function save(){
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);   // 獨立備份網址
   }catch(e){}
 }
+const curMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+const upThisMonth=r=>r&&r.lastUp===curMonth();
 
 const fmt=n=>n==null||isNaN(n)?"—":Math.round(n).toLocaleString();
 const pct=n=>n==null||isNaN(n)?"—":(n*100).toFixed(2)+"%";
@@ -437,10 +447,12 @@ function renderMeta(){
 function renderDCA(){
   document.getElementById('dca').innerHTML=dca.map((p,idx)=>{
     const r=data.find(x=>x.code===p.code);
+    const done=upThisMonth(r);
     const hold=r?`持有 ${r.shares.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · 均價 ${r.avg?r.avg.toFixed(2):'—'}`:'尚未持有（代碼需與持倉一致）';
     const usd=(r&&r.fx>1.5)?` / ≈$${(p.amt/r.fx).toFixed(0)}`:'';
+    const badge=done?'<span style="color:var(--gain);font-size:11px;margin-left:6px">✓ 本月已扣</span>':'<span style="color:var(--loss);font-size:11px;margin-left:6px">● 本月未扣</span>';
     return `<div class="dca-row">
-      <div class="dr-code">${p.code}</div>
+      <div class="dr-code">${p.code}${badge}</div>
       <div class="dr-amt">月扣 ${p.amt.toLocaleString()}${usd}</div>
       <div class="dr-hold">${hold}</div>
       <div class="dr-act">
@@ -468,7 +480,7 @@ function renderTable(){
   document.getElementById('hbody').innerHTML=rows.map(({r,i})=>{
     const m=mv(r),w=m/t.total,p=pnl(r),rt=ret(r),wbar=Math.max(2,(w/maxW)*46);
     return `<tr class="${clickable?'clickable':''}" ${clickable?`onclick="openEdit(${i})"`:''}>
-      <td class="l"><span class="code">${r.code}</span><div class="nm">${r.name}</div></td>
+      <td class="l"><span class="code">${r.code}</span>${upThisMonth(r)?'<span title="本月已更新" style="color:var(--gain);margin-left:5px">✓</span>':''}<div class="nm">${r.name}</div></td>
       <td><span class="chip c-${r.cls}">${r.cls}</span></td>
       <td>${r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—'}</td>
       <td>${r.price!=null?r.price.toLocaleString():'—'}</td>
@@ -573,6 +585,14 @@ function setTab(t){tab=t;
   if(t==='analy')renderCharts();
 }
 
+/* 點一下就自動全選，免拖曳 */
+document.addEventListener('focusin',e=>{
+  const el=e.target;
+  if(el.tagName==='INPUT'&&(el.type==='number'||el.type==='text')){
+    setTimeout(()=>{try{el.select();}catch(_){}},0);
+  }
+});
+
 /* ===== position modal ===== */
 function show(){document.getElementById('ov').classList.add('show');}
 function closeModal(){document.getElementById('ov').classList.remove('show');}
@@ -595,6 +615,8 @@ function openEdit(i){
   document.getElementById('delBtn').style.display='block';
   fillEdit(r);
   document.getElementById('a_shares').value='';document.getElementById('a_price').value='';
+  document.getElementById('a_cost').value='';document.getElementById('a_cash').value='';
+  configAdd(r,null);
   setMode('add');show();
 }
 function openDCA(code){
@@ -603,8 +625,21 @@ function openDCA(code){
   openEdit(i);
   const plan=dca.find(p=>p.code===code);const r=data[i];
   document.getElementById('mTitle').textContent=`本月扣款 · ${code}`;
+  configAdd(r,plan);
   if(r.price&&plan){const est=(plan.amt/(r.fx||1))/r.price;document.getElementById('a_shares').value=est.toFixed(r.fx>1.5?4:0);}
-  document.getElementById('a_price').value=r.price||'';prev();
+  prev();
+}
+/* 依類別/是否DCA決定加碼區欄位 */
+function configAdd(r,plan){
+  const isCash=r.cls==='現金';
+  document.getElementById('segAdd').textContent=isCash?'改餘額':'加碼（增量）';
+  document.getElementById('addCash').style.display=isCash?'block':'none';
+  document.getElementById('addNormal').style.display=isCash?'none':'block';
+  if(isCash){document.getElementById('a_cash').value=r.shares||'';return;}
+  const fixed=plan&&plan.amt>0;        // 定期定額：金額固定，只填股數
+  document.getElementById('fgPrice').style.display=fixed?'none':'block';
+  document.getElementById('fgCost').style.display=fixed?'block':'none';
+  if(fixed)document.getElementById('a_cost').value=plan.amt;
 }
 function setMode(m){mode=m;
   document.getElementById('segAdd').classList.toggle('on',m==='add');
@@ -618,12 +653,27 @@ function fillEdit(r){
   f_price.value=r.price;f_fx.value=r.fx;f_avg.value=r.avg;f_prin.value=r.prin??'';f_note.value=r.note||'';}
 function prev(){
   if(editIdx<0)return;const r=data[editIdx];
+  const pv=document.getElementById('addPrev');
+  // 現金：直接覆蓋餘額
+  if(r.cls==='現金'){
+    const nv=parseFloat(document.getElementById('a_cash').value);
+    const newBal=isNaN(nv)?r.shares:nv;
+    pv.innerHTML=`<span class="pl">現金餘額</span><span class="pv">${fmt(r.shares)} <span class="arrow">→</span> ${fmt(newBal)} TWD</span>`;
+    return;
+  }
   const addSh=parseFloat(document.getElementById('a_shares').value)||0;
-  const px=document.getElementById('a_price').value===''?r.price:parseFloat(document.getElementById('a_price').value);
-  const costThis=Math.round(addSh*px*(r.fx||1));
+  // 定期定額固定金額
+  const fixedCost=document.getElementById('fgCost').style.display!=='none';
+  let costThis;
+  if(fixedCost){
+    costThis=Math.round(parseFloat(document.getElementById('a_cost').value)||0);
+  }else{
+    const px=document.getElementById('a_price').value===''?r.price:parseFloat(document.getElementById('a_price').value);
+    costThis=Math.round(addSh*px*(r.fx||1));
+  }
   const newSh=r.shares+addSh,newPrin=(r.prin||0)+costThis;
   const newAvg=newSh>0?(newPrin/((r.fx||1)*newSh)):0;
-  document.getElementById('addPrev').innerHTML=
+  pv.innerHTML=
     `<span class="pl">本次花費</span><span class="pv">${fmt(costThis)} TWD</span><br>
      <span class="pl">股數</span><span class="pv">${r.shares.toLocaleString(undefined,{maximumFractionDigits:4})} <span class="arrow">→</span> ${newSh.toLocaleString(undefined,{maximumFractionDigits:4})}</span><br>
      <span class="pl">平均成本</span><span class="pv">${r.avg?r.avg.toFixed(2):'—'} <span class="arrow">→</span> ${newAvg.toFixed(2)}</span><br>
@@ -632,10 +682,24 @@ function prev(){
 function saveRow(){
   if(mode==='add'&&editIdx>=0){
     const r=data[editIdx];
+    if(r.cls==='現金'){
+      const nv=parseFloat(document.getElementById('a_cash').value);
+      if(isNaN(nv)){alert('請填現金新餘額');return;}
+      r.shares=nv;r.prin=nv;r.avg=1;r.price=1;r.fx=1;r.lastUp=curMonth();
+      save();closeModal();render();return;
+    }
     const addSh=parseFloat(document.getElementById('a_shares').value)||0;
     if(addSh<=0){alert('請輸入本次買進股數');return;}
-    const px=document.getElementById('a_price').value===''?r.price:parseFloat(document.getElementById('a_price').value);
-    r.shares+=addSh;r.prin=(r.prin||0)+addSh*px*(r.fx||1);r.avg=r.prin/((r.fx||1)*r.shares);
+    const fixedCost=document.getElementById('fgCost').style.display!=='none';
+    let costThis;
+    if(fixedCost){
+      costThis=parseFloat(document.getElementById('a_cost').value)||0;
+      if(costThis<=0){alert('請填本次花費金額');return;}
+    }else{
+      const px=document.getElementById('a_price').value===''?r.price:parseFloat(document.getElementById('a_price').value);
+      costThis=addSh*px*(r.fx||1);
+    }
+    r.shares+=addSh;r.prin=(r.prin||0)+costThis;r.avg=r.prin/((r.fx||1)*r.shares);r.lastUp=curMonth();
   }else{
     const r={code:f_code.value.trim(),name:f_name.value.trim(),cls:f_cls.value,
       shares:parseFloat(f_shares.value)||0,fx:parseFloat(f_fx.value)||1,price:parseFloat(f_price.value)||0,
