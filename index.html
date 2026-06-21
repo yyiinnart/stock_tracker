@@ -115,6 +115,30 @@
   .cal-m .mo .n{font-size:9px;color:var(--gold);font-weight:600}
   .cal-m .et{color:var(--ink2);font-size:10px;line-height:1.5;word-break:break-all}
   .ytable td{font-size:11.5px} .yld{font-weight:700;color:var(--gold)}
+  .yld-cell{cursor:pointer;border-bottom:1px dotted rgba(212,175,55,.4)}
+  .yld-cell:hover{border-bottom-color:var(--gold)}
+  .yld-edit{width:74px;background:var(--panel2);border:1px solid var(--line);color:var(--gold);font-weight:700;
+    font-family:var(--mono);font-size:11.5px;padding:4px 6px;border-radius:6px;text-align:right}
+  .yld-edit:focus{outline:none;border-color:var(--accent)}
+  .verdict{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;font-family:var(--sans)}
+  .v-buy{background:rgba(46,204,113,.16);color:var(--gain)}
+  .v-hold{background:rgba(79,140,255,.16);color:var(--accent)}
+  .v-watch{background:rgba(212,175,55,.16);color:var(--gold)}
+  .v-warn{background:rgba(255,138,92,.16);color:#ff9d72}
+  .v-sell{background:rgba(255,92,92,.16);color:var(--loss)}
+  .v-low{background:rgba(107,114,128,.18);color:#9ca3af}
+  .strat-blk{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .strat-blk .sb-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .strat-blk .sb-tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;font-family:var(--sans)}
+  .strat-blk .sb-codes{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+  .strat-blk .sb-row{display:flex;gap:10px;padding:6px 0;border-top:1px solid rgba(39,44,56,.5);font-size:12px}
+  .strat-blk .sb-row:first-of-type{border-top:none}
+  .strat-blk .sb-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+  .strat-blk .sb-act{font-weight:700;min-width:64px;color:var(--ink)}
+  .strat-blk .sb-cond{color:var(--ink);flex:1}
+  .strat-blk .sb-cond .sub{display:block;color:var(--ink3);font-size:10.5px;margin-top:2px}
+  .strat-blk .sb-foot{font-size:10.5px;color:var(--ink2);line-height:1.6;border-left:2px solid var(--gold);
+    padding:8px 10px;margin-top:8px;background:rgba(0,0,0,.18);border-radius:0 6px 6px 0}
 
   .ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
   .ov.show{display:flex}
@@ -236,6 +260,11 @@
         <thead><tr><th class="l">標的</th><th>年配息</th><th>股價</th><th>每領1元成本</th><th>殖利率</th><th class="l">簡評</th></tr></thead>
         <tbody id="ybody"></tbody>
       </table>
+      <div class="hint" style="margin-top:8px">殖利率欄位可直接點改；簡評會依下方策略門檻自動核對。</div>
+    </div>
+    <div class="card">
+      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
+      <div id="stratMap" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -250,9 +279,9 @@
       <button id="segEdit" onclick="setMode('edit')">直接編輯</button>
     </div>
     <div id="blockAdd">
-      <!-- 現金：直接填新餘額 -->
+      <!-- 現金 / 貸款：直接填新餘額 -->
       <div id="addCash" style="display:none">
-        <div class="fg"><label>現金新餘額 (TWD)</label><input id="a_cash" type="number" step="any" oninput="prev()" placeholder="直接填現在的總額"><div class="hint">現金沒有股價變化，直接覆蓋成新數字</div></div>
+        <div class="fg"><label id="cashLabel">新餘額 (TWD)</label><input id="a_cash" type="number" step="any" oninput="prev()" placeholder="直接填現在的總額"><div class="hint" id="cashHint">沒有股價變化，直接覆蓋成新數字</div></div>
       </div>
       <!-- 一般 / DCA -->
       <div id="addNormal">
@@ -482,6 +511,11 @@ function markDCA(code){
   r.lastUp=upThisMonth(r)?null:curMonth();
   save();render();
 }
+function toggleMarkRow(i){
+  const r=data[i];if(!r)return;
+  r.lastUp=upThisMonth(r)?null:curMonth();
+  save();render();
+}
 function renderFilter(){
   const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];
   document.getElementById('filt').innerHTML=cls.map(c=>
@@ -501,15 +535,19 @@ function renderTable(){
   const clickable=isLive();
   document.getElementById('hbody').innerHTML=rows.map(({r,i})=>{
     const m=mv(r),w=m/t.total,p=pnl(r),rt=ret(r),wbar=Math.max(2,(w/maxW)*46);
+    const marked=upThisMonth(r);
+    const tick=clickable
+      ? `<span onclick="event.stopPropagation();toggleMarkRow(${i})" title="${marked?'本月已更新（點一下取消）':'點一下標記本月已更新'}" style="cursor:pointer;margin-left:5px;color:${marked?'var(--gain)':'var(--ink3)'}">${marked?'✓':'○'}</span>`
+      : (marked?'<span title="本月已更新" style="color:var(--gain);margin-left:5px">✓</span>':'');
     return `<tr class="${clickable?'clickable':''}" ${clickable?`onclick="openEdit(${i})"`:''}>
-      <td class="l"><span class="code">${r.code}</span>${upThisMonth(r)?'<span title="本月已更新" style="color:var(--gain);margin-left:5px">✓</span>':''}<div class="nm">${r.name}</div></td>
+      <td class="l"><span class="code">${r.code}</span>${tick}<div class="nm">${r.name}</div></td>
       <td><span class="chip c-${r.cls}">${r.cls}</span></td>
-      <td>${r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—'}</td>
-      <td>${r.price!=null?r.price.toLocaleString():'—'}</td>
+      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—')}</td>
+      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.price!=null?r.price.toLocaleString():'—')}</td>
       <td>${fmt(m)}</td>
       <td>${pct(w)}<span class="wt-bar" style="width:${wbar}px"></span></td>
-      <td>${r.avg?r.avg.toLocaleString(undefined,{maximumFractionDigits:2}):'—'}</td>
-      <td class="hide-sm">${fmt(r.prin)}</td>
+      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.avg?r.avg.toLocaleString(undefined,{maximumFractionDigits:2}):'—')}</td>
+      <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':fmt(r.prin)}</td>
       <td class="${p>=0?'pos':'neg'}">${p!=null?(p>=0?'+':'')+fmt(p):'—'}</td>
       <td class="${rt>=0?'pos':'neg'}">${rt!=null?pct(rt):'—'}</td>
     </tr>`;}).join('');
@@ -530,14 +568,136 @@ function renderCal(){
       <div class="mo">${c.m}${c.m===nowM?'<span class="n">本月</span>':''}</div>
       <div class="et">${c.e}</div></div>`).join('');
 }
+/* ===== 殖利率策略地圖（板塊二/三/四） ===== */
+// 殖利率以「小數」儲存（0.10 = 10%）。verdict() 依板塊門檻回傳行動標籤。
+const STRAT=[
+  {
+    id:'b2', name:'板塊二 · 其他高股息 ETF', tag:'現金流擴充',
+    tagBg:'rgba(46,204,113,.16)', tagCol:'var(--gain)',
+    codes:['00881','00923','00878','0056'], metric:'年化殖利率',
+    rules:[
+      {v:'v-buy',  act:'加倉',     cond:'可用現金 > 50 萬 且 年化殖利率 > 10%', sub:'兩條件同時滿足才執行，現金閘門優先'},
+      {v:'v-hold', act:'持倉/觀察', cond:'年化殖利率 7% – 10%',                  sub:'不主動加碼；等待殖利率升破 10% 再行動'},
+      {v:'v-low',  act:'低優先',   cond:'年化殖利率 < 7%'},
+      {v:'v-sell', act:'賣出',     cond:'年化殖利率跌破 5%'},
+    ],
+    foot:'加倉前確認配息來源結構。若主要來自資本利得而非現金股息，大盤回調時配息率可能快速衰退。',
+    // 自動核對門檻（小數）
+    eval:y=>y<0.05?'v-sell':y<0.07?'v-low':y<=0.10?'v-hold':'v-buy',
+    label:v=>({['v-sell']:'賣出',['v-low']:'低優先',['v-hold']:'持倉/觀察',['v-buy']:'加倉（待現金>50萬）'}[v]),
+  },
+  {
+    id:'b3', name:'板塊三 · 債券加倉', tag:'鎖利防禦',
+    tagBg:'rgba(79,140,255,.16)', tagCol:'var(--accent)',
+    codes:['00937B','00679B'], metric:'配息殖利率',
+    rules:[
+      {v:'v-buy',  act:'加倉', cond:'可用現金 > 50 萬 且 配息殖利率 > 5.0%', sub:'降息前、預期尚未完全發酵時執行。Fed 大幅降息後殖利率往往已壓縮，不宜追進'},
+      {v:'v-hold', act:'持倉', cond:'配息殖利率 > 3.5%'},
+      {v:'v-warn', act:'警示', cond:'配息殖利率接近 3.5%（±0.2%）', sub:'評估縮減部位，追蹤後續配息公告'},
+      {v:'v-sell', act:'賣出', cond:'配息殖利率跌破 3.0%，且持續 2 個月以上', sub:'確認配息無回升跡象；短暫波動不觸發'},
+    ],
+    foot:'門檻參照：00937B 年化約 5.9%（持倉區）、00679B 約 4.4%（持倉區）、00719B 逼近警示線。債券加倉 5.0% 門檻下，達標者才同時看現金閘門。',
+    eval:y=>y<0.03?'v-sell':y<=0.037?'v-warn':y<=0.05?'v-hold':'v-buy',
+    label:v=>({['v-sell']:'賣出（需連2月）',['v-warn']:'警示',['v-hold']:'持倉',['v-buy']:'加倉（待現金>50萬）'}[v]),
+  },
+  {
+    id:'b4', name:'板塊四 · 債券防禦底線', tag:'汰弱留強',
+    tagBg:'rgba(212,175,55,.16)', tagCol:'var(--gold)',
+    codes:['00719B'], metric:'殖利率',
+    rules:[
+      {v:'v-warn', act:'當前狀態', cond:'殖利率逼近 3.5% 警戒線，持續監控中', sub:'維持待機，不加碼'},
+      {v:'v-sell', act:'賣出',     cond:'殖利率跌破 3.0%，且持續 2 個月以上未回升', sub:'資金轉換為現金或攻擊彈藥（MA60 扣款 / 50 萬奇兵計畫）'},
+    ],
+    foot:'此檔為防禦底線，原則只守不攻；跌破 3.0% 且連 2 月未回升才汰除。',
+    eval:y=>y<0.03?'v-sell':'v-warn',
+    label:v=>({['v-sell']:'賣出（需連2月）',['v-warn']:'待機監控'}[v]),
+  },
+];
+function stratFor(code){return STRAT.find(s=>s.codes.includes(code));}
+// 回傳 {cls, text}；若該代碼不屬任何板塊則回傳 null
+function verdict(code,y){
+  const s=stratFor(code);
+  if(!s||y==null||isNaN(y))return null;
+  const v=s.eval(y);
+  return {cls:v,text:s.label(v)};
+}
+function renderStrat(){
+  const host=document.getElementById('stratMap');if(!host)return;
+  // 把目前 YIELD 表中、屬於各板塊的標的即時殖利率帶進註腳
+  host.innerHTML=STRAT.map(s=>{
+    const live=s.codes.map(c=>{
+      const y=YIELD.find(x=>x.c===c);
+      if(!y||y.y==null)return null;
+      const vd=verdict(c,y.y);
+      return `${c} ${(y.y*100).toFixed(2)}%（${vd?vd.text:'—'}）`;
+    }).filter(Boolean);
+    const rows=s.rules.map(r=>`<div class="sb-row">
+      <span class="sb-dot" style="background:${dotColor(r.v)}"></span>
+      <span class="sb-act">${r.act}</span>
+      <span class="sb-cond">${r.cond}${r.sub?`<span class="sub">${r.sub}</span>`:''}</span>
+    </div>`).join('');
+    const liveLine=live.length?`<div class="sb-foot" style="border-left-color:var(--accent);background:rgba(79,140,255,.08)"><b>目前持有：</b>${live.join('　·　')}</div>`:'';
+    return `<div class="strat-blk">
+      <div class="sb-head">
+        <span class="sb-tag" style="background:${s.tagBg};color:${s.tagCol}">${s.tag}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--ink)">${s.name}</span>
+        <span class="sb-codes">${s.codes.join(' / ')}</span>
+      </div>
+      ${rows}
+      <div class="sb-foot">${s.foot}</div>
+      ${liveLine}
+    </div>`;
+  }).join('');
+}
+function dotColor(v){return {['v-buy']:'var(--gain)',['v-hold']:'var(--accent)',['v-watch']:'var(--gold)',['v-warn']:'#ff9d72',['v-sell']:'var(--loss)',['v-low']:'#6b7280'}[v]||'var(--ink3)';}
+function toggleStrat(){
+  const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');
+  const open=m.style.display==='none';
+  m.style.display=open?'block':'none';
+  t.textContent=open?'STRATEGY ▾ 收合':'STRATEGY ▸ 展開';
+  try{localStorage.setItem('stratOpen',open?'1':'0');}catch(e){}
+}
+
 function renderYield(){
   const yb=document.getElementById('ybody');
-  if(!YIELD.length){yb.innerHTML='<tr><td colspan="6" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「⬆ 匯入」載入備份即可顯示。</td></tr>';return;}
-  yb.innerHTML=YIELD.map(y=>`<tr>
+  if(!YIELD.length){yb.innerHTML='<tr><td colspan="6" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「⬆ 匯入」載入備份即可顯示。</td></tr>';renderStrat();return;}
+  yb.innerHTML=YIELD.map((y,i)=>{
+    const vd=verdict(y.c,y.y);
+    const noteTxt=vd?vd.text:(y.note||'—');
+    const noteCol=vd?verdictColor(vd.cls):'var(--ink2)';
+    const marked=(y.yUp===curMonth());
+    const mark=`<span onclick="event.stopPropagation();toggleYieldMark(${i})" title="${marked?'本月已更新（點一下取消）':'點一下標記本月已更新'}" style="cursor:pointer;margin-right:5px;color:${marked?'var(--gain)':'var(--ink3)'}">${marked?'✓':'○'}</span>`;
+    const yldCell=y.y!=null
+      ? `${mark}<span class="yld yld-cell" onclick="editYield(${i})" title="點一下手動修改">${(y.y*100).toFixed(2)}%</span>`
+      : `${mark}<span class="yld-cell" onclick="editYield(${i})" style="color:var(--ink3)" title="點一下手動修改">—</span>`;
+    return `<tr>
     <td class="l"><span class="code">${y.c}</span><div class="nm">${y.n}</div></td>
-    <td>${y.d}</td><td>${y.p}</td><td>${y.cost}</td>
-    <td class="yld">${(y.y*100).toFixed(2)}%</td><td class="l" style="font-family:var(--sans);color:var(--ink2)">${y.note}</td>
-  </tr>`).join('');
+    <td>${y.d}</td><td>${y.p}</td><td id="yc${i}">${yldCell}</td>
+    <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
+  </tr>`;}).join('');
+  renderStrat();
+}
+function verdictColor(cls){return {['v-buy']:'var(--gain)',['v-hold']:'var(--ink2)',['v-watch']:'var(--gold)',['v-warn']:'#ff9d72',['v-sell']:'var(--loss)',['v-low']:'#9ca3af'}[cls]||'var(--ink2)';}
+function editYield(i){
+  const cell=document.getElementById('yc'+i);if(!cell)return;
+  const cur=YIELD[i].y!=null?(YIELD[i].y*100).toFixed(2):'';
+  cell.innerHTML=`<input class="yld-edit" type="number" step="0.01" value="${cur}" title="輸入百分比，例 5.9">`;
+  const inp=cell.querySelector('input');inp.focus();inp.select();
+  const commit=()=>setYield(i,inp.value);
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.removeEventListener('blur',commit);renderYield();}});
+}
+function setYield(i,val){
+  const v=String(val).trim();
+  const before=YIELD[i].y;
+  YIELD[i].y=v===''?null:(isNaN(parseFloat(v))?YIELD[i].y:parseFloat(v)/100);   // 介面用百分比，內部存小數
+  if(YIELD[i].y!==before)YIELD[i].yUp=curMonth();   // 有實際變動才蓋本月戳記
+  save();renderYield();
+}
+function toggleYieldMark(i){
+  const y=YIELD[i];if(!y)return;
+  y.yUp=(y.yUp===curMonth())?null:curMonth();
+  save();renderYield();
 }
 
 const CLR={現金:'#6b7280',美股:'#4f8cff',台股:'#2ecc71',債券:'#b07cff',貸款:'#ff8a5c'};
@@ -646,11 +806,13 @@ function openEdit(i){
 }
 function renderMarkBtn(){
   if(editIdx<0)return;
-  const on=upThisMonth(data[editIdx]);
+  const r=data[editIdx];const on=upThisMonth(r);
+  const simple=(r.cls==='現金'||r.cls==='貸款');
+  const word=simple?'更新':'扣款';   // 現金/貸款用「更新」，其餘用「扣款」
   document.getElementById('markState').innerHTML=on
-    ?'<span style="color:var(--gain)">✓ 本月已扣</span>'
-    :'<span style="color:var(--loss)">● 本月未扣</span>';
-  document.getElementById('markBtn').textContent=on?'改成未扣':'標記本月已扣';
+    ?`<span style="color:var(--gain)">✓ 本月已${word}</span>`
+    :`<span style="color:var(--loss)">● 本月未${word}</span>`;
+  document.getElementById('markBtn').textContent=on?`改成未${word}`:`標記本月已${word}`;
 }
 function toggleMark(){
   if(editIdx<0)return;const r=data[editIdx];
@@ -669,11 +831,17 @@ function openDCA(code){
 }
 /* 依類別/是否DCA決定加碼區欄位 */
 function configAdd(r,plan){
-  const isCash=r.cls==='現金';
-  document.getElementById('segAdd').textContent=isCash?'改餘額':'加碼（增量）';
-  document.getElementById('addCash').style.display=isCash?'block':'none';
-  document.getElementById('addNormal').style.display=isCash?'none':'block';
-  if(isCash){document.getElementById('a_cash').value=r.shares||'';return;}
+  const isSimple=(r.cls==='現金'||r.cls==='貸款');
+  document.getElementById('segAdd').textContent=isSimple?'改餘額':'加碼（增量）';
+  document.getElementById('addCash').style.display=isSimple?'block':'none';
+  document.getElementById('addNormal').style.display=isSimple?'none':'block';
+  if(isSimple){
+    const isLoan=r.cls==='貸款';
+    document.getElementById('cashLabel').textContent=isLoan?'貸款餘額 (TWD)':'現金新餘額 (TWD)';
+    document.getElementById('cashHint').textContent=isLoan?'填目前還欠多少（正數即可），會自動計為負債':'沒有股價變化，直接覆蓋成新數字';
+    document.getElementById('a_cash').value=Math.abs(r.shares||0)||'';
+    return;
+  }
   const fixed=plan&&plan.amt>0;        // 定期定額：金額固定，只填股數
   document.getElementById('fgPrice').style.display=fixed?'none':'block';
   document.getElementById('fgCost').style.display=fixed?'block':'none';
@@ -702,11 +870,14 @@ function prinHint(){
 function prev(){
   if(editIdx<0)return;const r=data[editIdx];
   const pv=document.getElementById('addPrev');
-  // 現金：直接覆蓋餘額
-  if(r.cls==='現金'){
-    const nv=parseFloat(document.getElementById('a_cash').value);
-    const newBal=isNaN(nv)?r.shares:nv;
-    pv.innerHTML=`<span class="pl">現金餘額</span><span class="pv">${fmt(r.shares)} <span class="arrow">→</span> ${fmt(newBal)} TWD</span>`;
+  // 現金 / 貸款：直接覆蓋餘額
+  if(r.cls==='現金'||r.cls==='貸款'){
+    const isLoan=r.cls==='貸款';
+    const raw=parseFloat(document.getElementById('a_cash').value);
+    const newBal=isNaN(raw)?r.shares:(isLoan?-Math.abs(raw):raw);
+    const lbl=isLoan?'貸款餘額':'現金餘額';
+    const showOld=isLoan?-Math.abs(r.shares||0):r.shares;
+    pv.innerHTML=`<span class="pl">${lbl}</span><span class="pv">${fmt(showOld)} <span class="arrow">→</span> ${fmt(newBal)} TWD</span>`;
     return;
   }
   const addSh=parseFloat(document.getElementById('a_shares').value)||0;
@@ -730,10 +901,11 @@ function prev(){
 function saveRow(){
   if(mode==='add'&&editIdx>=0){
     const r=data[editIdx];
-    if(r.cls==='現金'){
-      const nv=parseFloat(document.getElementById('a_cash').value);
-      if(isNaN(nv)){alert('請填現金新餘額');return;}
-      r.shares=nv;r.prin=nv;r.avg=1;r.price=1;r.fx=1;r.lastUp=curMonth();
+    if(r.cls==='現金'||r.cls==='貸款'){
+      const raw=parseFloat(document.getElementById('a_cash').value);
+      if(isNaN(raw)){alert(r.cls==='貸款'?'請填貸款餘額':'請填現金新餘額');return;}
+      const bal=r.cls==='貸款'?-Math.abs(raw):raw;
+      r.shares=bal;r.prin=bal;r.avg=1;r.price=1;r.fx=1;r.lastUp=curMonth();
       save();closeModal();render();return;
     }
     const addSh=parseFloat(document.getElementById('a_shares').value)||0;
@@ -912,6 +1084,8 @@ function exportXLSX(){
 
 function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy')renderCharts();}
 render();
+// 還原策略地圖收合狀態（預設收合）
+try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='STRATEGY ▾ 收合';}}}catch(e){}
 // 頁面載入後自動更新股價（如已設定 Sheet 網址）
 if(sheetUrl){
   setTimeout(()=>{
