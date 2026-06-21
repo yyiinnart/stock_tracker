@@ -287,6 +287,14 @@
         <div class="hint" id="prinHint"></div>
       </div>
       <div class="fg"><label>備註</label><input id="f_note"></div>
+      <div class="fg" id="markRow" style="display:none">
+        <label>本月扣款狀態</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="markState" style="font-size:13px"></span>
+          <button type="button" class="mini-btn" id="markBtn" onclick="toggleMark()" style="margin-left:auto"></button>
+        </div>
+        <div class="hint">手動標記不會動到任何數字，校準完用這個復原即可</div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn danger" id="delBtn" onclick="delRow()">刪除</button>
@@ -368,8 +376,8 @@ const upThisMonth=r=>r&&r.lastUp===curMonth();
 const fmt=n=>n==null||isNaN(n)?"—":Math.round(n).toLocaleString();
 const pct=n=>n==null||isNaN(n)?"—":(n*100).toFixed(2)+"%";
 const mv=r=>Math.round((r.shares||0)*(r.fx||1)*(r.price||0));
-const pnl=r=>r.prin?mv(r)-r.prin:null;
-const ret=r=>r.prin?pnl(r)/r.prin:null;
+const pnl=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:mv(r)-r.prin;
+const ret=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:pnl(r)/r.prin;
 
 // which dataset are we viewing
 function curData(){return viewKey==='live'?data:archives[viewKey];}
@@ -379,7 +387,7 @@ function totals(arr){
   arr=arr||curData();
   let total=0,prin=0,pl=0,twd=0,usd=0;
   arr.forEach(r=>{const m=mv(r);total+=m;
-    if(r.cls!=="貸款"&&r.prin){prin+=r.prin;pl+=(m-r.prin);}
+    if(r.cls!=="貸款"&&r.cls!=="現金"&&r.prin){prin+=r.prin;pl+=(m-r.prin);}  // 現金/貸款不算投入本金與損益
     if((r.fx||1)>1.5)usd+=m;else twd+=m;
   });
   return {total,prin,pl,twd,usd};
@@ -456,7 +464,10 @@ function renderDCA(){
     const done=upThisMonth(r);
     const hold=r?`持有 ${r.shares.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · 均價 ${r.avg?r.avg.toFixed(2):'—'}`:'尚未持有（代碼需與持倉一致）';
     const usd=(r&&r.fx>1.5)?` / ≈$${(p.amt/r.fx).toFixed(0)}`:'';
-    const badge=done?'<span style="color:var(--gain);font-size:11px;margin-left:6px">✓ 本月已扣</span>':'<span style="color:var(--loss);font-size:11px;margin-left:6px">● 本月未扣</span>';
+    const badge=r?(done
+      ?`<button class="mini-btn" onclick="markDCA('${p.code}')" style="color:var(--gain);font-size:11px;margin-left:6px;padding:1px 6px">✓ 本月已扣</button>`
+      :`<button class="mini-btn" onclick="markDCA('${p.code}')" style="color:var(--loss);font-size:11px;margin-left:6px;padding:1px 6px">● 本月未扣</button>`)
+      :'';
     return `<div class="dca-row">
       <div class="dr-code">${p.code}${badge}</div>
       <div class="dr-amt">月扣 ${p.amt.toLocaleString()}${usd}</div>
@@ -465,6 +476,11 @@ function renderDCA(){
         <button class="mini-btn go" onclick="openDCA('${p.code}')">本月扣款 ＋</button>
         <button class="mini-btn" onclick="openDCAEdit(${idx})">⚙</button>
       </div></div>`;}).join('')||'<div style="color:var(--ink3);font-size:12px">尚未設定 DCA 標的，按右上「＋ 設定標的」。</div>';
+}
+function markDCA(code){
+  const r=data.find(x=>x.code===code);if(!r)return;
+  r.lastUp=upThisMonth(r)?null:curMonth();
+  save();render();
 }
 function renderFilter(){
   const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];
@@ -502,7 +518,7 @@ function renderTable(){
     <td>合計（${filter}）</td><td></td><td></td><td></td>
     <td>${fmt(rows.reduce((s,o)=>s+mv(o.r),0))}</td>
     <td>${pct(rows.reduce((s,o)=>s+mv(o.r),0)/t.total)}</td>
-    <td></td><td class="hide-sm">${fmt(rows.reduce((s,o)=>s+(o.r.prin||0),0))}</td>
+    <td></td><td class="hide-sm">${fmt(rows.reduce((s,o)=>s+((o.r.cls==='現金'||o.r.cls==='貸款')?0:(o.r.prin||0)),0))}</td>
     <td>${fmt(rows.reduce((s,o)=>s+(pnl(o.r)||0),0))}</td><td></td></tr>`;
 }
 function renderCal(){
@@ -609,6 +625,7 @@ function openAdd(){
   document.getElementById('mSub').textContent='';
   document.getElementById('modeSeg').style.display='none';
   document.getElementById('delBtn').style.display='none';
+  document.getElementById('markRow').style.display='none';
   fillEdit({code:'',name:'',cls:'台股',shares:0,fx:1,price:0,avg:0,prin:0,note:''});
   swapBlocks();show();
 }
@@ -623,7 +640,22 @@ function openEdit(i){
   document.getElementById('a_shares').value='';document.getElementById('a_price').value='';
   document.getElementById('a_cost').value='';document.getElementById('a_cash').value='';
   configAdd(r,null);
+  document.getElementById('markRow').style.display='block';
+  renderMarkBtn();
   setMode('add');show();
+}
+function renderMarkBtn(){
+  if(editIdx<0)return;
+  const on=upThisMonth(data[editIdx]);
+  document.getElementById('markState').innerHTML=on
+    ?'<span style="color:var(--gain)">✓ 本月已扣</span>'
+    :'<span style="color:var(--loss)">● 本月未扣</span>';
+  document.getElementById('markBtn').textContent=on?'改成未扣':'標記本月已扣';
+}
+function toggleMark(){
+  if(editIdx<0)return;const r=data[editIdx];
+  r.lastUp=upThisMonth(r)?null:curMonth();
+  save();renderMarkBtn();render();
 }
 function openDCA(code){
   let i=data.findIndex(x=>x.code===code);
@@ -725,7 +757,8 @@ function saveRow(){
       shares:parseFloat(f_shares.value)||0,fx:fxv,price:parseFloat(f_price.value)||0,
       avg:parseFloat(f_avg.value)||0,prin:prinTWD,note:f_note.value.trim()};
     if(!r.code){alert('請填代碼');return;}
-    if(editIdx>=0)data[editIdx]=r;else data.push(r);
+    if(editIdx>=0){if(data[editIdx].lastUp)r.lastUp=data[editIdx].lastUp;data[editIdx]=r;}  // 保留本月已扣標記
+    else data.push(r);
   }
   save();closeModal();render();
 }
@@ -767,8 +800,11 @@ async function fetchSheet(url){
   if(!res.ok)throw new Error('HTTP '+res.status);
   const j=await res.json();
   if(!j.ok)throw new Error(j.error||'回傳格式錯誤');
+  if(!j.prices||typeof j.prices!=='object')throw new Error('回傳沒有 prices 報價資料');
   return j;
 }
+// 只接受「正數」報價，過濾 0／空字串／字串／NaN，避免洗掉舊價
+function validNum(v){const n=typeof v==='string'?parseFloat(v):v;return (typeof n==='number'&&isFinite(n)&&n>0)?n:null;}
 async function testSync(){
   const url=document.getElementById('s_url').value.trim();
   const st=document.getElementById('syncStatus');
@@ -789,21 +825,23 @@ async function syncPrices(){
   btn.textContent='更新中…';btn.disabled=true;
   try{
     const j=await fetchSheet(sheetUrl);
-    let hit=0;
+    let hit=0,skip=0;
     data.forEach(r=>{
       const q=j.prices[r.code];
-      if(q&&!isNaN(q.price)){
-        r.price=q.price;
-        if(q.fx&&q.fx>1.5)r.fx=q.fx;   // 只更新美股匯率，台股維持 1
-        hit++;
-      }
+      if(!q){return;}
+      const px=validNum(q.price);
+      if(px==null){skip++;return;}   // 報價無效（0/空/壞）→ 保留舊價，不洗掉
+      r.price=px;
+      const fxv=validNum(q.fx);
+      if(fxv&&fxv>1.5)r.fx=fxv;       // 只更新美股匯率，台股維持 1
+      hit++;
     });
     save();render();
-    btn.textContent=`✓ 已更新 ${hit} 檔`;
-    setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2000);
+    btn.textContent=skip?`✓ 更新 ${hit} 檔（${skip} 檔報價無效已略過）`:`✓ 已更新 ${hit} 檔`;
+    setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2500);
   }catch(err){
     btn.textContent=old;btn.disabled=false;
-    alert('更新失敗：'+err.message+'\n\n請按 ⚙ 測試連線，或確認 Web App 已部署為「任何人皆可存取」。');
+    alert('更新失敗：'+err.message+'\n\n（舊的價格已保留，不會被清掉）\n請按 ⚙ 測試連線，或確認 Web App 已部署為「任何人皆可存取」。');
   }
 }
 document.getElementById('ovSync').addEventListener('click',e=>{if(e.target.id==='ovSync')closeSync();});
