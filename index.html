@@ -168,6 +168,15 @@
     .calmini{grid-template-columns:repeat(2,1fr)} .hide-sm{display:none}
     .dca-row{flex-wrap:wrap} .dca-row .dr-hold{flex-basis:100%;order:5}
   }
+  .tscroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  @media(max-width:560px){
+    table{font-size:12px} .ytable td{font-size:12px}
+    tbody td,thead th{padding:8px 7px}
+    .verdict{font-size:9.5px;padding:2px 6px}
+    .nm{font-size:10px}
+    .strat-blk .sb-head{flex-wrap:wrap} .strat-blk .sb-codes{margin-left:0;flex-basis:100%;order:5}
+    .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
+  }
 </style>
 </head>
 <body>
@@ -222,15 +231,17 @@
         <button class="btn" onclick="openSync()" id="syncCfgBtn" title="設定 Sheet 連線">⚙</button>
         <div class="filt" id="filt"></div>
       </div>
+      <div class="tscroll">
       <table id="htable">
         <thead><tr>
-          <th class="l">標的</th><th>類別</th><th>股數</th><th>現價</th>
-          <th>市值(TWD)</th><th>權重</th><th>平均成本</th><th class="hide-sm">投入本金</th>
+          <th class="l">標的</th><th class="hide-sm">類別</th><th class="hide-sm">股數</th><th class="hide-sm">現價</th>
+          <th>市值(TWD)</th><th>權重</th><th class="hide-sm">平均成本</th><th class="hide-sm">投入本金</th>
           <th>損益(TWD)</th><th>報酬率</th>
         </tr></thead>
         <tbody id="hbody"></tbody>
         <tfoot id="hfoot"></tfoot>
       </table>
+      </div>
     </div>
   </div>
 
@@ -256,10 +267,12 @@
     </div>
     <div class="card">
       <h2>殖利率追蹤<span class="tag">YIELD</span></h2>
+      <div class="tscroll">
       <table class="ytable">
-        <thead><tr><th class="l">標的</th><th>年配息</th><th>股價</th><th>每領1元成本</th><th>殖利率</th><th class="l">簡評</th></tr></thead>
+        <thead><tr><th class="l">標的</th><th class="hide-sm">年配息</th><th class="hide-sm">股價</th><th class="hide-sm">每領1元成本</th><th>殖利率</th><th class="l">簡評</th></tr></thead>
         <tbody id="ybody"></tbody>
       </table>
+      </div>
       <div class="hint" style="margin-top:8px">殖利率欄位可直接點改；簡評會依下方策略門檻自動核對。</div>
     </div>
     <div class="card">
@@ -541,22 +554,22 @@ function renderTable(){
       : (marked?'<span title="本月已更新" style="color:var(--gain);margin-left:5px">✓</span>':'');
     return `<tr class="${clickable?'clickable':''}" ${clickable?`onclick="openEdit(${i})"`:''}>
       <td class="l"><span class="code">${r.code}</span>${tick}<div class="nm">${r.name}</div></td>
-      <td><span class="chip c-${r.cls}">${r.cls}</span></td>
-      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—')}</td>
-      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.price!=null?r.price.toLocaleString():'—')}</td>
+      <td class="hide-sm"><span class="chip c-${r.cls}">${r.cls}</span></td>
+      <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—')}</td>
+      <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.price!=null?r.price.toLocaleString():'—')}</td>
       <td>${fmt(m)}</td>
       <td>${pct(w)}<span class="wt-bar" style="width:${wbar}px"></span></td>
-      <td>${(r.cls==='現金'||r.cls==='貸款')?'—':(r.avg?r.avg.toLocaleString(undefined,{maximumFractionDigits:2}):'—')}</td>
+      <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.avg?r.avg.toLocaleString(undefined,{maximumFractionDigits:2}):'—')}</td>
       <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':fmt(r.prin)}</td>
       <td class="${p>=0?'pos':'neg'}">${p!=null?(p>=0?'+':'')+fmt(p):'—'}</td>
       <td class="${rt>=0?'pos':'neg'}">${rt!=null?pct(rt):'—'}</td>
     </tr>`;}).join('');
   document.getElementById('hcount').textContent=`${rows.length} 檔${isLive()?'':' · 唯讀'}`;
   document.getElementById('hfoot').innerHTML=`<tr>
-    <td>合計（${filter}）</td><td></td><td></td><td></td>
+    <td>合計（${filter}）</td><td class="hide-sm"></td><td class="hide-sm"></td><td class="hide-sm"></td>
     <td>${fmt(rows.reduce((s,o)=>s+mv(o.r),0))}</td>
     <td>${pct(rows.reduce((s,o)=>s+mv(o.r),0)/t.total)}</td>
-    <td></td><td class="hide-sm">${fmt(rows.reduce((s,o)=>s+((o.r.cls==='現金'||o.r.cls==='貸款')?0:(o.r.prin||0)),0))}</td>
+    <td class="hide-sm"></td><td class="hide-sm">${fmt(rows.reduce((s,o)=>s+((o.r.cls==='現金'||o.r.cls==='貸款')?0:(o.r.prin||0)),0))}</td>
     <td>${fmt(rows.reduce((s,o)=>s+(pnl(o.r)||0),0))}</td><td></td></tr>`;
 }
 function renderCal(){
@@ -672,7 +685,8 @@ function renderYield(){
       : `${mark}<span class="yld-cell" onclick="editYield(${i})" style="color:var(--ink3)" title="點一下手動修改">—</span>`;
     return `<tr>
     <td class="l"><span class="code">${y.c}</span><div class="nm">${y.n}</div></td>
-    <td>${y.d}</td><td>${y.p}</td><td id="yc${i}">${yldCell}</td>
+    <td class="hide-sm">${y.d}</td><td class="hide-sm">${y.p}</td><td class="hide-sm">${y.cost!=null?y.cost:'—'}</td>
+    <td id="yc${i}">${yldCell}</td>
     <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
   </tr>`;}).join('');
   renderStrat();
