@@ -1146,7 +1146,12 @@ function saveSync(){
   save();closeSync();
 }
 async function fetchSheet(url){
-  const res=await fetch(url,{method:'GET'});
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),20000);   // 20 秒逾時，避免 Apps Script 沒回應時卡死
+  let res;
+  try{res=await fetch(url,{method:'GET',signal:ctrl.signal});}
+  catch(e){throw new Error(e.name==='AbortError'?'連線逾時（20 秒），請稍後再試':e.message);}
+  finally{clearTimeout(timer);}
   if(!res.ok)throw new Error('HTTP '+res.status);
   const j=await res.json();
   if(!j.ok)throw new Error(j.error||'回傳格式錯誤');
@@ -1171,7 +1176,7 @@ async function testSync(){
 async function syncPrices(){
   if(!isLive()){alert('請先回到「即時」再更新股價');return;}
   if(!sheetUrl){openSync();return;}
-  const btn=document.getElementById('syncBtn');const old=btn.textContent;
+  const btn=document.getElementById('syncBtn');const IDLE='🔄 從 Sheet 更新股價';
   btn.textContent='更新中…';btn.disabled=true;
   try{
     const j=await fetchSheet(sheetUrl);
@@ -1209,9 +1214,9 @@ async function syncPrices(){
 
     save();render();
     btn.textContent=skip?`✓ 更新 ${hit}+${yHit} 檔（${skip} 檔報價無效已略過）`:`✓ 已更新 ${hit} 檔部位、${yHit} 檔殖利率標的`;
-    setTimeout(()=>{btn.textContent=old;btn.disabled=false;},2500);
+    setTimeout(()=>{btn.textContent=IDLE;btn.disabled=false;},2500);
   }catch(err){
-    btn.textContent=old;btn.disabled=false;
+    btn.textContent=IDLE;btn.disabled=false;
     alert('更新失敗：'+err.message+'\n\n（舊的價格已保留，不會被清掉）\n請按 ⚙ 測試連線，或確認 Web App 已部署為「任何人皆可存取」。');
   }
 }
