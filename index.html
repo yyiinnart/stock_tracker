@@ -158,6 +158,12 @@
     padding:9px 11px;border-radius:9px;font-size:13px;font-family:var(--mono)}
   .fg input:focus,.fg select:focus{outline:none;border-color:var(--accent)}
   .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .notepad{width:100%;min-height:180px;resize:vertical;background:var(--panel2);border:1px solid var(--line);
+    color:var(--ink);padding:12px 14px;border-radius:9px;font-size:13px;line-height:1.8;font-family:var(--sans)}
+  .notepad:focus{outline:none;border-color:var(--accent)}
+  .notepad::placeholder{color:var(--ink3)}
+  .note-status{font-size:11px;color:var(--ink3);letter-spacing:.5px}
+  .note-status.saved{color:var(--gain)}
   .modal-actions{display:flex;gap:10px;margin-top:8px}
   .modal-actions .btn{flex:1;justify-content:center;text-align:center;padding:10px}
   .btn.danger{color:var(--loss);border-color:rgba(255,92,92,.3)}
@@ -287,6 +293,12 @@
     <div class="card">
       <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
       <div id="stratMap" style="display:none"></div>
+    </div>
+    <div class="card">
+      <h2>操作策略筆記<span class="tag">NOTES</span>
+        <span class="act"><span class="note-status" id="noteStatus"></span></span></h2>
+      <textarea class="notepad" id="noteArea" placeholder="記錄你的操作策略、加減碼條件、觀察心得…&#10;例如：QQQ 跌破 $500 分三批進、0056 殖利率低於 5% 停止加碼。" oninput="noteChanged()" onblur="saveNotes(true)"></textarea>
+      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「⬇ 備份 / ⬆ 匯入」會一併包含筆記內容。</div>
     </div>
   </div>
 </div>
@@ -423,6 +435,7 @@ let store=loadStore();
 let data=store.live, dca=store.dca, archives=store.archives;
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl=localStorage.getItem(URL_KEY)||store.sheetUrl||'';
+let notes=store.notes||'';   // 操作策略筆記
 CAL=store.cal; YIELD=store.yield;
 let filter='全部', editIdx=-1, mode='add', tab='hold', charts={};
 let viewKey='live';            // 'live' or an archive label
@@ -431,13 +444,13 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[]};}}catch(e){}
-  return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[]};
+    return {live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||''};}}catch(e){}
+  return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:''};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
 function save(){
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD}));
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes}));
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);   // 獨立備份網址
   }catch(e){}
 }
@@ -1231,7 +1244,7 @@ function stamp(){const d=new Date();return d.getFullYear()+
   String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
 
 function exportJSON(){
-  const payload={v:3,exportedAt:new Date().toISOString(),live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD};
+  const payload={v:3,exportedAt:new Date().toISOString(),live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
 }
@@ -1247,6 +1260,8 @@ function importJSON(input){
       data=o.live; dca=o.dca||[]; archives=o.archives||{};
       CAL=o.cal||[]; YIELD=o.yield||[];
       if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
+      if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
+      renderNotes();
       viewKey='live';save();switchView('live');
       alert('匯入完成。');
     }catch(err){alert('匯入失敗：'+err.message);}
@@ -1286,8 +1301,29 @@ function exportXLSX(){
   XLSX.writeFile(wb,`資產追蹤_${stamp()}.xlsx`);
 }
 
+/* ===== 操作策略筆記 ===== */
+let noteTimer=null;
+function renderNotes(){const na=document.getElementById('noteArea');if(na)na.value=notes;}
+function noteChanged(){
+  const st=document.getElementById('noteStatus');
+  if(st){st.textContent='輸入中…';st.classList.remove('saved');}
+  clearTimeout(noteTimer);
+  noteTimer=setTimeout(()=>saveNotes(),1000);
+}
+function saveNotes(force){
+  clearTimeout(noteTimer);
+  const na=document.getElementById('noteArea');if(!na)return;
+  if(na.value===notes&&!force)return;
+  notes=na.value;save();
+  const st=document.getElementById('noteStatus');
+  if(st){const d=new Date();
+    st.textContent='✓ 已儲存 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    st.classList.add('saved');}
+}
+
 function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy')renderCharts();}
 render();
+renderNotes();
 // 還原策略地圖收合狀態（預設收合）
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='STRATEGY ▾ 收合';}}}catch(e){}
 // 頁面載入後自動更新股價（如已設定 Sheet 網址）
