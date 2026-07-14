@@ -374,6 +374,7 @@
     <div class="msub">這裡只設定「每月固定扣款」的標的與金額</div>
     <div class="fg"><label>代碼</label><input id="d_code" placeholder="例 0050"><div class="hint">需與持倉代碼一致才會自動帶入持股</div></div>
     <div class="fg"><label>每月扣款金額 (TWD)</label><input id="d_amt" type="number" step="any" placeholder="例 12000"></div>
+    <div class="fg"><label>每月扣款日</label><input id="d_day" type="number" min="1" max="31" step="1" placeholder="例 6（可留空）"><div class="hint">1–31；遇當月沒有該日（如 31 日）視為當月最後一天</div></div>
     <div class="modal-actions">
       <button class="btn danger" id="dcaDelBtn" onclick="dcaDel()">刪除</button>
       <button class="btn" onclick="closeDca()">取消</button>
@@ -553,9 +554,17 @@ function renderDCA(){
       ?`<button class="mini-btn" onclick="markDCA('${p.code}')" style="color:var(--gain);font-size:11px;margin-left:6px;padding:1px 6px">✓ 本月已扣</button>`
       :`<button class="mini-btn" onclick="markDCA('${p.code}')" style="color:var(--loss);font-size:11px;margin-left:6px;padding:1px 6px">● 本月未扣</button>`)
       :'';
+    let dayTxt='';
+    if(p.day){
+      const now=new Date();
+      const dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+      const eff=Math.min(p.day,dim);                 // 當月沒有該日則視為月底
+      const overdue=!done&&now.getDate()>=eff;
+      dayTxt=`<span style="font-size:11px;margin-left:8px;color:${overdue?'var(--loss)':'var(--ink3)'}">每月${p.day}日${overdue?' · 已到扣款日':''}</span>`;
+    }
     return `<div class="dca-row">
       <div class="dr-code">${p.code}${badge}</div>
-      <div class="dr-amt">月扣 ${p.amt.toLocaleString()}${usd}</div>
+      <div class="dr-amt">月扣 ${p.amt.toLocaleString()}${usd}${dayTxt}</div>
       <div class="dr-hold">${hold}</div>
       <div class="dr-act">
         <button class="mini-btn go" onclick="openDCA('${p.code}')">本月扣款 ＋</button>
@@ -1135,13 +1144,19 @@ function openDCAEdit(idx){
   document.getElementById('dcaDelBtn').style.display=idx<0?'none':'block';
   d_code.value=idx<0?'':dca[idx].code;
   d_amt.value=idx<0?'':dca[idx].amt;
+  d_day.value=idx<0?'':(dca[idx].day||'');
   document.getElementById('ovDca').classList.add('show');
 }
 function closeDca(){document.getElementById('ovDca').classList.remove('show');}
 function dcaSave(){
   const code=d_code.value.trim(),amt=parseFloat(d_amt.value)||0;
   if(!code||amt<=0){alert('請填代碼與金額');return;}
-  if(dcaEditIdx<0)dca.push({code,amt});else dca[dcaEditIdx]={code,amt};
+  let day=null;
+  if(d_day.value.trim()!==''){
+    day=parseInt(d_day.value,10);
+    if(!(day>=1&&day<=31)){alert('扣款日需為 1–31 的整數');return;}
+  }
+  if(dcaEditIdx<0)dca.push({code,amt,day});else dca[dcaEditIdx]={code,amt,day};
   save();closeDca();renderDCA();
 }
 function dcaDel(){if(dcaEditIdx>=0&&confirm('刪除這個 DCA 標的？')){dca.splice(dcaEditIdx,1);save();closeDca();renderDCA();}}
