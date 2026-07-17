@@ -872,7 +872,7 @@ function renderCharts(){
   charts.pf=new Chart(pieFx,{type:'doughnut',data:{labels:['TWD 台幣','USD 美元'],
     datasets:[{data:[t.twd,t.usd],backgroundColor:['#2ecc71','#4f8cff'],borderColor:'#171a21',borderWidth:2}]},
     options:{...base,cutout:'62%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)}`}}}}});
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/(t.twd+t.usd)*100).toFixed(1)}%)`}}}}});
   const pl=arr.filter(r=>pnl(r)!=null&&r.cls!=='貸款').map(r=>({c:r.code,v:pnl(r)})).sort((a,b)=>b.v-a.v);
   // 高度隨檔數自動調整：每檔約 30px，最低 260px，避免橫條被擠掉
   const pnlBox=document.getElementById('barPnl').parentElement;
