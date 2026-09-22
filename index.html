@@ -25,6 +25,18 @@
   h1 .sub{display:block;font-size:11px;color:var(--ink3);font-weight:500;letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
   .meta{font-size:11px;color:var(--ink2);text-align:right;line-height:1.7;font-family:var(--mono)}
   .meta b{color:var(--ink)}
+  .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;margin-left:auto}
+  .ctrlbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+  .ctrl-sep{width:1px;height:18px;background:var(--line)}
+  .iobar{display:flex;gap:6px}
+  .iobar .mini-btn{height:32px;padding:0 12px;border-radius:8px}
+  .meta{display:flex;gap:18px;justify-content:flex-end;flex-wrap:wrap;align-items:baseline}
+  .meta .mi{display:flex;align-items:baseline;gap:6px;color:var(--ink3);font-family:var(--sans);font-size:11px;letter-spacing:.5px}
+  .meta .mi b{font-family:var(--mono);font-size:12.5px;color:var(--ink2);font-weight:600;letter-spacing:0}
+  .meta .mi.main b{font-size:15px;color:var(--ink);font-weight:700}
+  @media(max-width:880px){.hdr-right{align-items:stretch;width:100%;margin-left:0}
+    .meta,.ctrlbar{justify-content:flex-start} .ctrl-sep{display:none}}
+  .mini-btn.done{border-color:var(--gain);color:var(--gain)}
 
   .topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
   .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;width:fit-content}
@@ -32,10 +44,10 @@
     padding:9px 22px;border-radius:9px;cursor:pointer;transition:.15s;letter-spacing:.5px}
   .tabs button.on{background:var(--accent);color:#fff}
   .tabs button:not(.on):hover{color:var(--ink)}
-  .viewsel{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .viewsel label{font-size:11px;color:var(--ink3);letter-spacing:.5px}
-  .viewsel select{background:var(--panel);border:1px solid var(--line);color:var(--ink);font-family:var(--mono);
-    font-size:12px;padding:8px 12px;border-radius:10px;cursor:pointer}
+  .viewsel{display:flex;align-items:center;gap:8px}
+  .viewsel span{font-size:11px;color:var(--ink3);letter-spacing:.5px;white-space:nowrap}
+  .viewsel select{height:32px;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-family:var(--mono);
+    font-size:12px;padding:0 10px;border-radius:8px;cursor:pointer}
   .viewsel select:focus{outline:none;border-color:var(--accent)}
   .archiving{font-size:11px;color:var(--gold);font-family:var(--mono)}
 
@@ -64,6 +76,14 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .grid2 .card{margin-bottom:0}
   .chartbox{position:relative;height:230px} .chartbox.tall{height:260px}
+  .rangesel{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px}
+  .rangesel button{background:transparent;border:none;color:var(--ink2);font-family:var(--mono);font-size:10.5px;font-weight:600;
+    padding:4px 9px;border-radius:6px;cursor:pointer}
+  .rangesel button.on{background:var(--accent);color:#fff}
+  .rangesel button:not(.on):not(:disabled):hover{color:var(--ink)}
+  .rangesel button:disabled{color:var(--ink3);opacity:.45;cursor:default}
+  .rangesel button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  @media(max-width:880px){.card h2 .rangesel{margin-left:auto}}  /* 窄螢幕時 .hide-sm 會藏起英文標籤，讓按鈕靠右 */
 
   /* compact DCA bar */
   .dca-head{display:flex;align-items:center;margin-bottom:12px}
@@ -196,17 +216,26 @@
 <div class="wrap">
   <header>
     <h1>資產追蹤儀表板<span class="sub">PORTFOLIO MONITOR · DEMO</span></h1>
-    <div class="meta" id="meta"></div>
+    <div class="hdr-right">
+      <div class="meta" id="meta"></div>
+      <div class="ctrlbar">
+        <label class="viewsel"><span>檢視時點</span>
+          <select id="viewSel" onchange="switchView(this.value)"></select></label>
+        <span class="ctrl-sep" aria-hidden="true"></span>
+        <div class="iobar">
+          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
+          <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">⬆ 匯入</button>
+          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">⬇ Excel</button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
+        </div>
+      </div>
+    </div>
   </header>
 
   <div class="topbar">
     <div class="tabs">
       <button class="on" onclick="setTab('hold')">持倉</button>
       <button onclick="setTab('analy')">分析</button>
-    </div>
-    <div class="viewsel">
-      <label>檢視時點</label>
-      <select id="viewSel" onchange="switchView(this.value)"></select>
     </div>
   </div>
 
@@ -230,12 +259,6 @@
 
     <div class="card">
       <h2>持倉明細<span class="tag" id="hcount"></span>
-        <span class="act" style="display:flex;gap:6px">
-          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
-          <button class="mini-btn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">⬆ 匯入</button>
-          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">⬇ Excel</button>
-          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
-        </span>
       </h2>
       <div class="toolbar">
         <button class="btn primary" onclick="openAdd()">＋ 新增部位</button>
@@ -265,7 +288,10 @@
       正常波動區間：大盤回調 −10% 到 −20% 以內皆視為正常，禁止恐慌賣出　·　高股息與債券追蹤殖利率而非漲跌
     </div>
     <div class="card">
-      <h2>每月淨資產走勢<span class="tag">NET ASSET · MONTHLY</span></h2>
+      <h2>每月淨資產走勢<span class="tag hide-sm">NET ASSET · MONTHLY</span>
+        <span class="rangesel" id="trendRange" role="group" aria-label="走勢期間">
+          <button data-r="3M">3M</button><button data-r="6M">6M</button><button data-r="1Y">1Y</button><button data-r="ALL">全部</button>
+        </span></h2>
       <div class="chartbox tall"><canvas id="lineTrend"></canvas></div>
     </div>
     <div class="grid2" style="margin-bottom:14px">
@@ -403,6 +429,17 @@
 </div>
 
 <!-- ===== Sheet sync setting modal ===== -->
+<div class="ov" id="ovImport">
+  <div class="modal" style="max-width:420px">
+    <h3 id="imp_title">以備份覆蓋目前資料？</h3>
+    <div class="msub" id="imp_sub"></div>
+    <div id="imp_msg" style="font-size:12.5px;line-height:1.8;color:var(--ink2);margin-bottom:16px"></div>
+    <div class="modal-actions" id="imp_actions">
+      <button class="btn" onclick="closeImport()">取消</button>
+      <button class="btn primary" id="imp_ok" onclick="applyImport()">確定覆蓋</button>
+    </div>
+  </div>
+</div>
 <div class="ov" id="ovSync">
   <div class="modal" style="max-width:460px">
     <h3>連線 Google Sheet</h3>
@@ -435,10 +472,13 @@ const URL_KEY='portfolio_sheetUrl';   // 獨立存，不跟主資料混在一起
 let store=loadStore();
 let data=store.live, dca=store.dca, archives=store.archives;
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
-let sheetUrl=localStorage.getItem(URL_KEY)||store.sheetUrl||'';
+let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
+sheetUrl=sheetUrl||store.sheetUrl||'';
 let notes=store.notes||'';   // 操作策略筆記
 CAL=store.cal; YIELD=store.yield;
 let filter='全部', editIdx=-1, mode='add', tab='hold', charts={};
+let trendRange='6M';
+try{const r=localStorage.getItem('trendRange');if(r)trendRange=r;}catch(e){}
 let viewKey='live';            // 'live' or an archive label
 let dcaEditIdx=-1;
 let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
@@ -542,7 +582,9 @@ function renderKPI(){
 function renderMeta(){
   const arr=curData(),t=totals(arr),fxRow=arr.find(r=>(r.fx||1)>1.5);
   document.getElementById('meta').innerHTML=
-    `檢視 <b>${isLive()?'即時':fmtLabel(viewKey)}</b>　美金匯率 <b>${fxRow?fxRow.fx.toFixed(3):'—'}</b><br>持倉檔數 <b>${arr.length}</b>　淨資產 <b>${fmt(t.total)}</b>`;
+    `<span class="mi">美金匯率<b>${fxRow?fxRow.fx.toFixed(3):'—'}</b></span>`+
+    `<span class="mi">持倉<b>${arr.length}</b>檔</span>`+
+    `<span class="mi main">淨資產<b>${fmt(t.total)}</b></span>`;
 }
 function renderDCA(){
   document.getElementById('dca').innerHTML=dca.map((p,idx)=>{
@@ -590,7 +632,7 @@ function setFilter(c){filter=c;renderTable();renderFilter();}
 function renderTable(){
   const arr=curData(),t=totals(arr);
   if(!arr.length){
-    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上「⬆ 匯入」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
+    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上角「⬆ 匯入」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
     document.getElementById('hcount').textContent='0 檔';
     document.getElementById('hfoot').innerHTML='';
     return;
@@ -845,21 +887,57 @@ function renderCharts(){
   const t0=dates[0].getTime();
   const ms=86400000;
   const trendPts=sortKeys.map((k,i)=>({x:Math.round((dates[i].getTime()-t0)/ms),y:pts[k],lbl:k==='__now'?'現在':fmtDate(dates[i])}));
-  // build x-tick map: day offset → display label
-  const tickMap={};
-  trendPts.forEach(p=>tickMap[p.x]=p.lbl);
-  const tickVals=trendPts.map(p=>p.x);
-  charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:trendPts.map(p=>({x:p.x,y:p.y})),
+  // 期間切換：3M / 6M / 1Y / 全部。期間比現有資料長時，就從第一筆開始顯示
+  const firstD=dates[0], lastD=dates[dates.length-1];
+  const RANGE_M={'3M':3,'6M':6,'1Y':12};
+  if(!(trendRange in RANGE_M)&&trendRange!=='ALL')trendRange='6M';
+  const cutoffOf=r=>{if(!RANGE_M[r])return null;const c=new Date(lastD);c.setMonth(c.getMonth()-RANGE_M[r]);return c;};
+  document.querySelectorAll('#trendRange button').forEach(b=>{
+    const r=b.dataset.r, on=r===trendRange; b.disabled=false; b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+    const c=cutoffOf(r); b.title=c&&c<=firstD?'資料還不滿這個期間，目前顯示全部':'';
+  });
+  let cut=cutoffOf(trendRange)||firstD; if(cut<firstD)cut=firstD;
+  const xMin=Math.round((cut.getTime()-t0)/ms), xMax=trendPts[trendPts.length-1].x;
+  // 可見範圍內的點；另外帶上範圍前一個點，讓線從左緣自然延伸進來（超出部分由 Chart.js 裁掉）
+  let startIdx=trendPts.findIndex(p=>p.x>=xMin); if(startIdx<0)startIdx=trendPts.length-1;
+  const drawFrom=Math.max(startIdx-1,0);
+  const vPts=trendPts.slice(drawFrom), vKeys=sortKeys.slice(drawFrom), lead=startIdx-drawFrom;
+
+  // X 軸刻度與資料點脫鉤：只在每月 1 號放刻度，精確日期交給 tooltip
+  // 跨度變長時自動拉大間隔（1 / 2 / 3 / 6 個月），並對齊到 1、4、7、10 月等整齊位置
+  const spanMonths=(lastD.getFullYear()-cut.getFullYear())*12+lastD.getMonth()-cut.getMonth();
+  const mStep=spanMonths<=12?1:spanMonths<=24?2:spanMonths<=48?3:6;
+  const tickMap={}, tickVals=[];
+  for(let d=new Date(cut.getFullYear(),cut.getMonth(),1);d<=lastD;d=new Date(d.getFullYear(),d.getMonth()+1,1)){
+    const off=Math.round((d.getTime()-t0)/ms);
+    if(off<xMin||(d.getFullYear()*12+d.getMonth())%mStep!==0)continue;
+    const withYear=tickVals.length===0||d.getMonth()===0;   // 第一個刻度與每年 1 月才標年份
+    tickMap[off]=withYear?`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`:`${d.getMonth()+1}月`;
+    tickVals.push(off);
+  }
+  if(!tickVals.length){ // 範圍內不滿一個月時，退回標起訖兩點
+    [vPts[lead],vPts[vPts.length-1]].forEach(p=>{if(!(p.x in tickMap)){tickMap[p.x]=p.lbl;tickVals.push(p.x);}});
+  }
+  // 點的大小依可見範圍的平均間距自動調整；「現在」與範圍內最高、最低點永遠保留
+  const inView=vPts.slice(lead), ys=inView.map(p=>p.y);
+  const keyIdx=new Set([vKeys.indexOf('__now'),lead+ys.indexOf(Math.max(...ys)),lead+ys.indexOf(Math.min(...ys))]);
+  const baseRadius=chart=>{
+    const w=chart.chartArea?chart.chartArea.width:chart.width;
+    const gap=w/Math.max(inView.length-1,1);
+    return gap>=36?4:gap>=18?2.5:0;
+  };
+  charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:vPts.map(p=>({x:p.x,y:p.y})),
     borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
-    pointBackgroundColor:sortKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),pointRadius:5,borderWidth:2,
-    pointHoverRadius:7}]},
-    options:{...base,plugins:{legend:{display:false},
+    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),borderWidth:2,
+    pointRadius:ctx=>keyIdx.has(ctx.dataIndex)?5:baseRadius(ctx.chart),pointHoverRadius:6,pointHitRadius:8}]},
+    options:{...base,animation:{duration:300},interaction:{mode:'nearest',axis:'x',intersect:false},plugins:{legend:{display:false},
       tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
         label:c=>' '+fmt(c.parsed.y)+' TWD'}}},
       scales:{
-        x:{type:'linear',min:tickVals[0],max:tickVals[tickVals.length-1],
+        x:{type:'linear',min:xMin,max:xMax,
           afterBuildTicks:axis=>{axis.ticks=tickVals.map(v=>({value:v}));},
-          ticks:{color:'#9aa3b5',font:{size:10},autoSkip:false,maxRotation:45,minRotation:45,
+          ticks:{color:'#9aa3b5',font:{size:10},autoSkip:false,maxRotation:0,minRotation:0,
             callback:v=>tickMap[v]||''},grid:{display:false}},
         y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
 
@@ -1249,6 +1327,7 @@ async function syncPrices(){
   }
 }
 document.getElementById('ovSync').addEventListener('click',e=>{if(e.target.id==='ovSync')closeSync();});
+document.getElementById('ovImport').addEventListener('click',e=>{if(e.target.id==='ovImport')closeImport();});
 
 /* ===== 備份 / 匯入 / Excel 匯出 ===== */
 function download(blob,name){
@@ -1263,26 +1342,49 @@ function exportJSON(){
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
 }
+// 匯入流程改用頁內對話框：瀏覽器的 confirm()/alert() 在部分環境（預覽框、內嵌 WebView、
+// 使用者勾選過「不要再顯示對話框」）會被直接略過並回傳 false，導致匯入默默取消
+let pendingImport=null;
 function importJSON(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
+    input.value='';   // 先清掉，同一個檔案可以重選
     try{
       const o=JSON.parse(e.target.result);
       if(!o.live||!Array.isArray(o.live))throw new Error('檔案格式不符（缺 live 持倉）');
+      pendingImport=o;
       const archN=o.archives?Object.keys(o.archives).length:0;
-      if(!confirm(`將以備份覆蓋目前資料：\n持倉 ${o.live.length} 筆、歷史快照 ${archN} 個、DCA ${o.dca?o.dca.length:0} 檔。\n\n目前裝置上的資料會被取代，確定嗎？`)){input.value='';return;}
-      data=o.live; dca=o.dca||[]; archives=o.archives||{};
-      CAL=o.cal||[]; YIELD=o.yield||[];
-      if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
-      if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
-      renderNotes();
-      viewKey='live';save();switchView('live');
-      alert('匯入完成。');
-    }catch(err){alert('匯入失敗：'+err.message);}
-    input.value='';
+      showImport('以備份覆蓋目前資料？',file.name,
+        `持倉 <b>${o.live.length}</b> 筆、歷史快照 <b>${archN}</b> 個、DCA <b>${o.dca?o.dca.length:0}</b> 檔。<br>目前裝置上的資料會被取代。`,true);
+    }catch(err){pendingImport=null;showImport('匯入失敗',file.name,err.message,false);}
   };
+  reader.onerror=()=>showImport('匯入失敗',file.name,'無法讀取檔案',false);
   reader.readAsText(file);
+}
+function showImport(title,sub,msg,canApply){
+  document.getElementById('imp_title').textContent=title;
+  document.getElementById('imp_sub').textContent=sub;
+  document.getElementById('imp_msg').innerHTML=msg;
+  document.getElementById('imp_ok').style.display=canApply?'':'none';
+  document.getElementById('ovImport').classList.add('show');
+}
+function closeImport(){pendingImport=null;document.getElementById('ovImport').classList.remove('show');}
+function applyImport(){
+  const o=pendingImport;if(!o)return closeImport();
+  closeImport();
+  try{
+    data=o.live; dca=o.dca||[]; archives=o.archives||{};
+    CAL=o.cal||[]; YIELD=o.yield||[];
+    if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
+    if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
+    save();
+    renderNotes();
+    switchView('live');
+    const btn=document.getElementById('importBtn');
+    btn.textContent='✓ 已匯入';btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='⬆ 匯入';btn.classList.remove('done');},2500);
+  }catch(err){showImport('匯入失敗','',err.message,false);}
 }
 
 function exportXLSX(){
@@ -1340,6 +1442,11 @@ function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFil
 render();
 renderNotes();
 // 還原策略地圖收合狀態（預設收合）
+document.getElementById('trendRange').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.dataset.r===trendRange)return;
+  trendRange=b.dataset.r;try{localStorage.setItem('trendRange',trendRange);}catch(err){}
+  renderCharts();
+});
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='STRATEGY ▾ 收合';}}}catch(e){}
 // 頁面載入後自動更新股價（如已設定 Sheet 網址）
 if(sheetUrl){
