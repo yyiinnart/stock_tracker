@@ -29,7 +29,8 @@
   .ctrlbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
   .ctrl-sep{width:1px;height:18px;background:var(--line)}
   .iobar{display:flex;gap:6px}
-  .iobar .mini-btn{height:32px;padding:0 12px;border-radius:8px}
+  .iobar .mini-btn,.ctrl-btn{height:32px;padding:0 12px;border-radius:8px}
+  .ctrlbar .viewsel+.ctrl-btn{margin-left:-6px}
   .meta{display:flex;gap:18px;justify-content:flex-end;flex-wrap:wrap;align-items:baseline}
   .meta .mi{display:flex;align-items:baseline;gap:6px;color:var(--ink3);font-family:var(--sans);font-size:11px;letter-spacing:.5px}
   .meta .mi b{font-family:var(--mono);font-size:12.5px;color:var(--ink2);font-weight:600;letter-spacing:0}
@@ -187,6 +188,43 @@
   .modal-actions{display:flex;gap:10px;margin-top:8px}
   .modal-actions .btn{flex:1;justify-content:center;text-align:center;padding:10px}
   .btn.danger{color:var(--loss);border-color:rgba(255,92,92,.3)}
+  /* 快照管理 */
+  .snap-modal{max-width:520px;display:flex;flex-direction:column;padding:22px 22px 18px}
+  .snap-tools{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .snap-tools .hint{margin:0 0 0 auto}
+  .snap-confirm{display:none;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(212,175,55,.08);
+    border:1px solid rgba(212,175,55,.3);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--gold);margin-bottom:12px}
+  .snap-confirm.show{display:flex}
+  .snap-confirm span{flex:1;min-width:180px}
+  .snap-list{overflow:auto;max-height:52vh;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+  .snap-mon{display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:11px;color:var(--ink2);
+    background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1;cursor:pointer;letter-spacing:.5px}
+  .snap-mon b{font-family:var(--mono);color:var(--ink);font-size:12px}
+  .snap-mon .cnt{margin-left:auto;color:var(--ink3)}
+  .snap-row{display:grid;grid-template-columns:18px 1fr auto 84px;align-items:center;gap:10px;padding:8px 12px;
+    border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--mono);font-size:12px}
+  .snap-row:last-child{border-bottom:none}
+  .snap-row:hover{background:rgba(79,140,255,.06)}
+  .snap-row.sel{background:rgba(255,92,92,.07)}
+  .snap-row.sel .sd{color:var(--ink3);text-decoration:line-through}
+  .snap-row .sv{color:var(--ink2);text-align:right}
+  .snap-row .sdiff{text-align:right;font-size:11px}
+  .snap-tag{font-family:var(--sans);font-size:9.5px;color:var(--gold);border:1px solid rgba(212,175,55,.35);
+    border-radius:5px;padding:1px 5px;margin-left:6px;letter-spacing:.5px}
+  .snap-tag.cur{color:var(--accent);border-color:rgba(79,140,255,.4)}
+  .snap-list input[type=checkbox]{accent-color:var(--loss);width:14px;height:14px;cursor:pointer;margin:0}
+  .snap-empty{padding:28px;text-align:center;color:var(--ink3);font-size:12px}
+  .snap-foot{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .snap-foot .selcnt{font-size:12px;color:var(--ink2);margin-right:auto}
+  .snap-foot .selcnt b{font-family:var(--mono);color:var(--loss)}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px 10px 16px;
+    display:flex;align-items:center;gap:14px;font-size:12.5px;color:var(--ink);z-index:80;transition:.2s;
+    box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .toast button{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:7px;
+    font-size:11.5px;padding:5px 12px;cursor:pointer;font-family:var(--sans);font-weight:600}
+  @media(max-width:560px){.snap-row{grid-template-columns:18px 1fr auto;} .snap-row .sdiff{display:none}}
   .hint{font-size:10.5px;color:var(--ink3);margin-top:4px;font-family:var(--sans)}
   .preview{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:4px 0 16px;font-size:12px;font-family:var(--mono);line-height:1.9}
   .preview .pl{color:var(--ink2)} .preview .pv{color:var(--ink);font-weight:600;float:right}
@@ -221,6 +259,7 @@
       <div class="ctrlbar">
         <label class="viewsel"><span>檢視時點</span>
           <select id="viewSel" onchange="switchView(this.value)"></select></label>
+        <button class="mini-btn ctrl-btn" onclick="openSnap()" title="批次整理歷史快照">🗂 快照</button>
         <span class="ctrl-sep" aria-hidden="true"></span>
         <div class="iobar">
           <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
@@ -429,6 +468,28 @@
 </div>
 
 <!-- ===== Sheet sync setting modal ===== -->
+<div class="ov" id="ovSnap">
+  <div class="modal snap-modal">
+    <h3>快照管理</h3>
+    <div class="msub" id="snap_sub"></div>
+    <div class="snap-tools">
+      <button class="btn" id="snap_thin" onclick="askThin()">每月只留最後一筆</button>
+      <div class="hint">本月的快照不會被整理</div>
+    </div>
+    <div class="snap-confirm" id="snap_confirm">
+      <span id="snap_confirm_msg"></span>
+      <button class="mini-btn" onclick="cancelThin()">取消</button>
+      <button class="mini-btn" style="border-color:var(--gold);color:var(--gold)" onclick="doThin()">整理</button>
+    </div>
+    <div class="snap-list" id="snap_list"></div>
+    <div class="snap-foot">
+      <div class="selcnt" id="snap_selcnt"></div>
+      <button class="btn" onclick="closeSnap()">關閉</button>
+      <button class="btn danger" id="snap_del" onclick="deleteSelected()">刪除所選</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><span id="toast_msg"></span><button id="toast_undo">復原</button></div>
 <div class="ov" id="ovImport">
   <div class="modal" style="max-width:420px">
     <h3 id="imp_title">以備份覆蓋目前資料？</h3>
@@ -556,13 +617,100 @@ function archiveNow(){
 }
 function deleteSnapshot(){
   if(isLive()){alert('「即時」不是快照，無法刪除。請先從下拉切到要刪的歷史時點。');return;}
-  const lbl=viewKey;
-  if(!confirm(`確定刪除快照 ${fmtLabel(lbl)}？此動作無法復原（走勢圖的該點也會移除）。`))return;
-  delete archives[lbl];
-  save();
-  viewKey='live';switchView('live');
-  alert(`已刪除 ${fmtLabel(lbl)}。`);
+  removeSnapshots([viewKey]);
 }
+
+/* ===== 快照管理：批次勾選刪除 + 每月只留最後一筆 ===== */
+let snapSel=new Set();
+const monthOf=l=>/^\d{6}$/.test(l)?'20'+l.slice(0,2)+'/'+l.slice(2,4):'其他';
+const thisMonth=()=>{const d=new Date();return d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0');};
+function snapGroups(){ // 依月份分組，新的月份在上、月內由舊到新
+  const g={};archLabels().forEach(l=>{(g[monthOf(l)]=g[monthOf(l)]||[]).push(l);});
+  return Object.keys(g).sort((a,b)=>a==='其他'?1:b==='其他'?-1:b.localeCompare(a)).map(m=>({m,labels:g[m].sort()}));
+}
+function thinCandidates(){ // 過去月份中，除最後一筆以外的快照；本月與非日期標籤不動
+  const out=[];
+  snapGroups().forEach(({m,labels})=>{if(m==='其他'||m>=thisMonth())return;out.push(...labels.slice(0,-1));});
+  return out;
+}
+function openSnap(){snapSel=new Set();cancelThin();renderSnap();document.getElementById('ovSnap').classList.add('show');}
+function closeSnap(){document.getElementById('ovSnap').classList.remove('show');}
+function renderSnap(){
+  const all=archLabels(), groups=snapGroups();
+  document.getElementById('snap_sub').textContent=`共 ${all.length} 筆快照　·　${groups.length} 個月份`;
+  const list=document.getElementById('snap_list');
+  if(!all.length){list.innerHTML='<div class="snap-empty">目前沒有快照。按「📸 歸檔本月」建立第一筆。</div>';}
+  else{
+    const tot={};all.forEach(l=>tot[l]=totals(archives[l]).total);
+    list.innerHTML=groups.map(({m,labels})=>{
+      const selN=labels.filter(l=>snapSel.has(l)).length;
+      const head=`<div class="snap-mon" data-m="${m}"><input type="checkbox" ${selN===labels.length?'checked':''} data-mall="${m}" aria-label="全選 ${m}">
+        <b>${m}</b>${m===thisMonth()?'<span class="snap-tag cur">本月</span>':''}<span class="cnt">${labels.length} 筆</span></div>`;
+      const rows=labels.slice().reverse().map(l=>{
+        const i=all.indexOf(l), prev=i>0?tot[all[i-1]]:null, d=prev==null?null:tot[l]-prev;
+        const last=l===labels[labels.length-1]&&m!=='其他'&&m<thisMonth();   // 本月還沒結束，不標月末
+        const diff=d==null?'<span style="color:var(--ink3)">—</span>':`<span class="${d>=0?'pos':'neg'}">${d>=0?'+':''}${fmt(d)}</span>`;
+        return `<label class="snap-row${snapSel.has(l)?' sel':''}"><input type="checkbox" data-l="${l}" ${snapSel.has(l)?'checked':''}>
+          <span class="sd">${fmtLabel(l)}${last?'<span class="snap-tag">月末</span>':''}</span>
+          <span class="sv">${fmt(tot[l])}</span><span class="sdiff">${diff}</span></label>`;
+      }).join('');
+      return head+rows;
+    }).join('');
+    // 月份勾選框的「部分選取」狀態
+    groups.forEach(({m,labels})=>{const n=labels.filter(l=>snapSel.has(l)).length;
+      const cb=list.querySelector(`[data-mall="${CSS.escape(m)}"]`);if(cb)cb.indeterminate=n>0&&n<labels.length;});
+  }
+  const n=snapSel.size;
+  document.getElementById('snap_selcnt').innerHTML=n?`已選 <b>${n}</b> 筆`:'勾選要刪除的快照';
+  document.getElementById('snap_del').disabled=!n;
+  document.getElementById('snap_del').style.opacity=n?'':'.4';
+  const c=thinCandidates().length, tb=document.getElementById('snap_thin');
+  tb.disabled=!c;tb.style.opacity=c?'':'.4';tb.title=c?'':'過去每個月都只剩一筆了';
+}
+document.getElementById('snap_list').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.l){t.checked?snapSel.add(t.dataset.l):snapSel.delete(t.dataset.l);}
+  else if(t.dataset.mall){const g=snapGroups().find(x=>x.m===t.dataset.mall);
+    if(g)g.labels.forEach(l=>t.checked?snapSel.add(l):snapSel.delete(l));}
+  renderSnap();
+});
+document.getElementById('snap_list').addEventListener('click',e=>{ // 點月份標題列＝切換整月
+  const h=e.target.closest('.snap-mon');if(!h||e.target.tagName==='INPUT')return;
+  const cb=h.querySelector('input');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change',{bubbles:true}));
+});
+function askThin(){
+  const c=thinCandidates();if(!c.length)return;
+  const months=new Set(c.map(monthOf)).size;
+  document.getElementById('snap_confirm_msg').textContent=`將刪除 ${months} 個月份中的 ${c.length} 筆，每月保留最後一筆。`;
+  document.getElementById('snap_confirm').classList.add('show');
+}
+function cancelThin(){document.getElementById('snap_confirm').classList.remove('show');}
+function doThin(){cancelThin();removeSnapshots(thinCandidates());}
+function deleteSelected(){if(snapSel.size)removeSnapshots([...snapSel]);}
+
+// 實際刪除：先留一份在記憶體，提示條上可以復原
+let undoBuf=null, toastTimer=null;
+function removeSnapshots(labels){
+  labels=labels.filter(l=>archives[l]);if(!labels.length)return;
+  undoBuf={};labels.forEach(l=>{undoBuf[l]=archives[l];delete archives[l];snapSel.delete(l);});
+  save();afterSnapChange(labels.includes(viewKey));
+  showToast(`已刪除 ${labels.length} 筆快照`,undoSnapshots);
+}
+function undoSnapshots(){
+  if(!undoBuf)return;Object.assign(archives,undoBuf);const n=Object.keys(undoBuf).length;undoBuf=null;
+  save();afterSnapChange(false);showToast(`已復原 ${n} 筆快照`,null);
+}
+function afterSnapChange(leaveView){
+  if(leaveView)switchView('live');else{renderViewSel();if(tab==='analy')renderCharts();}
+  if(document.getElementById('ovSnap').classList.contains('show'))renderSnap();
+}
+function showToast(msg,onUndo){
+  const t=document.getElementById('toast'),b=document.getElementById('toast_undo');
+  document.getElementById('toast_msg').textContent=msg;
+  b.style.display=onUndo?'':'none';b.onclick=()=>{hideToast();onUndo&&onUndo();};
+  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(hideToast,onUndo?8000:2500);
+}
+function hideToast(){document.getElementById('toast').classList.remove('show');clearTimeout(toastTimer);}
 
 /* ===== renderers ===== */
 function renderKPI(){
@@ -1328,6 +1476,7 @@ async function syncPrices(){
 }
 document.getElementById('ovSync').addEventListener('click',e=>{if(e.target.id==='ovSync')closeSync();});
 document.getElementById('ovImport').addEventListener('click',e=>{if(e.target.id==='ovImport')closeImport();});
+document.getElementById('ovSnap').addEventListener('click',e=>{if(e.target.id==='ovSnap')closeSnap();});
 
 /* ===== 備份 / 匯入 / Excel 匯出 ===== */
 function download(blob,name){
