@@ -57,6 +57,19 @@
   .histbanner{background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);border-radius:10px;
     padding:10px 14px;font-size:12px;color:var(--gold);margin-bottom:16px;display:none;align-items:center;gap:10px}
   .histbanner.show{display:flex}
+  /* 備份提醒 */
+  .bkremind{height:32px;background:var(--panel);border:1px solid var(--line);color:var(--ink2);font-family:var(--sans);
+    font-size:11px;border-radius:8px;padding:0 8px;cursor:pointer}
+  .bkremind:hover{border-color:var(--accent);color:#fff}
+  .bkremind:focus{outline:none;border-color:var(--accent)}
+  .bkbanner{background:rgba(255,92,92,.07);border:1px solid rgba(255,92,92,.32);border-radius:10px;
+    padding:10px 14px;font-size:12px;color:#ffb0b0;margin-bottom:16px;display:none;align-items:center;gap:10px;flex-wrap:wrap}
+  .bkbanner.show{display:flex}
+  .bkbanner b{color:#ffd0d0}
+  .bkbanner .bk-acts{margin-left:auto;display:flex;gap:8px}
+  .bkbanner button{border:none;font-weight:600;font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:var(--sans)}
+  .bkbanner .bk-now{background:var(--loss);color:#1a1a1a}
+  .bkbanner .bk-later{background:transparent;color:var(--ink2);border:1px solid var(--line)}
   .histbanner b{color:#f0d77a}
   .histbanner button{margin-left:auto;background:var(--gold);border:none;color:#1a1a1a;font-weight:600;
     font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:var(--sans)}
@@ -263,6 +276,14 @@
         <span class="ctrl-sep" aria-hidden="true"></span>
         <div class="iobar">
           <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
+          <select class="bkremind" id="bkRemindSel" onchange="setRemindDays(this.value)" aria-label="備份提醒天數">
+            <option value="7">⏰ 7 天</option>
+            <option value="14">⏰ 14 天</option>
+            <option value="30">⏰ 30 天</option>
+            <option value="45">⏰ 45 天</option>
+            <option value="60">⏰ 60 天</option>
+            <option value="0">⏰ 不提醒</option>
+          </select>
           <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">⬆ 匯入</button>
           <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">⬇ Excel</button>
           <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
@@ -276,6 +297,14 @@
       <button class="on" onclick="setTab('hold')">持倉</button>
       <button onclick="setTab('analy')">分析</button>
     </div>
+  </div>
+
+  <div class="bkbanner" id="bkBanner">
+    <span id="bkMsg"></span>
+    <span class="bk-acts">
+      <button class="bk-later" onclick="snoozeBackup()">今天先不要</button>
+      <button class="bk-now" onclick="exportJSON()">⬇ 立即備份</button>
+    </span>
   </div>
 
   <div class="histbanner" id="histBanner">
@@ -612,7 +641,8 @@ function archiveNow(){
   }
   archives[lbl]=clone(data);
   save();renderViewSel();
-  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。`);
+  exportJSON();   // 歸檔時順便自動下載一份完整備份
+  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。\n\n已同時下載完整備份檔（資產備份_${stamp()}.json）。`);
   if(tab==='analy')renderCharts();
 }
 function deleteSnapshot(){
@@ -1487,9 +1517,61 @@ function stamp(){const d=new Date();return d.getFullYear()+
   String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
 
 function exportJSON(){
-  const payload={v:3,exportedAt:new Date().toISOString(),live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes};
+  const now=new Date().toISOString();
+  const payload={v:3,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
+  markBackedUp(now);
+}
+
+/* ===== 備份提醒：超過設定天數沒備份就在頁首提示（天數可在右上 ⏰ 選單調整） ===== */
+const REMIND_KEY='portfolio_backupRemindDays';   // 提醒天數（每台裝置各自設定）
+const REMIND_DEFAULT=30;                     // 預設 30 天；0 = 不提醒
+function remindDays(){
+  try{const v=localStorage.getItem(REMIND_KEY);if(v!==null&&v!==''&&!isNaN(+v))return +v;}catch(e){}
+  return REMIND_DEFAULT;
+}
+function setRemindDays(v){
+  try{localStorage.setItem(REMIND_KEY,String(+v));}catch(e){}
+  checkBackupReminder();
+  showToast(+v?`備份提醒：超過 ${+v} 天未備份時提示`:'已關閉備份提醒',null);
+}
+function renderRemindSel(){
+  const sel=document.getElementById('bkRemindSel');if(!sel)return;
+  const d=remindDays();
+  if(![...sel.options].some(o=>+o.value===d)){   // 舊設定不在選單裡時補一個選項
+    const o=document.createElement('option');o.value=d;o.textContent=`⏰ ${d} 天`;sel.appendChild(o);
+  }
+  sel.value=String(d);
+  let last='';try{last=localStorage.getItem(LASTBK_KEY)||'';}catch(e){}
+  const t=last?new Date(last):null;
+  sel.title='超過幾天沒備份就在頁首提醒'+(t&&!isNaN(t)?`\n上次備份：${t.toLocaleString()}`:'\n這台裝置還沒有備份紀錄');
+}
+const LASTBK_KEY='portfolio_lastBackup';     // 上次備份時間（ISO 字串）
+const SNOOZE_KEY='portfolio_backupSnooze';   // 「今天先不要」的日期
+function markBackedUp(iso){
+  try{localStorage.setItem(LASTBK_KEY,iso||new Date().toISOString());}catch(e){}
+  checkBackupReminder();
+}
+function snoozeBackup(){
+  try{localStorage.setItem(SNOOZE_KEY,stamp());}catch(e){}
+  document.getElementById('bkBanner').classList.remove('show');
+}
+function checkBackupReminder(){
+  renderRemindSel();
+  const el=document.getElementById('bkBanner');if(!el)return;
+  const limit=remindDays();
+  let last='',snooze='';
+  try{last=localStorage.getItem(LASTBK_KEY)||'';snooze=localStorage.getItem(SNOOZE_KEY)||'';}catch(e){}
+  const hasData=data.length||dca.length||Object.keys(archives).length||CAL.length||YIELD.length||notes;
+  if(!limit||!hasData||snooze===stamp()){el.classList.remove('show');return;}
+  const t=last?Date.parse(last):NaN;
+  const days=isNaN(t)?null:Math.floor((Date.now()-t)/86400000);
+  if(days!==null&&days<limit){el.classList.remove('show');return;}
+  document.getElementById('bkMsg').innerHTML=days===null
+    ? '⚠ 這台裝置上還沒有備份紀錄。資料只存在瀏覽器裡，清除瀏覽資料就會消失。'
+    : `⚠ 已經 <b>${days}</b> 天沒有備份了。資料只存在瀏覽器裡，建議下載一份備份檔。`;
+  el.classList.add('show');
 }
 // 匯入流程改用頁內對話框：瀏覽器的 confirm()/alert() 在部分環境（預覽框、內嵌 WebView、
 // 使用者勾選過「不要再顯示對話框」）會被直接略過並回傳 false，導致匯入默默取消
@@ -1528,6 +1610,7 @@ function applyImport(){
     if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
     if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
     save();
+    markBackedUp(o.exportedAt||new Date().toISOString());   // 剛匯入的檔案本身就是一份備份
     renderNotes();
     switchView('live');
     const btn=document.getElementById('importBtn');
@@ -1590,6 +1673,7 @@ function saveNotes(force){
 function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy')renderCharts();}
 render();
 renderNotes();
+checkBackupReminder();
 // 還原策略地圖收合狀態（預設收合）
 document.getElementById('trendRange').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.dataset.r===trendRange)return;
