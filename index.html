@@ -385,7 +385,7 @@
         <tbody id="ybody"></tbody>
       </table>
       </div>
-      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點殖利率會開啟「年配息」輸入框（建議填近 12 個月實配），輸入後殖利率自動重算。⚙ 可設定策略板塊、編輯或刪除標的。</div>
+      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。⚙ 可設定策略板塊、編輯或刪除標的。</div>
     </div>
     <div class="card">
       <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
@@ -983,7 +983,7 @@ function renderYield(){
     const sub=auto?`<div class="yld-sub">年配 ${y.d} ÷ 價 ${y.p}</div>`:'';
     return `<tr>
     <td class="l"><span class="code">${y.c}</span><div class="nm">${y.n}</div></td>
-    <td class="hide-sm">${(y.d!=null&&y.d!=='')?y.d:'—'}</td><td class="hide-sm">${(y.p!=null&&y.p!=='')?y.p:'—'}</td><td class="hide-sm">${cv!=null?cv:'—'}</td>
+    <td class="hide-sm" id="yd${i}"><span class="yld-cell" onclick="editDivCell(${i})" title="點一下修改年配息"${(y.d!=null&&y.d!=='')?'':' style="color:var(--ink3)"'}>${(y.d!=null&&y.d!=='')?y.d:'—'}</span></td><td class="hide-sm">${(y.p!=null&&y.p!=='')?y.p:'—'}</td><td class="hide-sm">${cv!=null?cv:'—'}</td>
     <td id="yc${i}">${yldCell}${sub}</td>
     <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
     <td><button class="mini-btn x" onclick="openYieldEdit(${i})" title="編輯／刪除">⚙</button></td>
@@ -1010,6 +1010,15 @@ function setYield(i,val){
   YIELD[i].y=v===''?null:(isNaN(parseFloat(v))?YIELD[i].y:parseFloat(v)/100);   // 介面用百分比，內部存小數
   if(YIELD[i].y!==before)YIELD[i].yUp=curMonth();   // 有實際變動才蓋本月戳記
   save();renderYield();
+}
+function editDivCell(i){
+  const cell=document.getElementById('yd'+i);if(!cell)return;
+  const y=YIELD[i];
+  cell.innerHTML=`<input class="yld-edit" type="number" step="any" value="${y.d??''}" placeholder="元" title="輸入年配息（元），殖利率會用股價自動計算">`;
+  const inp=cell.querySelector('input');inp.focus();inp.select();
+  const commit=()=>setDiv(i,inp.value);
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.removeEventListener('blur',commit);renderYield();}});
 }
 function setDiv(i,val){
   const v=String(val).trim(),o=YIELD[i],before=o.d;
