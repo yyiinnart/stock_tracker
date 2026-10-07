@@ -645,8 +645,7 @@ function archiveNow(){
   }
   archives[lbl]=clone(data);
   save();renderViewSel();
-  exportJSON();   // 歸檔時順便自動下載一份完整備份
-  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。\n\n已同時下載完整備份檔（資產備份_${stamp()}.json）。`);
+  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。`);
   if(tab==='analy')renderCharts();
 }
 function deleteSnapshot(){
