@@ -328,6 +328,11 @@
       <div class="dca-list" id="dca"></div>
     </div>
 
+    <div class="card" id="recurringCard">
+      <h2>固定收支與貸款自動更新<span class="tag">RECURRING</span><span class="act"><button class="mini-btn" onclick="openRecurring()">＋ 新增規則</button></span></h2>
+      <div class="hint" style="margin-bottom:10px">依每月指定日期自動記帳，僅更新已設定的持倉餘額。貸款以「每期減少本金」更新，避免把利息當本金。請避免與銀行餘額手動同步重複計入。</div>
+      <div id="recurringList"></div>
+    </div>
     <div class="card">
       <h2>持倉明細<span class="tag" id="hcount"></span>
       </h2>
@@ -390,6 +395,14 @@
     <div class="card">
       <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
       <div id="stratMap" style="display:none"></div>
+    </div>
+    <div class="card">
+      <h2>交給 AI 分析<span class="tag">AI EXPORT · OFFLINE</span></h2>
+      <div class="hint" style="margin-bottom:12px">在本機整理分析資料，不直接連接外部 AI。確認內容後可複製到 AI 聊天室，或下載文字檔；不包含 Google Sheet 連線網址。</div>
+      <div class="fg"><label>想請 AI 著重分析什麼？</label><input id="aiQuestion" placeholder="例如：分析資產配置、貸款壓力、每月現金流和再平衡建議" value="分析資產配置、集中風險、負債、每月固定收支及改善建議" oninput="scheduleAiPreview()"></div>
+      <label style="font-size:12px"><input id="aiIncludeHistory" type="checkbox" checked onchange="refreshAiPreview()"> 包含歷史快照（月末摘要，不含逐筆個資）</label>
+      <textarea id="aiOutput" class="notepad" style="margin-top:10px;min-height:220px;font-family:var(--mono);font-size:11px" readonly></textarea>
+      <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
     <div class="card">
       <h2>操作策略筆記<span class="tag">NOTES</span>
@@ -464,6 +477,19 @@
   </div>
 </div>
 
+<!-- ===== Recurring transaction setting ===== -->
+<div class="ov" id="ovRecurring"><div class="modal" style="max-width:460px">
+  <h3 id="recTitle">新增固定收支規則</h3>
+  <div class="msub">每月到期後，自動套用至指定現金或貸款部位；支援暫停與補登。</div>
+  <div class="fg"><label>規則名稱</label><input id="recName" placeholder="例：信貸每月償還本金"></div>
+  <div class="fg"><label>計算類型</label><select id="recType" onchange="updateRecHelp()"><option value="loan">貸款本金減少</option><option value="expense">現金支出（餘額減少）</option><option value="income">現金收入（餘額增加）</option></select></div>
+  <div class="fg"><label>更新哪個持倉？</label><select id="recCode"></select><div class="hint" id="recHelp"></div></div>
+  <div class="frow"><div class="fg"><label id="recAmountLabel">每月減少本金 (TWD)</label><input id="recAmount" type="number" step="0.01" min="0" placeholder="例：5000"></div><div class="fg"><label>每月日期</label><input id="recDay" type="number" min="1" max="31" value="5"></div></div>
+  <div class="fg"><label>開始月份</label><input id="recStart" type="month"></div>
+  <div class="fg"><label><input type="checkbox" id="recEnabled" checked> 啟用自動記帳</label></div>
+  <div class="hint" style="margin-bottom:14px">每月沒有指定日期時取月底；第一次建立時從開始月份計算。建議從尚未手動記錄的月份開始，以免重複扣款。</div>
+  <div class="modal-actions"><button class="btn danger" id="recDelete" onclick="deleteRecurring()">刪除</button><button class="btn" onclick="closeRecurring()">取消</button><button class="btn primary" onclick="saveRecurring()">儲存</button></div>
+</div></div>
 <!-- ===== DCA setting modal ===== -->
 <div class="ov" id="ovDca">
   <div class="modal" style="max-width:380px">
@@ -565,6 +591,7 @@ const KEY='portfolioDemo_v3';
 const URL_KEY='portfolio_sheetUrl';   // 獨立存，不跟主資料混在一起
 let store=loadStore();
 let data=store.live, dca=store.dca, archives=store.archives;
+let recurring=store.recurring||[];
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
 sheetUrl=sheetUrl||store.sheetUrl||'';
@@ -579,16 +606,24 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||''};}}catch(e){}
-  return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:''};
+    return {live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
+  return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:'',recurring:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
-function save(){
+// 合併同一段時間內的多次寫入，避免大型歷史快照反覆 JSON.stringify 卡住主執行緒。
+let saveTimer=null, saveDirty=false;
+function persistNow(){
+  clearTimeout(saveTimer);saveTimer=null;
+  if(!saveDirty)return;
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes}));
-    if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);   // 獨立備份網址
-  }catch(e){}
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring}));
+    if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);
+    saveDirty=false;
+  }catch(e){console.error('資料儲存失敗',e);showToast?.('儲存失敗：請先匯出備份，確認瀏覽器儲存空間',null);}
 }
+function save(){saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);}
+window.addEventListener('pagehide',persistNow);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistNow();});
 const curMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
 const upThisMonth=r=>r&&r.lastUp===curMonth();
 
@@ -1191,7 +1226,7 @@ function setTab(t){tab=t;
   document.querySelectorAll('.tabs button').forEach((b,i)=>b.classList.toggle('on',(i===0)===(t==='hold')));
   document.getElementById('page-hold').classList.toggle('on',t==='hold');
   document.getElementById('page-analy').classList.toggle('on',t==='analy');
-  if(t==='analy')renderCharts();
+  if(t==='analy'){refreshAiPreview();if(typeof Chart!=='undefined')renderCharts();}
 }
 
 /* 點一下就自動全選，免拖曳（用 click 取代 focusin，避免每次鍵盤聚焦/自動完成都排 setTimeout 造成卡頓） */
@@ -1565,8 +1600,9 @@ function stamp(){const d=new Date();return d.getFullYear()+
   String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
 
 function exportJSON(){
+  persistNow();
   const now=new Date().toISOString();
-  const payload={v:3,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes};
+  const payload={v:4,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
   markBackedUp(now);
@@ -1654,10 +1690,10 @@ function applyImport(){
   closeImport();
   try{
     data=o.live; dca=o.dca||[]; archives=o.archives||{};
-    CAL=o.cal||[]; YIELD=o.yield||[];
+    CAL=o.cal||[]; YIELD=o.yield||[]; recurring=Array.isArray(o.recurring)?o.recurring:[];
     if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
     if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
-    save();
+    applyDueRecurring();save();
     markBackedUp(o.exportedAt||new Date().toISOString());   // 剛匯入的檔案本身就是一份備份
     renderNotes();
     switchView('live');
@@ -1698,6 +1734,117 @@ function exportXLSX(){
   XLSX.writeFile(wb,`資產追蹤_${stamp()}.xlsx`);
 }
 
+
+/* ===== 固定收支與貸款 ===== */
+let recurringEdit=-1;
+function monthNext(m){const [y,n]=m.split('-').map(Number);return n===12?`${y+1}-01`:`${y}-${String(n+1).padStart(2,'0')}`;}
+function dueDate(m,day){const [y,n]=m.split('-').map(Number);return `${m}-${String(Math.min(day,new Date(y,n,0).getDate())).padStart(2,'0')}`;}
+function localToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function recurringDue(r){
+  if(!r.enabled||!r.start||!(r.amount>0))return [];
+  const today=localToday(),out=[];let m=r.start;
+  // 每條規則每次最多處理 240 期，防範損壞資料造成死迴圈。
+  for(let i=0;i<240&&m<=today.slice(0,7);i++,m=monthNext(m)){
+    if(dueDate(m,r.day)>today)continue;
+    if(!(r.applied||[]).includes(m))out.push(m);
+  }
+  return out;
+}
+function applyDueRecurring(){
+  let count=0;
+  recurring.forEach(r=>{
+    const target=data.find(x=>x.code===r.code&&x.cls===(r.type==='loan'?'貸款':'現金'));
+    if(!target)return;
+    const pending=recurringDue(r);
+    for(const month of pending){
+      const current=Number(target.shares)||0;
+      let next;
+      if(r.type==='loan')next=Math.min(0,current+Number(r.amount));
+      else next=current+(r.type==='income'?1:-1)*Number(r.amount);
+      // loan 已完全清償時也登記為已處理，避免每次載入又觸發。
+      target.shares=next;target.prin=next;target.price=1;target.avg=1;target.fx=1;
+      r.applied=r.applied||[];r.applied.push(month);count++;
+    }
+  });
+  if(count)save();
+  return count;
+}
+function renderRecurring(){
+  const el=document.getElementById('recurringList');if(!el)return;
+  el.replaceChildren();
+  if(!isLive()){el.textContent='歷史快照為唯讀，固定規則只更新即時持倉。';return;}
+  if(!recurring.length){el.innerHTML='<div class="hint">尚未設定固定收支規則。新增後，頁面開啟時會自動補記已到期的月份。</div>';return;}
+  recurring.forEach((r,i)=>{
+    const row=document.createElement('div');row.className='dca-row';row.style.flexWrap='wrap';
+    const name=document.createElement('span');name.className='dr-code';name.style.flex='1';name.textContent=r.name||r.code;
+    const detail=document.createElement('span');detail.className='dr-amt';detail.style.minWidth='220px';detail.textContent=`${r.code} · ${r.type==='loan'?'減少本金':r.type==='income'?'收入':'支出'} ${fmt(r.amount)} /月 · ${r.day}日`;
+    const status=document.createElement('span');status.className='dr-hold';status.textContent=`${r.enabled?'執行中':'已暫停'} · 已記 ${r.applied?.length||0} 期${data.some(x=>x.code===r.code)?'':' · 找不到對應持倉'}`;
+    const btn=document.createElement('button');btn.className='mini-btn';btn.textContent='⚙ 編輯';btn.onclick=()=>openRecurring(i);
+    row.append(name,detail,status,btn);el.appendChild(row);
+  });
+}
+function updateRecHelp(){
+  const type=document.getElementById('recType').value;
+  document.getElementById('recAmountLabel').textContent=type==='loan'?'每月減少本金 (TWD)':'每月金額 (TWD)';
+  document.getElementById('recHelp').textContent=type==='loan'?'選擇「貸款」部位；輸入純本金減少額，繳款中的利息不納入此數字。':'選擇「現金」部位；應使用不會另外手動覆蓋餘額的專用帳戶，以免重複計算。';
+  const sel=document.getElementById('recCode'),old=sel.value;sel.replaceChildren();
+  data.filter(x=>x.cls===(type==='loan'?'貸款':'現金')).forEach(x=>{const o=document.createElement('option');o.value=x.code;o.textContent=`${x.code} · ${x.name}`;sel.append(o);});
+  if([...sel.options].some(x=>x.value===old))sel.value=old;
+}
+function openRecurring(i=-1){
+  recurringEdit=i;const r=i<0?{name:'',type:'loan',code:'',amount:'',day:5,start:curMonth(),enabled:true}:{...recurring[i]};
+  document.getElementById('recTitle').textContent=i<0?'新增固定收支規則':'編輯固定收支規則';
+  document.getElementById('recName').value=r.name;
+  document.getElementById('recType').value=r.type;updateRecHelp();
+  document.getElementById('recCode').value=r.code;
+  document.getElementById('recAmount').value=r.amount;
+  document.getElementById('recDay').value=r.day;
+  document.getElementById('recStart').value=r.start;
+  document.getElementById('recEnabled').checked=r.enabled!==false;
+  document.getElementById('recDelete').style.display=i<0?'none':'';
+  document.getElementById('ovRecurring').classList.add('show');
+}
+function closeRecurring(){document.getElementById('ovRecurring').classList.remove('show');}
+function saveRecurring(){
+  const v=id=>document.getElementById(id).value;
+  const amt=Number(v('recAmount')),day=Number(v('recDay'));
+  if(!v('recCode')||!v('recStart')||!Number.isFinite(amt)||amt<=0||!Number.isInteger(day)||day<1||day>31){alert('請確認持倉、開始月份、正確金額及扣款日（1～31）');return;}
+  const prev=recurringEdit>=0?recurring[recurringEdit]:null;
+  const r={id:prev?.id||`rec_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,name:v('recName').trim()||v('recCode'),type:v('recType'),code:v('recCode'),amount:amt,day,start:v('recStart'),enabled:document.getElementById('recEnabled').checked,applied:prev?.applied||[]};
+  if(prev&&(prev.code!==r.code||prev.type!==r.type||prev.start!==r.start)){
+    if(!confirm('更換持倉、類型或開始月份，舊期數紀錄會保留以防重複扣款。確定儲存？'))return;
+  }
+  if(recurringEdit<0)recurring.push(r);else recurring[recurringEdit]=r;
+  const count=applyDueRecurring();save();closeRecurring();render();
+  showToast(count?`已自動補記 ${count} 筆到期收支`:'規則已儲存',null);
+}
+function deleteRecurring(){
+  if(recurringEdit<0||!confirm('刪除這條規則？已入帳的餘額不會自動回復，請自行校正。'))return;
+  recurring.splice(recurringEdit,1);save();closeRecurring();render();
+}
+document.getElementById('ovRecurring').addEventListener('click',e=>{if(e.target.id==='ovRecurring')closeRecurring();});
+
+/* ===== AI 分析資料：全程在本機產生，不外送 ===== */
+let aiPreviewTimer=null;
+function scheduleAiPreview(){clearTimeout(aiPreviewTimer);aiPreviewTimer=setTimeout(refreshAiPreview,350);}
+function makeAiReport(){
+  const t=totals(data),question=document.getElementById('aiQuestion').value.trim();
+  const monthly=recurring.filter(x=>x.enabled).map(x=>({名稱:x.name,類型:x.type,持倉:x.code,金額_TWD:x.amount,每月日期:x.day,開始月份:x.start,已記帳月份:x.applied?.slice(-6)||[]}));
+  const positions=data.map(x=>({代碼:x.code,名稱:x.name,類別:x.cls,數量:x.shares,幣別匯率:x.fx,目前價格:x.price,市值_TWD:mv(x),本金_TWD:x.prin??null,未實現損益_TWD:pnl(x),權重百分比:t.total?+(mv(x)/t.total*100).toFixed(2):null}));
+  const content={資料日期:localToday(),淨資產_TWD:t.total,投資本金_TWD:t.prin,未實現損益_TWD:t.pl,持倉:positions,定期定額:dca,每月固定收支:monthly,殖利率追蹤:YIELD.map(x=>({代碼:x.c,名稱:x.n,年配息:x.d,價格:x.p,殖利率:x.y})),備註:notes};
+  if(document.getElementById('aiIncludeHistory').checked){
+    const monthlyLast={};Object.keys(archives).sort().forEach(k=>{const m=/^\d{6}$/.test(k)?`20${k.slice(0,2)}-${k.slice(2,4)}`:k.slice(0,7);monthlyLast[m]={快照日期:fmtLabel(k),淨資產_TWD:totals(archives[k]).total};});
+    content.歷史月末淨資產=Object.values(monthlyLast);
+  }
+  return `你是一位審慎的個人財務分析助理。請使用以下資料分析：${question||'資產配置與風險'}。\n請區分已知數據與假設，列出資產配置、集中度、負債壓力、固定現金流風險與可執行建議。請勿將市場變動誤認為投資報酬，也不要假設未提供的利率、薪資或交易紀錄。貸款規則的金額為每期減少本金，非一定等於實際還款總額。資料可能包含敏感財務資訊。\n\n${JSON.stringify(content,null,2)}`;
+}
+function refreshAiPreview(){const el=document.getElementById('aiOutput');if(el)el.value=makeAiReport();}
+async function copyAiReport(){
+  const v=makeAiReport();
+  try{await navigator.clipboard.writeText(v);showToast('分析資料已複製，可以貼給 AI',null);}catch(e){document.getElementById('aiOutput').value=v;document.getElementById('aiOutput').select();showToast('無法使用剪貼簿，請按 Ctrl+C 複製選取文字',null);}
+}
+function downloadAiReport(){download(new Blob([makeAiReport()],{type:'text/plain;charset=utf-8'}),`AI財務分析_${stamp()}.txt`);}
+
 /* ===== 操作策略筆記 ===== */
 let noteTimer=null;
 function renderNotes(){const na=document.getElementById('noteArea');if(na)na.value=notes;}
@@ -1718,7 +1865,9 @@ function saveNotes(force){
     st.classList.add('saved');}
 }
 
-function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy')renderCharts();}
+let chartRenderTimer=null;
+function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderRecurring();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy'){clearTimeout(chartRenderTimer);chartRenderTimer=setTimeout(()=>{refreshAiPreview();if(typeof Chart!=='undefined')renderCharts();},110);}}
+applyDueRecurring();
 render();
 renderNotes();
 checkBackupReminder();
