@@ -483,8 +483,9 @@
   <div class="msub">每月到期後，自動套用至指定現金或貸款部位；支援暫停與補登。</div>
   <div class="fg"><label>規則名稱</label><input id="recName" placeholder="例：信貸每月償還本金"></div>
   <div class="fg"><label>計算類型</label><select id="recType" onchange="updateRecHelp()"><option value="loan">貸款本金減少</option><option value="expense">現金支出（餘額減少）</option><option value="income">現金收入（餘額增加）</option></select></div>
-  <div class="fg"><label>更新哪個持倉？</label><select id="recCode"></select><div class="hint" id="recHelp"></div></div>
-  <div class="frow"><div class="fg"><label id="recAmountLabel">每月減少本金 (TWD)</label><input id="recAmount" type="number" step="0.01" min="0" placeholder="例：5000"></div><div class="fg"><label>每月日期</label><input id="recDay" type="number" min="1" max="31" value="5"></div></div>
+  <div class="fg"><label>更新哪個持倉？</label><select id="recCode" onchange="updateRecPreview()"></select><div class="hint" id="recHelp"></div></div>
+  <div class="frow"><div class="fg"><label id="recAmountLabel">每月償還本金 (TWD)</label><input id="recAmount" type="number" step="0.01" min="0" placeholder="例：5000" oninput="updateRecPreview()"></div><div class="fg"><label>每月日期</label><input id="recDay" type="number" min="1" max="31" value="5"></div></div>
+  <div id="recLoanPreview" class="preview" style="display:none;float:none" aria-live="polite"></div>
   <div class="fg"><label>開始月份</label><input id="recStart" type="month"></div>
   <div class="fg"><label><input type="checkbox" id="recEnabled" checked> 啟用自動記帳</label></div>
   <div class="hint" style="margin-bottom:14px">每月沒有指定日期時取月底；第一次建立時從開始月份計算。建議從尚未手動記錄的月份開始，以免重複扣款。</div>
@@ -870,7 +871,7 @@ function renderTable(){
       <td class="hide-sm"><span class="chip c-${r.cls}">${r.cls}</span></td>
       <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.shares?r.shares.toLocaleString(undefined,{maximumFractionDigits:4}):'—')}</td>
       <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.price!=null?r.price.toLocaleString():'—')}</td>
-      <td>${fmt(m)}</td>
+      <td>${r.cls==='貸款'?`<span title="欠款顯示為正數，計算淨資產時仍為負債">${fmt(Math.abs(m))}<span class="nm" style="display:block">剩餘欠款</span></span>`:fmt(m)}</td>
       <td>${pct(w)}<span class="wt-bar" style="width:${wbar}px"></span></td>
       <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':(r.avg?r.avg.toLocaleString(undefined,{maximumFractionDigits:2}):'—')}</td>
       <td class="hide-sm">${(r.cls==='現金'||r.cls==='貸款')?'—':fmt(r.prin)}</td>
@@ -1393,9 +1394,10 @@ function prev(){
     const isLoan=r.cls==='貸款';
     const raw=parseFloat(document.getElementById('a_cash').value);
     const newBal=isNaN(raw)?r.shares:(isLoan?-Math.abs(raw):raw);
-    const lbl=isLoan?'貸款餘額':'現金餘額';
-    const showOld=isLoan?-Math.abs(r.shares||0):r.shares;
-    pv.innerHTML=`<span class="pl">${lbl}</span><span class="pv">${fmt(showOld)} <span class="arrow">→</span> ${fmt(newBal)} TWD</span>`;
+    const lbl=isLoan?'剩餘欠款':'現金餘額';
+    const showOld=isLoan?Math.abs(r.shares||0):r.shares;
+    const showNew=isLoan?Math.abs(newBal):newBal;
+    pv.innerHTML=`<span class="pl">${lbl}</span><span class="pv">${fmt(showOld)} <span class="arrow">→</span> ${fmt(showNew)} TWD</span>`;
     return;
   }
   const addSh=parseFloat(document.getElementById('a_shares').value)||0;
@@ -1777,7 +1779,7 @@ function renderRecurring(){
   recurring.forEach((r,i)=>{
     const row=document.createElement('div');row.className='dca-row';row.style.flexWrap='wrap';
     const name=document.createElement('span');name.className='dr-code';name.style.flex='1';name.textContent=r.name||r.code;
-    const detail=document.createElement('span');detail.className='dr-amt';detail.style.minWidth='220px';detail.textContent=`${r.code} · ${r.type==='loan'?'減少本金':r.type==='income'?'收入':'支出'} ${fmt(r.amount)} /月 · ${r.day}日`;
+    const detail=document.createElement('span');detail.className='dr-amt';detail.style.minWidth='220px';detail.textContent=`${r.code} · ${r.type==='loan'?'償還本金':r.type==='income'?'收入':'支出'} ${fmt(r.amount)} /月 · ${r.day}日`;
     const status=document.createElement('span');status.className='dr-hold';status.textContent=`${r.enabled?'執行中':'已暫停'} · 已記 ${r.applied?.length||0} 期${data.some(x=>x.code===r.code)?'':' · 找不到對應持倉'}`;
     const btn=document.createElement('button');btn.className='mini-btn';btn.textContent='⚙ 編輯';btn.onclick=()=>openRecurring(i);
     row.append(name,detail,status,btn);el.appendChild(row);
@@ -1785,19 +1787,42 @@ function renderRecurring(){
 }
 function updateRecHelp(){
   const type=document.getElementById('recType').value;
-  document.getElementById('recAmountLabel').textContent=type==='loan'?'每月減少本金 (TWD)':'每月金額 (TWD)';
-  document.getElementById('recHelp').textContent=type==='loan'?'選擇「貸款」部位；輸入純本金減少額，繳款中的利息不納入此數字。':'選擇「現金」部位；應使用不會另外手動覆蓋餘額的專用帳戶，以免重複計算。';
+  document.getElementById('recAmountLabel').textContent=type==='loan'?'每月償還本金 (TWD)':'每月金額 (TWD)';
+  document.getElementById('recHelp').textContent=type==='loan'?'選擇「貸款」部位；填入正數代表每月償還的本金，欠款會逐漸接近 0。利息不計入償還本金。':'選擇「現金」部位；應使用不會另外手動覆蓋餘額的專用帳戶，以免重複計算。';
   const sel=document.getElementById('recCode'),old=sel.value;sel.replaceChildren();
   data.filter(x=>x.cls===(type==='loan'?'貸款':'現金')).forEach(x=>{const o=document.createElement('option');o.value=x.code;o.textContent=`${x.code} · ${x.name}`;sel.append(o);});
   if([...sel.options].some(x=>x.value===old))sel.value=old;
+  updateRecPreview();
+}
+function updateRecPreview(){
+  const el=document.getElementById('recLoanPreview');if(!el)return;
+  if(document.getElementById('recType').value!=='loan'){el.style.display='none';return;}
+  el.style.display='block';
+  const code=document.getElementById('recCode').value;
+  const target=data.find(x=>x.code===code&&x.cls==='貸款');
+  const amount=Number(document.getElementById('recAmount').value);
+  if(!target){el.textContent='請先選擇貸款持倉，才能預覽償還效果。';return;}
+  const debt=Math.abs(Number(target.shares)||0);
+  const paid=Number.isFinite(amount)&&amount>0?Math.min(debt,amount):0;
+  const after=Math.max(0,debt-paid);
+  el.replaceChildren();
+  const top=document.createElement('div');top.className='pl';top.textContent='還款效果預覽（只顯示，尚未入帳）';
+  const nums=document.createElement('div');nums.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0';
+  const before=document.createElement('span');before.textContent=`目前欠款  ${fmt(debt)} 元`;
+  const arrow=document.createElement('span');arrow.className='arrow';arrow.textContent='→';
+  const next=document.createElement('span');next.textContent=`還款後  ${fmt(after)} 元`;
+  nums.append(before,arrow,next);
+  const msg=document.createElement('div');msg.style.color='var(--gain)';msg.textContent=paid>0?`✓ 欠款減少 ${fmt(paid)} 元（朝 0 靠近）`:'請輸入每月償還本金（正數）';
+  el.append(top,nums,msg);
 }
 function openRecurring(i=-1){
   recurringEdit=i;const r=i<0?{name:'',type:'loan',code:'',amount:'',day:5,start:curMonth(),enabled:true}:{...recurring[i]};
   document.getElementById('recTitle').textContent=i<0?'新增固定收支規則':'編輯固定收支規則';
   document.getElementById('recName').value=r.name;
   document.getElementById('recType').value=r.type;updateRecHelp();
-  document.getElementById('recCode').value=r.code;
+  if(r.code&&[...document.getElementById('recCode').options].some(o=>o.value===r.code))document.getElementById('recCode').value=r.code;
   document.getElementById('recAmount').value=r.amount;
+  updateRecPreview();
   document.getElementById('recDay').value=r.day;
   document.getElementById('recStart').value=r.start;
   document.getElementById('recEnabled').checked=r.enabled!==false;
