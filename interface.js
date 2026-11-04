@@ -104,3 +104,30 @@ const archiveBeforeUI=archiveNow;archiveNow=function(){archiveBeforeUI();if(tab=
 document.querySelectorAll('.tag').forEach(el=>{if(!el.id&&/^[A-Z\s·/&]+$/.test(el.textContent.trim()))el.remove();});
 renderKPI();renderTable();renderSettings();setTab('hold');
 if(!cloudAvailable())cloudStatus('僅此裝置 · 未啟用同步');
+
+// Static deployments: probe the manifest without cache, then let the user reload safely.
+const runningAppVersion=document.querySelector('meta[name="app-version"]')?.content||'';
+let availableAppVersion='',appUpdateChecking=false,lastAppUpdateCheck=0;
+function updateAppMessage(message){document.getElementById('appUpdateStatus').textContent=message;}
+async function checkAppUpdate(manual=false){
+ if(appUpdateChecking)return;
+ if(cloudAvailable()){updateAppMessage('私人版需先在 Google 更新部署版本，再重新開啟私人網址。');return;}
+ if(!/^https?:$/.test(location.protocol)){updateAppMessage('本機檔案請更新專案後重新開啟；GitHub 網頁版可線上檢查更新。');return;}
+ appUpdateChecking=true;lastAppUpdateCheck=Date.now();const button=document.getElementById('checkUpdateBtn');button.disabled=true;if(manual)updateAppMessage('正在檢查…');
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+ try{const url=new URL('version.json',location.href);url.searchParams.set('_check',Date.now());const response=await fetch(url,{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('版本資訊尚未發布');const manifest=await response.json();if(!/^[a-f0-9]{16}$/.test(manifest.version))throw Error('版本資訊格式錯誤');
+ availableAppVersion=manifest.version;const changed=availableAppVersion!==runningAppVersion;document.getElementById('reloadUpdateBtn').hidden=!changed;updateAppMessage(changed?'發現新版。完成目前編輯後，可保存資料並重新載入。':'目前已是最新版本。');
+ let banner=document.getElementById('appUpdateBanner');if(changed&&!banner){banner=document.createElement('div');banner.id='appUpdateBanner';banner.className='histbanner show';banner.setAttribute('role','status');banner.innerHTML='<span>程式有新版可用；資料會保留。</span><button class="btn" onclick="focusSetting(\'updatePanel\')">查看更新</button>';document.querySelector('.app-nav').after(banner);}else if(!changed)banner?.remove();
+ }catch(e){if(manual)updateAppMessage('無法檢查更新，請確認網路與網站部署後重試。現有資料不受影響。');}
+ finally{clearTimeout(timer);appUpdateChecking=false;button.disabled=false;}
+}
+function reloadAppUpdate(){
+ if(!availableAppVersion||availableAppVersion===runningAppVersion)return;
+ if(document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open){updateAppMessage('請先儲存或關閉目前的編輯視窗，再更新。');return;}
+ if(typeof cloudBusy!=='undefined'&&cloudBusy){updateAppMessage('資料正在同步，請完成後再更新。');return;}
+ saveNotes(true);saveDirty=true;persistNow();if(saveDirty){updateAppMessage('本機資料未能保存，已停止重新載入。請先下載備份。');return;}
+ const url=new URL(location.href);url.searchParams.set('_app',availableAppVersion);url.searchParams.set('_refresh',Date.now());location.replace(url.href);
+}
+document.getElementById('appVersionLabel').textContent='目前程式版本：'+(runningAppVersion||'開發版本');
+setTimeout(()=>checkAppUpdate(),2500);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastAppUpdateCheck>300000)checkAppUpdate();});

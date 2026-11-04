@@ -43,3 +43,13 @@
 Google 私人部署授權與兩台真實裝置的連線仍需部署後驗證。
 
 執行 `node build-cloud.cjs` 會同時更新 `apps-script/Index.html` 與設定頁使用的 `setup-assets.js`。兩者只含程式，不含持倉。修改介面後須重新產生，再更新 Google 部署版本；GitHub 推送本身不會更新私人版。
+
+## GitHub 網頁更新與快取
+
+「設定 → 程式更新」可查看版本、檢查更新及保存後重新載入。網頁開啟與返回頁面（間隔至少 5 分鐘）會以不使用快取的方式查詢 version.json；有新版只顯示提示，不自動打斷編輯。重新載入前保存筆記與本機資料，若儲存失敗就停止。載入網址增加版本與時間參數，CSS／JS 使用內容雜湊版本，保留同來源 localStorage 資料。
+
+`node build-cloud.cjs` 同時產生檔案版本、version.json、私人版與設定頁部署檔。若手動從分支發布，修改程式後必須先執行此命令並提交產物。
+
+已提供 `.github/workflows/pages.yml`：要自動建置發布，請在 GitHub 倉庫 Settings → Pages → Build and deployment → Source 選 GitHub Actions。之後推送 main 會自動產生版本並只發布網頁必要檔案；不會發布備份、測試或工作資料。此設定仍需在 GitHub 啟用，本次未更動線上設定。
+
+第一次從不具更新功能的舊版升級，需要在發布完成後手動強制重新整理一次。Google 私人版不使用 GitHub 的版本檢查，須另外更新 Apps Script 部署。

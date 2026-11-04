@@ -101,3 +101,4 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
  .app-nav{background:#101522;border-top-color:#566174}.app-nav button{font-size:13px}.app-nav button[aria-current=page]{background:#2b2118;border-top-color:var(--accent);color:#ffb866}.card,.kpis{border-radius:5px}.kpi:first-child{border-bottom:1px solid var(--line)}.kpi:nth-child(2){border-left:0}.kpi:first-child .val{font-size:30px}.kpi .val{font-size:19px}.kpi .lbl{font-size:13px}.sync-entry #cloudState{font-size:12px}.position-name small{font-size:12px}.price-main{font-size:19px}.holding-context>span{max-width:57%}.comparison-controls .btn{font-size:13px}.subnav{gap:6px}.subnav button{padding:8px;font-size:13px}#htable .cell-label{font-size:12px}.setup-actions .btn{font-size:14px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+[hidden]{display:none!important}

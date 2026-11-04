@@ -29,6 +29,17 @@ await page.evaluate(()=>{switchView('261101');setTab('plans');});assert.equal(aw
 // The generated Apps Script page must also run without any relative assets.
 const hosted=await context.newPage();hosted.on('pageerror',e=>errors.push(e.message));await hosted.goto(url+'/apps-script/Index.html');await hosted.locator('.position-name').first().waitFor();await hosted.close();
 assert.deepEqual(errors,[]);console.log('PASS: comparison, mobile layout, add preview, audit, quote-safe undo, backup/import/reload');
+// A stale page sees a fresh manifest; reload preserves data and changes the document URL.
+await page.evaluate(()=>setTab('settings'));
+await page.evaluate(()=>checkAppUpdate(true));assert.match(await page.locator('#appUpdateStatus').innerText(),/最新版本/);assert.equal(await page.locator('#reloadUpdateBtn').isVisible(),false);
+await page.route('**/version.json?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({version:'0123456789abcdef'})}));
+await page.evaluate(()=>checkAppUpdate(true));assert.equal(await page.locator('#reloadUpdateBtn').isVisible(),true);assert.equal(await page.locator('#appUpdateBanner').count(),1);
+await page.evaluate(()=>{notes='update preservation';save();});
+await Promise.all([page.waitForURL('**_app=0123456789abcdef*'),page.locator('#reloadUpdateBtn').click()]);
+assert.equal(await page.evaluate(()=>data[0].shares),900);assert.ok(await page.evaluate(()=>audit.length>=3));
+// A failed probe must not expose a destructive fallback or clear local data.
+await page.route('**/version.json?*',route=>route.abort());await page.evaluate(()=>checkAppUpdate(true));assert.match(await page.locator('#appUpdateStatus').innerText(),/無法檢查/);assert.equal(await page.evaluate(()=>data[0].shares),900);
+console.log('PASS: current/stale/offline version checks, cache-busting reload and data preservation');
 // Two isolated devices call the real client transport against an in-memory CAS server.
 let remote={revision:0,payload:null,updatedAt:null};
 async function device(seed){const c=await browser.newContext();await c.route('https://**/*',r=>r.abort());await c.exposeBinding('testCloud',(_,method,args)=>{if(method==='readPortfolio')return JSON.parse(JSON.stringify(remote));if(args[0]!==remote.revision)return {...remote,conflict:true};remote={revision:remote.revision+1,payload:args[1],updatedAt:new Date().toISOString()};return {revision:remote.revision,updatedAt:remote.updatedAt};});await c.addInitScript(seed=>{localStorage.setItem('portfolioDemo_v3',JSON.stringify(seed));function runner(ok=()=>{},fail=()=>{}){return new Proxy({withSuccessHandler:f=>runner(f,fail),withFailureHandler:f=>runner(ok,f)},{get:(o,k)=>o[k]||((...args)=>window.testCloud(k,args).then(ok,fail))});}window.google={script:{run:runner()}};},seed);const p=await c.newPage();p.on('dialog',d=>d.accept());p.on('pageerror',e=>errors.push(e.message));await p.goto(url);return p;}
