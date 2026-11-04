@@ -265,54 +265,33 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
+<link rel="stylesheet" href="interface.css">
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>資產追蹤儀表板<span class="sub">PORTFOLIO MONITOR · DEMO</span></h1>
-    <div class="hdr-right">
-      <div class="meta" id="meta"></div>
-      <div class="ctrlbar">
-        <label class="viewsel"><span>檢視時點</span>
-          <select id="viewSel" onchange="switchView(this.value)"></select></label>
-        <button class="mini-btn ctrl-btn" onclick="openSnap()" title="批次整理歷史快照">🗂 快照</button>
-        <span class="ctrl-sep" aria-hidden="true"></span>
-        <div class="iobar">
-          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
-          <select class="bkremind" id="bkRemindSel" onchange="setRemindDays(this.value)" aria-label="備份提醒天數">
-            <option value="7">⏰ 7 天</option>
-            <option value="14">⏰ 14 天</option>
-            <option value="30">⏰ 30 天</option>
-            <option value="45">⏰ 45 天</option>
-            <option value="60">⏰ 60 天</option>
-            <option value="0">⏰ 不提醒</option>
-          </select>
-          <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">⬆ 匯入</button>
-          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">⬇ Excel</button>
-          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
-        </div>
-      </div>
-    </div>
+  <header class="app-header">
+    <div><p class="brand">資產追蹤</p><h1 id="pageTitle">我的持倉</h1></div>
+    <button class="sync-entry" onclick="openCloud()" aria-label="跨裝置同步設定"><span id="cloudState" role="status" aria-live="polite">僅此裝置</span><span class="sync-link">同步設定</span></button>
   </header>
-
-  <div class="topbar">
-    <div class="tabs">
-      <button class="on" onclick="setTab('hold')">持倉</button>
-      <button onclick="setTab('analy')">分析</button>
-    </div>
-  </div>
+  <nav class="app-nav" aria-label="主要功能">
+    <button data-page="hold" onclick="setTab('hold')" aria-current="page">持倉</button>
+    <button data-page="analy" onclick="setTab('analy')">比較分析</button>
+    <button data-page="records" onclick="setTab('records')">操作紀錄</button>
+    <button data-page="plans" onclick="setTab('plans')">投資計畫</button>
+    <button data-page="settings" onclick="setTab('settings')">設定</button>
+  </nav>
 
   <div class="bkbanner" id="bkBanner">
     <span id="bkMsg"></span>
     <span class="bk-acts">
       <button class="bk-later" onclick="snoozeBackup()">今天先不要</button>
-      <button class="bk-now" onclick="exportJSON()">⬇ 立即備份</button>
+      <button class="bk-now" onclick="exportJSON()">立即備份</button>
     </span>
   </div>
 
   <div class="histbanner" id="histBanner">
-    📅 正在檢視歷史快照 <b id="histLabel"></b>　此為當時凍結的資產配置（含當時股價），唯讀。
-    <button onclick="deleteSnapshot()" style="background:rgba(255,92,92,.85)">🗑 刪除此快照</button>
+     正在檢視歷史快照 <b id="histLabel"></b>　此為當時凍結的資產配置（含當時股價），唯讀。
+    <button onclick="deleteSnapshot()" style="background:rgba(255,92,92,.85)"> 刪除此快照</button>
     <button onclick="switchView('live')">回到即時</button>
   </div>
 
@@ -320,30 +299,16 @@
   <div class="page on" id="page-hold">
     <div class="kpis" id="kpis"></div>
 
-    <div class="card" id="dcaCard">
-      <div class="dca-head">
-        <h2 style="flex:1">定期定額快捷<span class="tag">DCA</span></h2>
-        <button class="mini-btn" onclick="openDCAEdit(-1)">＋ 設定標的</button>
-      </div>
-      <div class="dca-list" id="dca"></div>
-    </div>
-
-    <div class="card" id="recurringCard">
-      <h2>固定收支與貸款自動更新<span class="tag">RECURRING</span><span class="act"><button class="mini-btn" onclick="openRecurring()">＋ 新增規則</button></span></h2>
-      <div class="hint" style="margin-bottom:10px">依每月指定日期自動記帳，僅更新已設定的持倉餘額。貸款以「每期減少本金」更新，避免把利息當本金。請避免與銀行餘額手動同步重複計入。</div>
-      <div id="recurringList"></div>
-    </div>
-    <div class="card">
+    <div class="card holdings-card" id="holdingsCard">
       <h2>持倉明細<span class="tag" id="hcount"></span>
       </h2>
-      <div class="toolbar">
-        <button class="btn primary" onclick="openAdd()">＋ 新增部位</button>
-        <button class="btn gold" onclick="archiveNow()">📸 歸檔本月</button>
-        <button class="btn" onclick="syncPrices()" id="syncBtn">🔄 從 Sheet 更新股價</button>
-        <button class="btn" onclick="openSync()" id="syncCfgBtn" title="設定 Sheet 連線">⚙</button>
-        <button class="btn" onclick="toggleReorder()" id="reorderBtn" title="拖曳自訂持倉排列順序">⇅ 排序</button>
-        <div class="filt" id="filt"></div>
+      <div class="toolbar holding-actions">
+        <button class="btn primary" onclick="openAdd()" id="addPositionBtn">新增部位</button>
+        <button class="btn" onclick="syncPrices()" id="syncBtn">更新報價</button>
+        <details class="more-actions"><summary>更多</summary><div><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="toggleReorder()" id="reorderBtn">自訂排序</button></div></details>
       </div>
+      <div class="holding-context"><span id="quoteStamp"></span><button class="text-btn" onclick="openCompare()">完整價格比較</button></div>
+      <div class="filt" id="filt" aria-label="持倉類別"></div>
       <div class="tscroll">
       <table id="htable">
         <thead><tr>
@@ -360,29 +325,40 @@
 
   <!-- ===== 分析 PAGE ===== -->
   <div class="page" id="page-analy">
+    <div class="subnav" aria-label="分析分類"><button data-analysis="compare" onclick="showAnalysis('compare')">價格比較</button><button data-analysis="charts" onclick="showAnalysis('charts')">資產分析</button><button data-analysis="income" onclick="showAnalysis('income')">配息與筆記</button></div>
+    <section class="card" id="comparisonPanel"><h2>歷史價格比較</h2><p class="muted">比較原幣價格，不含配息或分割調整。</p>
+      <div class="comparison-controls"><label>比較快照<select id="compareDate" onchange="showCompare()"></select></label><label>篩選<select id="compareDirection" onchange="showCompare()"><option value="all">全部，依漲跌幅排序</option><option value="up">上漲</option><option value="down">下跌</option></select></label><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="openSnap()">管理快照</button></div>
+      <p id="compareEmpty" class="empty-note" hidden></p><div id="compareResults"></div>
+    </section>
+    <div id="analysisCharts"><div class="analysis-scope">        <label class="viewsel"><span>檢視時點</span>
+          <select id="viewSel" onchange="switchView(this.value)"></select></label>
+        <button class="mini-btn ctrl-btn" onclick="openSnap()" title="批次整理歷史快照">快照管理</button>
+<div id="meta" class="meta"></div></div>
+
     <div class="note-banner">
       正常波動區間：大盤回調 −10% 到 −20% 以內皆視為正常，禁止恐慌賣出　·　高股息與債券追蹤殖利率而非漲跌
     </div>
     <div class="card">
-      <h2>每月淨資產走勢<span class="tag hide-sm">NET ASSET · MONTHLY</span>
+      <h2>每月淨資產走勢
         <span class="rangesel" id="trendRange" role="group" aria-label="走勢期間">
           <button data-r="3M">3M</button><button data-r="6M">6M</button><button data-r="1Y">1Y</button><button data-r="ALL">全部</button>
         </span></h2>
       <div class="chartbox tall"><canvas id="lineTrend"></canvas></div>
     </div>
     <div class="grid2" style="margin-bottom:14px">
-      <div class="card"><h2>資產類別配置<span class="tag">BY CLASS</span></h2><div class="chartbox"><canvas id="pieClass"></canvas></div></div>
-      <div class="card"><h2>幣別配置<span class="tag">TWD / USD</span></h2><div class="chartbox"><canvas id="pieFx"></canvas></div></div>
+      <div class="card"><h2>資產類別配置</h2><div class="chartbox"><canvas id="pieClass"></canvas></div></div>
+      <div class="card"><h2>幣別配置</h2><div class="chartbox"><canvas id="pieFx"></canvas></div></div>
     </div>
     <div class="card">
       <h2>個股損益<span class="tag">P&amp;L · TWD</span></h2><div class="chartbox tall"><canvas id="barPnl"></canvas></div>
     </div>
+    </div><div id="analysisIncome">
     <div class="card">
-      <h2>配息行事曆<span class="tag">DIVIDEND CALENDAR</span></h2>
+      <h2>配息行事曆</h2>
       <div class="calmini" id="cal"></div>
     </div>
     <div class="card">
-      <h2>殖利率追蹤<span class="tag">YIELD</span>
+      <h2>殖利率追蹤
         <span class="act"><button class="mini-btn" onclick="openYieldEdit(-1)">＋ 增減標的</button></span></h2>
       <div class="tscroll">
       <table class="ytable">
@@ -393,11 +369,11 @@
       <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。⚙ 可設定策略板塊、編輯或刪除標的。</div>
     </div>
     <div class="card">
-      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
+      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">展開</span></h2>
       <div id="stratMap" style="display:none"></div>
     </div>
     <div class="card">
-      <h2>交給 AI 分析<span class="tag">AI EXPORT · OFFLINE</span></h2>
+      <h2>交給 AI 分析</h2>
       <div class="hint" style="margin-bottom:12px">在本機整理分析資料，不直接連接外部 AI。確認內容後可複製到 AI 聊天室，或下載文字檔；不包含 Google Sheet 連線網址。</div>
       <div class="fg"><label>想請 AI 著重分析什麼？</label><input id="aiQuestion" placeholder="例如：分析資產配置、貸款壓力、每月現金流和再平衡建議" value="分析資產配置、集中風險、負債、每月固定收支及改善建議" oninput="scheduleAiPreview()"></div>
       <label style="font-size:12px"><input id="aiIncludeHistory" type="checkbox" checked onchange="refreshAiPreview()"> 包含歷史快照（月末摘要，不含逐筆個資）</label>
@@ -405,12 +381,46 @@
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
     <div class="card">
-      <h2>操作策略筆記<span class="tag">NOTES</span>
+      <h2>操作策略筆記
         <span class="act"><span class="note-status" id="noteStatus"></span></span></h2>
       <textarea class="notepad" id="noteArea" placeholder="記錄你的操作策略、加減碼條件、觀察心得…&#10;例如：QQQ 跌破 $500 分三批進、0056 殖利率低於 5% 停止加碼。" oninput="noteChanged()" onblur="saveNotes(true)"></textarea>
-      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「⬇ 備份 / ⬆ 匯入」會一併包含筆記內容。</div>
+      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「下載備份 / 匯入備份」會一併包含筆記內容。</div>
     </div>
-  </div>
+  </div></div>
+  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><button class="btn" onclick="undoLastTrade()">撤銷最近一次操作</button></div><p class="muted">核對加減碼與編輯前後的數值。只撤銷最近一次操作，後續報價會保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
+  <section class="page" id="page-plans"><p class="page-intro">定期投資與每月收支集中管理。規則在開啟頁面時補記到期月份。</p>    <div class="card" id="dcaCard">
+      <div class="dca-head">
+        <h2 style="flex:1">定期定額快捷</h2>
+        <button class="mini-btn" onclick="openDCAEdit(-1)">＋ 設定標的</button>
+      </div>
+      <div class="dca-list" id="dca"></div>
+    </div>
+
+    <div class="card" id="recurringCard">
+      <h2>固定收支與貸款自動更新<span class="act"><button class="mini-btn" onclick="openRecurring()">＋ 新增規則</button></span></h2>
+      <div class="hint" style="margin-bottom:10px">依每月指定日期自動記帳，僅更新已設定的持倉餘額。貸款以「每期減少本金」更新，避免把利息當本金。請避免與銀行餘額手動同步重複計入。</div>
+      <div id="recurringList"></div>
+    </div>
+</section>
+  <section class="page" id="page-settings">
+    <nav class="settings-links" aria-label="設定分類"><button class="btn" onclick="focusSetting('cloudPanel')">跨裝置同步</button><button class="btn" onclick="focusSetting('quotePanel')">報價來源</button><button class="btn" onclick="focusSetting('backupPanel')">備份與還原</button></nav>
+    <section class="card setting-row" id="cloudPanel" tabindex="-1"><div><h2>跨裝置同步</h2><p class="muted">電腦與手機共用持倉、快照、筆記和操作紀錄。</p></div><div id="cloudSetupBody"></div></section>
+    <section class="card setting-row" id="quotePanel" tabindex="-1"><div><h2>報價來源</h2><p class="muted">從 Google Sheet 讀取股價與匯率。這項連線不會同步你的持倉。</p></div><div><p id="quoteConnectionState"></p><button class="btn" onclick="openSync()" id="syncCfgBtn">設定報價連線</button><p class="muted">設定後回到持倉頁，按「更新報價」。資料仍以來源提供的報價時間為準。</p></div></section>
+    <section class="card setting-row" id="backupPanel" tabindex="-1"><div><h2>備份與還原</h2><p class="muted">保存可還原的完整資料。JSON 包含快照和操作紀錄；Excel 用於檢視。</p></div><div>        <div class="iobar">
+          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">下載備份</button>
+          <select class="bkremind" id="bkRemindSel" onchange="setRemindDays(this.value)" aria-label="備份提醒天數">
+            <option value="7">7 天</option>
+            <option value="14">14 天</option>
+            <option value="30">30 天</option>
+            <option value="45">45 天</option>
+            <option value="60">60 天</option>
+            <option value="0">不提醒</option>
+          </select>
+          <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">匯入備份</button>
+          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">匯出 Excel</button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
+        </div><p class="muted">備份提醒天數只作用於此裝置。匯入會取代此裝置資料，請先保存備份。</p></div></section>
+  </section>
 </div>
 
 <!-- ===== Position modal ===== -->
@@ -563,12 +573,12 @@
 </div>
 <div class="ov" id="ovSync">
   <div class="modal" style="max-width:460px">
-    <h3>連線 Google Sheet</h3>
+    <h3>設定報價連線</h3>
     <div class="msub">單向讀取：只抓即時股價與匯率貼到本機部位，不會改你的 Sheet</div>
     <div class="fg">
       <label>Web App 網址（Apps Script 部署後取得）</label>
       <input id="s_url" placeholder="https://script.google.com/macros/s/..../exec">
-      <div class="hint">部署步驟見對話說明。貼一次就會記住。</div>
+      <div class="hint">貼上既有報價服務的網址。此處只讀取價格，不同步持倉。</div>
     </div>
     <div id="syncStatus" style="font-size:11.5px;font-family:var(--mono);color:var(--ink2);min-height:18px;margin-bottom:8px"></div>
     <div class="modal-actions">
@@ -583,7 +593,7 @@
 const ARCHIVE_SEED={};  // 歷史快照將從備份還原
 const TREND_SEED=[];  // 淨資產走勢種子，從備份還原（勿寫死真實金額）
 
-const SEED = [];  // 請用「⬆ 匯入」載入你的備份資料
+const SEED = [];  // 請用「匯入備份」載入你的備份資料
 const DCA_DEFAULT=[];  // 請在 DCA 快捷區自行設定
 let CAL=[];    // 配息行事曆，從備份還原
 let YIELD=[];  // 殖利率追蹤，從備份還原
@@ -597,6 +607,7 @@ let audit=Array.isArray(store.audit)?store.audit:[];
 if(!store.audit){try{const old=JSON.parse(localStorage.getItem('portfolio_audit_v1')||'[]');if(Array.isArray(old))audit=old;}catch(e){}}
 let cloudMeta=store.cloudMeta||{};
 let quoteUpdatedAt=store.quoteUpdatedAt||'';
+let modifiedAt=store.modifiedAt||'';
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
 sheetUrl=sheetUrl||store.sheetUrl||'';
@@ -611,7 +622,7 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
+    return {modifiedAt:o.modifiedAt,audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
   return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:'',recurring:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
@@ -621,12 +632,12 @@ function persistNow(){
   clearTimeout(saveTimer);saveTimer=null;
   if(!saveDirty)return;
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt}));
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt,modifiedAt}));
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);
     saveDirty=false;
   }catch(e){console.error('資料儲存失敗',e);showToast?.('儲存失敗：請先匯出備份，確認瀏覽器儲存空間',null);}
 }
-function save(){saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);window.dispatchEvent(new Event('portfoliochange'));}
+function save(){modifiedAt=new Date().toISOString();saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);window.dispatchEvent(new Event('portfoliochange'));}
 window.addEventListener('pagehide',persistNow);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistNow();});
 const curMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
@@ -655,7 +666,7 @@ function totals(arr){
 /* ===== view switching / history ===== */
 function archLabels(){return Object.keys(archives).sort();}
 function renderViewSel(){
-  const opts=['<option value="live">即時（目前）</option>',
+  const opts=['<option value="live">目前資料</option>',
     ...archLabels().sort((a,b)=>b.localeCompare(a)).map(l=>`<option value="${l}">${fmtLabel(l)}</option>`)];
   const sel=document.getElementById('viewSel');
   sel.innerHTML=opts.join('');sel.value=viewKey;
@@ -712,7 +723,7 @@ function renderSnap(){
   const all=archLabels(), groups=snapGroups();
   document.getElementById('snap_sub').textContent=`共 ${all.length} 筆快照　·　${groups.length} 個月份`;
   const list=document.getElementById('snap_list');
-  if(!all.length){list.innerHTML='<div class="snap-empty">目前沒有快照。按「📸 歸檔本月」建立第一筆。</div>';}
+  if(!all.length){list.innerHTML='<div class="snap-empty">目前沒有快照。按「 儲存今日快照」建立第一筆。</div>';}
   else{
     const tot={};all.forEach(l=>tot[l]=totals(archives[l]).total);
     list.innerHTML=groups.map(({m,labels})=>{
@@ -792,9 +803,9 @@ function renderKPI(){
   const retOverall=t.prin?t.pl/t.prin:0;
   const k=[
     {lbl:"淨資產 (TWD)",val:fmt(t.total),cls:"",delta:`含現金、扣貸款 · 投資部位 ${fmt(invMv)}`},
-    {lbl:"未實現損益 (不含息)",val:(t.pl>=0?"+":"")+fmt(t.pl),cls:t.pl>=0?"k-gain":"",delta:`報酬率 ${pct(retOverall)}`,col:t.pl>=0?"pos":"neg"},
+    {lbl:"未實現損益 (不含息)",val:(t.pl>=0?"+":"")+fmt(t.pl),cls:t.pl>0?"k-gain":"",delta:`報酬率 ${pct(retOverall)}`,col:t.pl>0?"pos":t.pl<0?"neg":""},
     {lbl:"投入本金 (TWD)",val:fmt(t.prin),cls:"k-mut",delta:"不含現金"},
-    {lbl:"幣別 TWD / USD",val:`${(t.twd/(t.twd+t.usd)*100).toFixed(0)} / ${(t.usd/(t.twd+t.usd)*100).toFixed(0)}`,cls:"k-gold",delta:`USD 部位 ${fmt(t.usd)}`},
+    {lbl:"幣別 TWD / USD",val:(t.twd+t.usd)>0?`${(t.twd/(t.twd+t.usd)*100).toFixed(0)} / ${(t.usd/(t.twd+t.usd)*100).toFixed(0)}`:"—",cls:"k-gold",delta:`USD 部位 ${fmt(t.usd)}`},
   ];
   document.getElementById('kpis').innerHTML=k.map(x=>`
     <div class="kpi ${x.cls}"><div class="lbl">${x.lbl}</div>
@@ -853,7 +864,7 @@ function setFilter(c){filter=c;renderTable();renderFilter();}
 function renderTable(){
   const arr=curData(),t=totals(arr);
   if(!arr.length){
-    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上角「⬆ 匯入」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
+    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上角「匯入備份」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
     document.getElementById('hcount').textContent='0 檔';
     document.getElementById('hfoot').innerHTML='';
     return;
@@ -893,7 +904,7 @@ function renderTable(){
 function renderCal(){
   const nowM=(new Date().getMonth()+1)+"月";
   const cal=document.getElementById('cal');
-  if(!CAL.length){cal.innerHTML='<div style="color:var(--ink3);font-size:12px;grid-column:1/-1">尚無配息資料 — 按「⬆ 匯入」載入備份即可顯示。</div>';return;}
+  if(!CAL.length){cal.innerHTML='<div style="color:var(--ink3);font-size:12px;grid-column:1/-1">尚無配息資料 — 按「匯入備份」載入備份即可顯示。</div>';return;}
   cal.innerHTML=CAL.map(c=>`
     <div class="cal-m ${c.m===nowM?'now':''}">
       <div class="mo">${c.m}${c.m===nowM?'<span class="n">本月</span>':''}</div>
@@ -1000,13 +1011,13 @@ function toggleStrat(){
   const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');
   const open=m.style.display==='none';
   m.style.display=open?'block':'none';
-  t.textContent=open?'STRATEGY ▾ 收合':'STRATEGY ▸ 展開';
+  t.textContent=open?'收合':'展開';
   try{localStorage.setItem('stratOpen',open?'1':'0');}catch(e){}
 }
 
 function renderYield(){
   const yb=document.getElementById('ybody');
-  if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「⬆ 匯入」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
+  if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「匯入備份」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
   YIELD.forEach(syncDerived);
   yb.innerHTML=YIELD.map((y,i)=>{
     const vd=verdict(y);
@@ -1131,10 +1142,10 @@ async function autoPullNewYield(code){
 function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個殖利率標的？')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
 document.getElementById('ovYld').addEventListener('click',e=>{if(e.target.id==='ovYld')closeYld();});
 
-const CLR={現金:'#6b7280',美股:'#4f8cff',台股:'#2ecc71',債券:'#b07cff',貸款:'#ff8a5c'};
+const CLR={現金:'#555555',美股:'#a5a5a5',台股:'#e4e4e4',債券:'#777777',貸款:'#444444'};
 function renderCharts(){
   Object.values(charts).forEach(c=>c&&c.destroy());charts={};
-  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9aa3b5',font:{size:11},padding:12,usePointStyle:true}}}};
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#b4b4b4',font:{size:11},padding:12,usePointStyle:true}}}};
   const arr=curData();
 
   // 淨資產走勢：X 軸用距起點的天數(linear)反映真實間距，不需 date adapter
@@ -1194,8 +1205,8 @@ function renderCharts(){
     return gap>=36?4:gap>=18?2.5:0;
   };
   charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:vPts.map(p=>({x:p.x,y:p.y})),
-    borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
-    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),borderWidth:2,
+    borderColor:'#d4d4d4',backgroundColor:'rgba(212,212,212,.08)',fill:false,tension:0,
+    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#ffffff':'#a5a5a5'),borderWidth:2,
     pointRadius:ctx=>keyIdx.has(ctx.dataIndex)?5:baseRadius(ctx.chart),pointHoverRadius:6,pointHitRadius:8}]},
     options:{...base,animation:{duration:300},interaction:{mode:'nearest',axis:'x',intersect:false},plugins:{legend:{display:false},
       tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
@@ -1203,28 +1214,28 @@ function renderCharts(){
       scales:{
         x:{type:'linear',min:xMin,max:xMax,
           afterBuildTicks:axis=>{axis.ticks=tickVals.map(v=>({value:v}));},
-          ticks:{color:'#9aa3b5',font:{size:10},autoSkip:false,maxRotation:0,minRotation:0,
+          ticks:{color:'#b4b4b4',font:{size:12},autoSkip:false,maxRotation:0,minRotation:0,
             callback:v=>tickMap[v]||''},grid:{display:false}},
-        y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
+        y:{ticks:{color:'#b4b4b4',maxTicksLimit:5,callback:v=>Number(v).toLocaleString('zh-TW')},grid:{color:'#333333'}}}}});
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
   charts.pc=new Chart(pieClass,{type:'doughnut',data:{labels:Object.keys(byCls),
-    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#171a21',borderWidth:2}]},
-    options:{...base,cutout:'62%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
+    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#111111',borderWidth:2}]},
+    options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/Object.values(byCls).reduce((a,b)=>a+b)*100).toFixed(1)}%)`}}}}});
   const t=totals(arr);
   charts.pf=new Chart(pieFx,{type:'doughnut',data:{labels:['TWD 台幣','USD 美元'],
-    datasets:[{data:[t.twd,t.usd],backgroundColor:['#2ecc71','#4f8cff'],borderColor:'#171a21',borderWidth:2}]},
-    options:{...base,cutout:'62%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
+    datasets:[{data:[t.twd,t.usd],backgroundColor:['#d4d4d4','#666666'],borderColor:'#111111',borderWidth:2}]},
+    options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/(t.twd+t.usd)*100).toFixed(1)}%)`}}}}});
   const pl=arr.filter(r=>pnl(r)!=null&&r.cls!=='貸款').map(r=>({c:r.code,v:pnl(r)})).sort((a,b)=>b.v-a.v);
   // 高度隨檔數自動調整：每檔約 30px，最低 260px，避免橫條被擠掉
   const pnlBox=document.getElementById('barPnl').parentElement;
   pnlBox.style.height=Math.max(260,pl.length*30+30)+'px';
   charts.bp=new Chart(barPnl,{type:'bar',data:{labels:pl.map(x=>x.c),datasets:[{data:pl.map(x=>x.v),
-    backgroundColor:pl.map(x=>x.v>=0?'#2ecc71':'#ff5c5c'),borderRadius:5}]},
+    backgroundColor:pl.map(x=>x.v>0?'#ff8b92':x.v<0?'#62d69d':'#a2a2a2'),borderRadius:5}]},
     options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+(c.parsed.x>=0?'+':'')+fmt(c.parsed.x)}}},
-      scales:{x:{ticks:{color:'#5c6479',callback:v=>(v/1000)+'k'},grid:{color:'#272c38'}},y:{ticks:{color:'#9aa3b5',font:{size:10}},grid:{display:false}}}}});
+      scales:{x:{ticks:{color:'#b4b4b4',callback:v=>(v/1000)+'k'},grid:{color:'#333333'}},y:{ticks:{color:'#b4b4b4',font:{size:12}},grid:{display:false}}}}});
 }
 
 function setTab(t){tab=t;
@@ -1549,7 +1560,7 @@ async function testSync(){
 async function syncPrices(){
   if(!isLive()){alert('請先回到「即時」再更新股價');return;}
   if(!sheetUrl){openSync();return;}
-  const btn=document.getElementById('syncBtn');const IDLE='🔄 從 Sheet 更新股價';
+  const btn=document.getElementById('syncBtn');const IDLE='更新報價';
   btn.textContent='更新中…';btn.disabled=true;
   try{
     const j=await fetchSheet(sheetUrl);
@@ -1578,7 +1589,7 @@ async function syncPrices(){
     const codesInData=new Set([...data.map(r=>r.code),...YIELD.map(y=>y.c)]);
     const unusedInSheet=Object.keys(j.prices).filter(c=>!codesInData.has(c));
 
-    console.group(`🔄 Sheet 對帳 ${new Date().toLocaleTimeString()}`);
+    console.group(` Sheet 對帳 ${new Date().toLocaleTimeString()}`);
     console.log('✅ 有對到並更新：', matched.join(', ')||'（無）');
     if(missing.length) console.warn('⚠️ 部位有、Sheet 沒報價（code 對不上或漏加列）：', missing.join(', '));
     if(invalid.length) console.warn('⚠️ Sheet 有列但報價無效（0/空/壞，已保留舊價）：', invalid.join(', '));
@@ -1609,13 +1620,13 @@ function stamp(){const d=new Date();return d.getFullYear()+
 function exportJSON(){
   persistNow();
   const now=new Date().toISOString();
-  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt};
+  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
   markBackedUp(now);
 }
 
-/* ===== 備份提醒：超過設定天數沒備份就在頁首提示（天數可在右上 ⏰ 選單調整） ===== */
+/* ===== 備份提醒：超過設定天數沒備份就在頁首提示（天數可在右上 選單調整） ===== */
 const REMIND_KEY='portfolio_backupRemindDays';   // 提醒天數（每台裝置各自設定）
 const REMIND_DEFAULT=30;                     // 預設 30 天；0 = 不提醒
 function remindDays(){
@@ -1631,7 +1642,7 @@ function renderRemindSel(){
   const sel=document.getElementById('bkRemindSel');if(!sel)return;
   const d=remindDays();
   if(![...sel.options].some(o=>+o.value===d)){   // 舊設定不在選單裡時補一個選項
-    const o=document.createElement('option');o.value=d;o.textContent=`⏰ ${d} 天`;sel.appendChild(o);
+    const o=document.createElement('option');o.value=d;o.textContent=`${d} 天`;sel.appendChild(o);
   }
   sel.value=String(d);
   let last='';try{last=localStorage.getItem(LASTBK_KEY)||'';}catch(e){}
@@ -1707,7 +1718,7 @@ function applyImport(){
     switchView('live');
     const btn=document.getElementById('importBtn');
     btn.textContent='✓ 已匯入';btn.classList.add('done');
-    setTimeout(()=>{btn.textContent='⬆ 匯入';btn.classList.remove('done');},2500);
+    setTimeout(()=>{btn.textContent='匯入備份';btn.classList.remove('done');},2500);
   }catch(err){showImport('匯入失敗','',err.message,false);}
 }
 
@@ -1908,15 +1919,15 @@ document.getElementById('trendRange').addEventListener('click',e=>{
   trendRange=b.dataset.r;try{localStorage.setItem('trendRange',trendRange);}catch(err){}
   renderCharts();
 });
-try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='STRATEGY ▾ 收合';}}}catch(e){}
+try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
 // 頁面載入後自動更新股價（如已設定 Sheet 網址）
 if(sheetUrl){
   setTimeout(()=>{
     const btn=document.getElementById('syncBtn');
-    if(btn)btn.textContent='🔄 自動更新中…';
+    if(btn)btn.textContent=' 自動更新中…';
     syncPrices();
   },800);
 }
 </script>
-<script src="portfolio-core.js"></script><script src="enhancements.js"></script><script src="cloud-sync.js"></script></body>
+<script src="portfolio-core.js"></script><script src="enhancements.js"></script><script src="cloud-sync.js"></script><script src="setup-assets.js"></script><script src="interface.js"></script></body>
 </html>

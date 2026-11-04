@@ -265,54 +265,67 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
+<style>
+/* A quiet dark workspace: colour belongs to changes, not navigation. */
+:root{--bg:#000;--panel:#111;--panel2:#242424;--line:#333;--ink:#f5f5f5;--ink2:#b4b4b4;--ink3:#a2a2a2;--gain:#ff8b92;--loss:#62d69d;--gold:#e5bd72;--accent:#e8e8e8;--mono:var(--sans)}
+body{background:#000;background-image:none;font-size:14px;line-height:1.5;padding:24px 22px 48px}
+button,input,select,textarea{font:inherit;color:inherit}button,a,summary{-webkit-tap-highlight-color:transparent}button{touch-action:manipulation}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #fff!important;outline-offset:3px}
+button:disabled{opacity:.65;cursor:not-allowed}a{color:var(--ink);text-underline-offset:4px}p{line-height:1.6}
+.wrap{max-width:1240px}.app-header{align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px}.brand{font-size:12px;color:var(--ink2);margin-bottom:3px}.app-header h1{font-size:24px;letter-spacing:0;font-weight:600}.sync-entry{display:flex;align-items:center;gap:16px;max-width:65%;border:1px solid #444;border-radius:999px;background:transparent;padding:9px 16px;min-height:44px;text-align:left}.sync-entry #cloudState{font-size:12px;color:var(--ink2);overflow-wrap:anywhere}.sync-link{font-size:13px;white-space:nowrap}
+.app-nav{display:flex;gap:28px;margin-bottom:22px;border-bottom:1px solid #333}.app-nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--ink2);padding:12px 2px;min-height:48px;font-size:14px;white-space:nowrap}.app-nav button[aria-current=page]{color:#fff;border-bottom-color:#fff;font-weight:600}
+.page.on{animation:none}.card{border:0;border-radius:20px;padding:22px;background:#111;box-shadow:none}.card h2{font-size:16px;letter-spacing:0;margin-bottom:14px}.card h2 .tag{font-size:12px;font-family:var(--sans);letter-spacing:0;color:var(--ink2)}
+.page-intro{color:var(--ink2);margin:0 0 18px}.muted,.hint,.nm{color:var(--ink2);font-size:12px;line-height:1.6}.muted{margin:8px 0 16px}.text-btn{background:none;border:0;color:var(--ink);padding:8px 0;min-height:44px;font-size:13px;text-decoration:underline;text-underline-offset:4px}.btn,.mini-btn,.bkremind,.rangesel button,.filt button{font-size:13px;min-height:40px;padding:8px 14px;border-radius:999px;border-color:#444;letter-spacing:0;font-family:var(--sans)}.btn.primary,.mini-btn.go,.bk-now{background:#f4f4f4!important;color:#111!important;border-color:#f4f4f4}.btn.gold{background:#242424;border-color:#444;color:#eee}.btn.danger{color:#ff8b92;border-color:#7c3d42;background:transparent}.btn:hover,.mini-btn:hover{background:#292929;border-color:#aaa;color:#fff}.btn.primary:hover{background:#ddd!important;color:#111!important;filter:none}
+.kpis{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:0;background:#111;border-radius:20px;margin-bottom:18px;overflow:hidden}.kpi{border:0;border-radius:0;padding:20px 22px;background:none;box-shadow:none}.kpi::after{display:none}.kpi .val{font-family:var(--sans);font-size:24px;letter-spacing:0;font-variant-numeric:tabular-nums}.kpi:first-child .val{font-size:32px}.kpi .lbl,.kpi .delta{font-size:12px;font-family:var(--sans);letter-spacing:0;color:var(--ink2)}.kpi .lbl{margin-bottom:4px}.kpi .delta{margin-top:4px}
+.holding-actions{margin:12px 0 4px;gap:8px}.holdings-card h2{margin-bottom:8px}.holding-context{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:var(--ink2);margin:0 0 8px}.filt{margin:0 0 12px;gap:8px;flex-wrap:wrap}.filt button{font-size:12px;min-height:36px;padding:5px 14px}.filt button.on{background:#333;color:#fff;border-color:#aaa}.more-actions{position:relative;margin-left:auto}.more-actions summary{list-style:none;cursor:pointer;padding:10px 14px;min-height:44px;font-size:13px}.more-actions summary::after{content:' ▾'}.more-actions>div{position:absolute;right:0;top:100%;background:#242424;z-index:5;padding:8px;border:1px solid #444;border-radius:12px;min-width:170px;display:grid;gap:6px}.more-actions button{text-align:left}
+table{font-size:14px;font-variant-numeric:tabular-nums}thead th{font-size:12px;color:var(--ink2);letter-spacing:0;padding:12px 8px}tbody td{font-size:14px;font-family:var(--sans);padding:14px 8px;border-bottom-color:#292929}tfoot td{font-family:var(--sans);font-size:13px}td,th,.val,.num{font-variant-numeric:tabular-nums}.chip{font-size:12px;color:var(--ink2);background:#292929}.code{font:600 14px var(--sans)}.position-name{display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;cursor:pointer;text-align:left;min-height:44px;padding:0;color:var(--ink)}.position-name small{font-size:12px;color:var(--ink2)}.position-actions{display:flex;gap:16px;margin-top:3px}.position-actions button{padding:2px 0;min-height:32px;font-size:12px}.price-main{font-size:15px;font-weight:600}.price-change{display:block;font-size:12px;margin-top:4px}.price-unit,.cell-label{font-size:12px;color:var(--ink2)}.cell-label{display:none}.wt-bar{background:#a1a1a1;height:3px}.empty-note{padding:18px 0;color:var(--ink2);font-size:14px}.empty-actions{display:flex;gap:10px;margin-top:12px}
+.subnav,.settings-links{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}.subnav button{background:none;border:1px solid #444;border-radius:999px;min-height:44px;padding:8px 16px;color:var(--ink2)}.subnav button[aria-current=true]{background:#292929;border-color:#aaa;color:#fff}.analysis-scope{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.analysis-scope .meta{margin-left:auto}.viewsel span,.viewsel select{font:13px var(--sans)}.viewsel select{height:44px}.note-banner{font-size:12px;background:#1d1b16;color:#e5bd72}.rangesel button{font-size:12px}.rangesel button.on{background:#444;color:#fff}.rangesel{background:#111}.comparison-controls,.record-filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:18px 0}.comparison-controls label,.record-filters label{font-size:12px;color:var(--ink2);display:flex;flex-direction:column;gap:6px}.comparison-controls select,.record-filters input{min-height:44px;padding:8px 12px;background:#242424;border:1px solid #555;border-radius:8px;font-size:14px;color:#fff;max-width:100%}
+.compare-heading,.compare-row{display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(80px,1fr));gap:16px;align-items:center;text-align:right}.compare-heading{font-size:12px;color:var(--ink2);padding:12px 0}.compare-row{padding:18px 0;border-top:1px solid #333;font-variant-numeric:tabular-nums}.compare-heading>:first-child,.compare-row>:first-child{text-align:left}.compare-row .label{display:none}.compare-identity small{display:block;font-size:12px;color:var(--ink2)}.compare-row .delta{font-weight:600}.compare-row .delta small{display:block;font-size:12px;font-weight:400;color:var(--ink2)}
+.section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.section-heading h2{margin-bottom:0}.audit-entry{padding:20px 0;border-bottom:1px solid #333}.audit-entry summary{cursor:pointer;min-height:44px;display:flex;justify-content:space-between;align-items:center;gap:12px}.audit-entry summary span{color:var(--ink2);font-size:12px}.audit-entry p{font-size:14px;line-height:1.8;padding-top:12px}.audit-entry p hr{margin:12px 0}.record-filters input{width:100%}
+.setting-row{display:grid;grid-template-columns:minmax(190px,1fr) minmax(0,2fr);gap:28px;scroll-margin-top:20px}.setting-row:focus{outline:none}.setting-row p{max-width:70ch}.setting-row .iobar{flex-wrap:wrap;gap:10px}.settings-links button{min-height:44px}.setup-choice{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.setup-choice button[aria-pressed=true]{background:#eee;color:#111}.setup-steps{list-style-position:outside;margin:20px 0 0 22px}.setup-steps>li{padding:0 0 22px 8px}.setup-steps h3{font-size:15px;margin-bottom:6px}.setup-steps p{color:var(--ink2);font-size:13px;margin:6px 0 10px}.setup-actions{display:flex;gap:8px;flex-wrap:wrap}.setup-status{padding:14px;background:#242424;border-radius:12px;margin-bottom:16px}.setup-status strong{display:block;font-size:15px;margin-bottom:5px}.setup-status p{font-size:13px;margin:0;color:var(--ink2)}.private-link-form{margin-top:16px}.private-link-form label{display:block;font-size:13px;margin-bottom:6px}.private-link-form input{width:100%;min-height:44px;background:#242424;border:1px solid #555;border-radius:8px;padding:10px 12px;font-size:14px}.private-link-form .setup-actions{margin-top:10px}.status-note{font-size:12px;margin:10px 0;color:var(--ink2);min-height:18px}.code-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0}.code-copy strong{font-size:14px;min-width:80px}.instructions{margin:10px 0;padding:12px;background:#242424;border-radius:8px}.instructions summary{cursor:pointer;min-height:32px;font-size:14px}.instructions textarea{width:100%;min-height:160px;margin-top:10px;font-size:12px}
+.ov{background:rgba(0,0,0,.72);backdrop-filter:none}.modal{background:#171717;border-color:#444;border-radius:20px}.modal h3,dialog h3{font-size:18px}.modal .hint,.msub{font-size:12px;color:var(--ink2)}.modal label{font-size:13px}.modal input,.modal select,.modal textarea{font-size:14px;min-height:44px;background:#242424;color:#fff;border-color:#555}.seg button{min-height:44px;font-size:14px}.seg button.on{background:#444;color:#fff}.modal-actions{gap:10px;flex-wrap:wrap}.modal-actions .btn{min-height:44px}dialog{font-size:14px;color:var(--ink)}dialog::backdrop{background:rgba(0,0,0,.72)}dialog p{margin:12px 0}dialog button{min-height:44px}dialog h3{padding-right:56px}dialog .close-dialog{float:right}.conflict-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}.conflict-grid section{background:#242424;border-radius:12px;padding:16px}.conflict-grid h4{font-size:14px}.conflict-grid p{font-size:13px;margin:6px 0}.conflict-danger{color:#ffadb2!important}.conflict-actions{display:flex;flex-wrap:wrap;gap:10px}.conflict-actions button{flex:1}.conflict-error{color:#ffadb2}
+.dca-row{background:#242424;border-color:#444;flex-wrap:wrap}.dca-row .dr-amt,.dca-row .dr-hold{font-size:13px}.dca-row .dr-act{flex-wrap:wrap}.histbanner,.bkbanner{font-size:13px}.histbanner{flex-wrap:wrap}.histbanner button,.bkbanner button{font-size:12px;min-height:40px}.toast{background:#242424;max-width:calc(100vw - 32px);white-space:normal}.toast button{min-height:44px}.calmini,.calmini th,.calmini td{font-size:12px}.notepad{font-size:14px!important}.tag,.dr-amt,.dr-hold,.preview .pl,.preview .pv,.note-status{font-size:12px!important}[style*="font-size:10"],[style*="font-size:11"]{font-size:12px!important}
+@media(max-width:880px){
+  body{padding:16px 16px 96px}.app-header{margin-bottom:16px;gap:8px}.app-header h1{font-size:22px}.sync-entry{max-width:62%;gap:6px;display:flex;flex-direction:column;align-items:flex-end;padding:5px 12px;border:0}.sync-entry #cloudState{font-size:12px;text-align:right;max-width:200px}.sync-link{font-size:12px}
+  .app-nav{position:fixed;z-index:30;bottom:0;left:0;right:0;background:#111;display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:0;padding:0 8px env(safe-area-inset-bottom);border:0;border-top:1px solid #444}.app-nav button{font-size:12px;min-height:60px;border:0;padding:12px 2px}.app-nav button[aria-current=page]{background:#292929;border-top:2px solid #fff}
+  .card{padding:16px;border-radius:16px}.kpis{grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px;border-radius:16px}.kpi{padding:12px 16px}.kpi:first-child{grid-column:1/-1;padding-bottom:6px}.kpi:first-child .val{font-size:30px}.kpi .val{font-size:20px}.kpi .lbl{font-size:12px}.kpi .delta{display:none}
+  .btn,.mini-btn,.filt button,.text-btn,.bkremind,.rangesel button{min-height:44px}.holding-actions{margin:8px 0 0}.holding-context{margin:0;gap:4px}.holding-context>span{max-width:60%;font-size:12px}.holding-context .text-btn{font-size:12px}.filt{flex-wrap:nowrap;overflow-x:auto;gap:4px;margin-bottom:4px;scrollbar-width:thin}.filt button{flex:none;padding:5px 12px}.holdings-card h2{font-size:16px;flex-wrap:wrap;margin-bottom:2px}.holdings-card #hcount{font-size:12px;max-width:100%;margin-left:auto}
+  #htable{width:100%;table-layout:fixed}#htable thead,#htable tfoot{display:none}#htable tbody{display:block;width:100%}#htable tbody tr[data-idx]{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,auto);gap:8px 10px;border-bottom:1px solid #333;padding:14px 0;width:100%}#htable tbody td{padding:0;border:0;white-space:normal;min-width:0}#htable tbody td:nth-child(1){display:block;grid-row:1;grid-column:1}#htable tbody td:nth-child(4){display:block!important;grid-row:1;grid-column:2;text-align:right}#htable tbody td:nth-child(5){display:block;grid-row:2;grid-column:1;text-align:left}#htable tbody td:nth-child(9){display:block;grid-row:2;grid-column:2;text-align:right}#htable tbody td:nth-child(2),#htable tbody td:nth-child(3),#htable tbody td:nth-child(6),#htable tbody td:nth-child(7),#htable tbody td:nth-child(8),#htable tbody td:nth-child(10){display:none!important}#htable .cell-label{display:block;font-size:12px;margin-bottom:2px}#htable .position-name{min-height:44px;max-width:100%;overflow-wrap:anywhere}#htable .position-actions{gap:12px}#htable .position-actions button{min-height:44px}.price-main{font-size:18px}.price-change{font-size:13px;white-space:nowrap}.price-unit{font-size:12px}
+  .compare-heading{display:none}.compare-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}.compare-identity{grid-column:1/-1}.compare-row .old,.compare-row .now{text-align:left}.compare-row .label{display:block;font-size:12px;color:var(--ink2);margin-bottom:4px}.compare-row .delta{grid-column:1/-1;text-align:left}.compare-row .difference{display:none}.compare-row .delta small{display:inline;margin-left:8px}.comparison-controls{gap:10px}.comparison-controls label{flex:1;min-width:120px}.comparison-controls select{width:100%;font-size:13px}.comparison-controls .btn{flex:1;font-size:12px}.subnav{gap:6px}.subnav button{font-size:13px;padding:8px 12px;flex:1}.analysis-scope{gap:8px}.analysis-scope .meta{width:100%;margin:0;font-size:12px}
+  .setting-row{grid-template-columns:1fr;gap:8px}.settings-links{gap:6px}.settings-links button{font-size:12px;padding:8px 12px;flex:1}.setup-steps{margin-left:18px}.setup-steps>li{padding-left:4px}.setup-actions .btn{font-size:13px}.section-heading{align-items:flex-start;flex-wrap:wrap}.record-filters{align-items:stretch}.record-filters label{flex:1;min-width:120px}.audit-entry summary{flex-direction:column;align-items:flex-start}.conflict-grid{grid-template-columns:1fr}.modal{padding:20px;max-height:85dvh}.modal h3{padding-right:0}.histbanner button{margin-left:0}.toast{bottom:80px}.more-actions .btn{width:100%}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.strat-blk .sb-tag,.cal-m .et,.yld-sub,.verdict{font-size:12px}.position-detail{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}.position-detail dt{font-size:12px;color:var(--ink2)}.position-detail dd{margin:4px 0 0;font-variant-numeric:tabular-nums}
+@media(max-width:880px){.comparison-controls .btn{flex:1 1 40%}.comparison-controls label{flex:1 1 40%}}
+.ytable td{font-size:13px}.ytable td[colspan]{white-space:normal;line-height:1.7}.cal-m .mo .n{font-size:12px}
+
+</style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>資產追蹤儀表板<span class="sub">PORTFOLIO MONITOR · DEMO</span></h1>
-    <div class="hdr-right">
-      <div class="meta" id="meta"></div>
-      <div class="ctrlbar">
-        <label class="viewsel"><span>檢視時點</span>
-          <select id="viewSel" onchange="switchView(this.value)"></select></label>
-        <button class="mini-btn ctrl-btn" onclick="openSnap()" title="批次整理歷史快照">🗂 快照</button>
-        <span class="ctrl-sep" aria-hidden="true"></span>
-        <div class="iobar">
-          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">⬇ 備份</button>
-          <select class="bkremind" id="bkRemindSel" onchange="setRemindDays(this.value)" aria-label="備份提醒天數">
-            <option value="7">⏰ 7 天</option>
-            <option value="14">⏰ 14 天</option>
-            <option value="30">⏰ 30 天</option>
-            <option value="45">⏰ 45 天</option>
-            <option value="60">⏰ 60 天</option>
-            <option value="0">⏰ 不提醒</option>
-          </select>
-          <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">⬆ 匯入</button>
-          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">⬇ Excel</button>
-          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
-        </div>
-      </div>
-    </div>
+  <header class="app-header">
+    <div><p class="brand">資產追蹤</p><h1 id="pageTitle">我的持倉</h1></div>
+    <button class="sync-entry" onclick="openCloud()" aria-label="跨裝置同步設定"><span id="cloudState" role="status" aria-live="polite">僅此裝置</span><span class="sync-link">同步設定</span></button>
   </header>
-
-  <div class="topbar">
-    <div class="tabs">
-      <button class="on" onclick="setTab('hold')">持倉</button>
-      <button onclick="setTab('analy')">分析</button>
-    </div>
-  </div>
+  <nav class="app-nav" aria-label="主要功能">
+    <button data-page="hold" onclick="setTab('hold')" aria-current="page">持倉</button>
+    <button data-page="analy" onclick="setTab('analy')">比較分析</button>
+    <button data-page="records" onclick="setTab('records')">操作紀錄</button>
+    <button data-page="plans" onclick="setTab('plans')">投資計畫</button>
+    <button data-page="settings" onclick="setTab('settings')">設定</button>
+  </nav>
 
   <div class="bkbanner" id="bkBanner">
     <span id="bkMsg"></span>
     <span class="bk-acts">
       <button class="bk-later" onclick="snoozeBackup()">今天先不要</button>
-      <button class="bk-now" onclick="exportJSON()">⬇ 立即備份</button>
+      <button class="bk-now" onclick="exportJSON()">立即備份</button>
     </span>
   </div>
 
   <div class="histbanner" id="histBanner">
-    📅 正在檢視歷史快照 <b id="histLabel"></b>　此為當時凍結的資產配置（含當時股價），唯讀。
-    <button onclick="deleteSnapshot()" style="background:rgba(255,92,92,.85)">🗑 刪除此快照</button>
+     正在檢視歷史快照 <b id="histLabel"></b>　此為當時凍結的資產配置（含當時股價），唯讀。
+    <button onclick="deleteSnapshot()" style="background:rgba(255,92,92,.85)"> 刪除此快照</button>
     <button onclick="switchView('live')">回到即時</button>
   </div>
 
@@ -320,30 +333,16 @@
   <div class="page on" id="page-hold">
     <div class="kpis" id="kpis"></div>
 
-    <div class="card" id="dcaCard">
-      <div class="dca-head">
-        <h2 style="flex:1">定期定額快捷<span class="tag">DCA</span></h2>
-        <button class="mini-btn" onclick="openDCAEdit(-1)">＋ 設定標的</button>
-      </div>
-      <div class="dca-list" id="dca"></div>
-    </div>
-
-    <div class="card" id="recurringCard">
-      <h2>固定收支與貸款自動更新<span class="tag">RECURRING</span><span class="act"><button class="mini-btn" onclick="openRecurring()">＋ 新增規則</button></span></h2>
-      <div class="hint" style="margin-bottom:10px">依每月指定日期自動記帳，僅更新已設定的持倉餘額。貸款以「每期減少本金」更新，避免把利息當本金。請避免與銀行餘額手動同步重複計入。</div>
-      <div id="recurringList"></div>
-    </div>
-    <div class="card">
+    <div class="card holdings-card" id="holdingsCard">
       <h2>持倉明細<span class="tag" id="hcount"></span>
       </h2>
-      <div class="toolbar">
-        <button class="btn primary" onclick="openAdd()">＋ 新增部位</button>
-        <button class="btn gold" onclick="archiveNow()">📸 歸檔本月</button>
-        <button class="btn" onclick="syncPrices()" id="syncBtn">🔄 從 Sheet 更新股價</button>
-        <button class="btn" onclick="openSync()" id="syncCfgBtn" title="設定 Sheet 連線">⚙</button>
-        <button class="btn" onclick="toggleReorder()" id="reorderBtn" title="拖曳自訂持倉排列順序">⇅ 排序</button>
-        <div class="filt" id="filt"></div>
+      <div class="toolbar holding-actions">
+        <button class="btn primary" onclick="openAdd()" id="addPositionBtn">新增部位</button>
+        <button class="btn" onclick="syncPrices()" id="syncBtn">更新報價</button>
+        <details class="more-actions"><summary>更多</summary><div><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="toggleReorder()" id="reorderBtn">自訂排序</button></div></details>
       </div>
+      <div class="holding-context"><span id="quoteStamp"></span><button class="text-btn" onclick="openCompare()">完整價格比較</button></div>
+      <div class="filt" id="filt" aria-label="持倉類別"></div>
       <div class="tscroll">
       <table id="htable">
         <thead><tr>
@@ -360,29 +359,40 @@
 
   <!-- ===== 分析 PAGE ===== -->
   <div class="page" id="page-analy">
+    <div class="subnav" aria-label="分析分類"><button data-analysis="compare" onclick="showAnalysis('compare')">價格比較</button><button data-analysis="charts" onclick="showAnalysis('charts')">資產分析</button><button data-analysis="income" onclick="showAnalysis('income')">配息與筆記</button></div>
+    <section class="card" id="comparisonPanel"><h2>歷史價格比較</h2><p class="muted">比較原幣價格，不含配息或分割調整。</p>
+      <div class="comparison-controls"><label>比較快照<select id="compareDate" onchange="showCompare()"></select></label><label>篩選<select id="compareDirection" onchange="showCompare()"><option value="all">全部，依漲跌幅排序</option><option value="up">上漲</option><option value="down">下跌</option></select></label><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="openSnap()">管理快照</button></div>
+      <p id="compareEmpty" class="empty-note" hidden></p><div id="compareResults"></div>
+    </section>
+    <div id="analysisCharts"><div class="analysis-scope">        <label class="viewsel"><span>檢視時點</span>
+          <select id="viewSel" onchange="switchView(this.value)"></select></label>
+        <button class="mini-btn ctrl-btn" onclick="openSnap()" title="批次整理歷史快照">快照管理</button>
+<div id="meta" class="meta"></div></div>
+
     <div class="note-banner">
       正常波動區間：大盤回調 −10% 到 −20% 以內皆視為正常，禁止恐慌賣出　·　高股息與債券追蹤殖利率而非漲跌
     </div>
     <div class="card">
-      <h2>每月淨資產走勢<span class="tag hide-sm">NET ASSET · MONTHLY</span>
+      <h2>每月淨資產走勢
         <span class="rangesel" id="trendRange" role="group" aria-label="走勢期間">
           <button data-r="3M">3M</button><button data-r="6M">6M</button><button data-r="1Y">1Y</button><button data-r="ALL">全部</button>
         </span></h2>
       <div class="chartbox tall"><canvas id="lineTrend"></canvas></div>
     </div>
     <div class="grid2" style="margin-bottom:14px">
-      <div class="card"><h2>資產類別配置<span class="tag">BY CLASS</span></h2><div class="chartbox"><canvas id="pieClass"></canvas></div></div>
-      <div class="card"><h2>幣別配置<span class="tag">TWD / USD</span></h2><div class="chartbox"><canvas id="pieFx"></canvas></div></div>
+      <div class="card"><h2>資產類別配置</h2><div class="chartbox"><canvas id="pieClass"></canvas></div></div>
+      <div class="card"><h2>幣別配置</h2><div class="chartbox"><canvas id="pieFx"></canvas></div></div>
     </div>
     <div class="card">
       <h2>個股損益<span class="tag">P&amp;L · TWD</span></h2><div class="chartbox tall"><canvas id="barPnl"></canvas></div>
     </div>
+    </div><div id="analysisIncome">
     <div class="card">
-      <h2>配息行事曆<span class="tag">DIVIDEND CALENDAR</span></h2>
+      <h2>配息行事曆</h2>
       <div class="calmini" id="cal"></div>
     </div>
     <div class="card">
-      <h2>殖利率追蹤<span class="tag">YIELD</span>
+      <h2>殖利率追蹤
         <span class="act"><button class="mini-btn" onclick="openYieldEdit(-1)">＋ 增減標的</button></span></h2>
       <div class="tscroll">
       <table class="ytable">
@@ -393,11 +403,11 @@
       <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。⚙ 可設定策略板塊、編輯或刪除標的。</div>
     </div>
     <div class="card">
-      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">STRATEGY ▸ 展開</span></h2>
+      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">展開</span></h2>
       <div id="stratMap" style="display:none"></div>
     </div>
     <div class="card">
-      <h2>交給 AI 分析<span class="tag">AI EXPORT · OFFLINE</span></h2>
+      <h2>交給 AI 分析</h2>
       <div class="hint" style="margin-bottom:12px">在本機整理分析資料，不直接連接外部 AI。確認內容後可複製到 AI 聊天室，或下載文字檔；不包含 Google Sheet 連線網址。</div>
       <div class="fg"><label>想請 AI 著重分析什麼？</label><input id="aiQuestion" placeholder="例如：分析資產配置、貸款壓力、每月現金流和再平衡建議" value="分析資產配置、集中風險、負債、每月固定收支及改善建議" oninput="scheduleAiPreview()"></div>
       <label style="font-size:12px"><input id="aiIncludeHistory" type="checkbox" checked onchange="refreshAiPreview()"> 包含歷史快照（月末摘要，不含逐筆個資）</label>
@@ -405,12 +415,46 @@
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
     <div class="card">
-      <h2>操作策略筆記<span class="tag">NOTES</span>
+      <h2>操作策略筆記
         <span class="act"><span class="note-status" id="noteStatus"></span></span></h2>
       <textarea class="notepad" id="noteArea" placeholder="記錄你的操作策略、加減碼條件、觀察心得…&#10;例如：QQQ 跌破 $500 分三批進、0056 殖利率低於 5% 停止加碼。" oninput="noteChanged()" onblur="saveNotes(true)"></textarea>
-      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「⬇ 備份 / ⬆ 匯入」會一併包含筆記內容。</div>
+      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「下載備份 / 匯入備份」會一併包含筆記內容。</div>
     </div>
-  </div>
+  </div></div>
+  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><button class="btn" onclick="undoLastTrade()">撤銷最近一次操作</button></div><p class="muted">核對加減碼與編輯前後的數值。只撤銷最近一次操作，後續報價會保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
+  <section class="page" id="page-plans"><p class="page-intro">定期投資與每月收支集中管理。規則在開啟頁面時補記到期月份。</p>    <div class="card" id="dcaCard">
+      <div class="dca-head">
+        <h2 style="flex:1">定期定額快捷</h2>
+        <button class="mini-btn" onclick="openDCAEdit(-1)">＋ 設定標的</button>
+      </div>
+      <div class="dca-list" id="dca"></div>
+    </div>
+
+    <div class="card" id="recurringCard">
+      <h2>固定收支與貸款自動更新<span class="act"><button class="mini-btn" onclick="openRecurring()">＋ 新增規則</button></span></h2>
+      <div class="hint" style="margin-bottom:10px">依每月指定日期自動記帳，僅更新已設定的持倉餘額。貸款以「每期減少本金」更新，避免把利息當本金。請避免與銀行餘額手動同步重複計入。</div>
+      <div id="recurringList"></div>
+    </div>
+</section>
+  <section class="page" id="page-settings">
+    <nav class="settings-links" aria-label="設定分類"><button class="btn" onclick="focusSetting('cloudPanel')">跨裝置同步</button><button class="btn" onclick="focusSetting('quotePanel')">報價來源</button><button class="btn" onclick="focusSetting('backupPanel')">備份與還原</button></nav>
+    <section class="card setting-row" id="cloudPanel" tabindex="-1"><div><h2>跨裝置同步</h2><p class="muted">電腦與手機共用持倉、快照、筆記和操作紀錄。</p></div><div id="cloudSetupBody"></div></section>
+    <section class="card setting-row" id="quotePanel" tabindex="-1"><div><h2>報價來源</h2><p class="muted">從 Google Sheet 讀取股價與匯率。這項連線不會同步你的持倉。</p></div><div><p id="quoteConnectionState"></p><button class="btn" onclick="openSync()" id="syncCfgBtn">設定報價連線</button><p class="muted">設定後回到持倉頁，按「更新報價」。資料仍以來源提供的報價時間為準。</p></div></section>
+    <section class="card setting-row" id="backupPanel" tabindex="-1"><div><h2>備份與還原</h2><p class="muted">保存可還原的完整資料。JSON 包含快照和操作紀錄；Excel 用於檢視。</p></div><div>        <div class="iobar">
+          <button class="mini-btn" onclick="exportJSON()" title="匯出完整備份(含歷史)">下載備份</button>
+          <select class="bkremind" id="bkRemindSel" onchange="setRemindDays(this.value)" aria-label="備份提醒天數">
+            <option value="7">7 天</option>
+            <option value="14">14 天</option>
+            <option value="30">30 天</option>
+            <option value="45">45 天</option>
+            <option value="60">60 天</option>
+            <option value="0">不提醒</option>
+          </select>
+          <button class="mini-btn" id="importBtn" onclick="document.getElementById('importFile').click()" title="從備份檔還原">匯入備份</button>
+          <button class="mini-btn" onclick="exportXLSX()" title="匯出 Excel">匯出 Excel</button>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importJSON(this)">
+        </div><p class="muted">備份提醒天數只作用於此裝置。匯入會取代此裝置資料，請先保存備份。</p></div></section>
+  </section>
 </div>
 
 <!-- ===== Position modal ===== -->
@@ -563,12 +607,12 @@
 </div>
 <div class="ov" id="ovSync">
   <div class="modal" style="max-width:460px">
-    <h3>連線 Google Sheet</h3>
+    <h3>設定報價連線</h3>
     <div class="msub">單向讀取：只抓即時股價與匯率貼到本機部位，不會改你的 Sheet</div>
     <div class="fg">
       <label>Web App 網址（Apps Script 部署後取得）</label>
       <input id="s_url" placeholder="https://script.google.com/macros/s/..../exec">
-      <div class="hint">部署步驟見對話說明。貼一次就會記住。</div>
+      <div class="hint">貼上既有報價服務的網址。此處只讀取價格，不同步持倉。</div>
     </div>
     <div id="syncStatus" style="font-size:11.5px;font-family:var(--mono);color:var(--ink2);min-height:18px;margin-bottom:8px"></div>
     <div class="modal-actions">
@@ -583,7 +627,7 @@
 const ARCHIVE_SEED={};  // 歷史快照將從備份還原
 const TREND_SEED=[];  // 淨資產走勢種子，從備份還原（勿寫死真實金額）
 
-const SEED = [];  // 請用「⬆ 匯入」載入你的備份資料
+const SEED = [];  // 請用「匯入備份」載入你的備份資料
 const DCA_DEFAULT=[];  // 請在 DCA 快捷區自行設定
 let CAL=[];    // 配息行事曆，從備份還原
 let YIELD=[];  // 殖利率追蹤，從備份還原
@@ -597,6 +641,7 @@ let audit=Array.isArray(store.audit)?store.audit:[];
 if(!store.audit){try{const old=JSON.parse(localStorage.getItem('portfolio_audit_v1')||'[]');if(Array.isArray(old))audit=old;}catch(e){}}
 let cloudMeta=store.cloudMeta||{};
 let quoteUpdatedAt=store.quoteUpdatedAt||'';
+let modifiedAt=store.modifiedAt||'';
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
 sheetUrl=sheetUrl||store.sheetUrl||'';
@@ -611,7 +656,7 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
+    return {modifiedAt:o.modifiedAt,audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
   return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:'',recurring:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
@@ -621,12 +666,12 @@ function persistNow(){
   clearTimeout(saveTimer);saveTimer=null;
   if(!saveDirty)return;
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt}));
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt,modifiedAt}));
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);
     saveDirty=false;
   }catch(e){console.error('資料儲存失敗',e);showToast?.('儲存失敗：請先匯出備份，確認瀏覽器儲存空間',null);}
 }
-function save(){saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);window.dispatchEvent(new Event('portfoliochange'));}
+function save(){modifiedAt=new Date().toISOString();saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);window.dispatchEvent(new Event('portfoliochange'));}
 window.addEventListener('pagehide',persistNow);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistNow();});
 const curMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
@@ -655,7 +700,7 @@ function totals(arr){
 /* ===== view switching / history ===== */
 function archLabels(){return Object.keys(archives).sort();}
 function renderViewSel(){
-  const opts=['<option value="live">即時（目前）</option>',
+  const opts=['<option value="live">目前資料</option>',
     ...archLabels().sort((a,b)=>b.localeCompare(a)).map(l=>`<option value="${l}">${fmtLabel(l)}</option>`)];
   const sel=document.getElementById('viewSel');
   sel.innerHTML=opts.join('');sel.value=viewKey;
@@ -712,7 +757,7 @@ function renderSnap(){
   const all=archLabels(), groups=snapGroups();
   document.getElementById('snap_sub').textContent=`共 ${all.length} 筆快照　·　${groups.length} 個月份`;
   const list=document.getElementById('snap_list');
-  if(!all.length){list.innerHTML='<div class="snap-empty">目前沒有快照。按「📸 歸檔本月」建立第一筆。</div>';}
+  if(!all.length){list.innerHTML='<div class="snap-empty">目前沒有快照。按「 儲存今日快照」建立第一筆。</div>';}
   else{
     const tot={};all.forEach(l=>tot[l]=totals(archives[l]).total);
     list.innerHTML=groups.map(({m,labels})=>{
@@ -792,9 +837,9 @@ function renderKPI(){
   const retOverall=t.prin?t.pl/t.prin:0;
   const k=[
     {lbl:"淨資產 (TWD)",val:fmt(t.total),cls:"",delta:`含現金、扣貸款 · 投資部位 ${fmt(invMv)}`},
-    {lbl:"未實現損益 (不含息)",val:(t.pl>=0?"+":"")+fmt(t.pl),cls:t.pl>=0?"k-gain":"",delta:`報酬率 ${pct(retOverall)}`,col:t.pl>=0?"pos":"neg"},
+    {lbl:"未實現損益 (不含息)",val:(t.pl>=0?"+":"")+fmt(t.pl),cls:t.pl>0?"k-gain":"",delta:`報酬率 ${pct(retOverall)}`,col:t.pl>0?"pos":t.pl<0?"neg":""},
     {lbl:"投入本金 (TWD)",val:fmt(t.prin),cls:"k-mut",delta:"不含現金"},
-    {lbl:"幣別 TWD / USD",val:`${(t.twd/(t.twd+t.usd)*100).toFixed(0)} / ${(t.usd/(t.twd+t.usd)*100).toFixed(0)}`,cls:"k-gold",delta:`USD 部位 ${fmt(t.usd)}`},
+    {lbl:"幣別 TWD / USD",val:(t.twd+t.usd)>0?`${(t.twd/(t.twd+t.usd)*100).toFixed(0)} / ${(t.usd/(t.twd+t.usd)*100).toFixed(0)}`:"—",cls:"k-gold",delta:`USD 部位 ${fmt(t.usd)}`},
   ];
   document.getElementById('kpis').innerHTML=k.map(x=>`
     <div class="kpi ${x.cls}"><div class="lbl">${x.lbl}</div>
@@ -853,7 +898,7 @@ function setFilter(c){filter=c;renderTable();renderFilter();}
 function renderTable(){
   const arr=curData(),t=totals(arr);
   if(!arr.length){
-    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上角「⬆ 匯入」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
+    document.getElementById('hbody').innerHTML='<tr><td colspan="10" class="l" style="color:var(--ink3);padding:24px">尚無持倉資料 — 按右上角「匯入備份」載入你的備份檔，或按「＋ 新增部位」手動建立。</td></tr>';
     document.getElementById('hcount').textContent='0 檔';
     document.getElementById('hfoot').innerHTML='';
     return;
@@ -893,7 +938,7 @@ function renderTable(){
 function renderCal(){
   const nowM=(new Date().getMonth()+1)+"月";
   const cal=document.getElementById('cal');
-  if(!CAL.length){cal.innerHTML='<div style="color:var(--ink3);font-size:12px;grid-column:1/-1">尚無配息資料 — 按「⬆ 匯入」載入備份即可顯示。</div>';return;}
+  if(!CAL.length){cal.innerHTML='<div style="color:var(--ink3);font-size:12px;grid-column:1/-1">尚無配息資料 — 按「匯入備份」載入備份即可顯示。</div>';return;}
   cal.innerHTML=CAL.map(c=>`
     <div class="cal-m ${c.m===nowM?'now':''}">
       <div class="mo">${c.m}${c.m===nowM?'<span class="n">本月</span>':''}</div>
@@ -1000,13 +1045,13 @@ function toggleStrat(){
   const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');
   const open=m.style.display==='none';
   m.style.display=open?'block':'none';
-  t.textContent=open?'STRATEGY ▾ 收合':'STRATEGY ▸ 展開';
+  t.textContent=open?'收合':'展開';
   try{localStorage.setItem('stratOpen',open?'1':'0');}catch(e){}
 }
 
 function renderYield(){
   const yb=document.getElementById('ybody');
-  if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「⬆ 匯入」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
+  if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「匯入備份」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
   YIELD.forEach(syncDerived);
   yb.innerHTML=YIELD.map((y,i)=>{
     const vd=verdict(y);
@@ -1131,10 +1176,10 @@ async function autoPullNewYield(code){
 function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個殖利率標的？')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
 document.getElementById('ovYld').addEventListener('click',e=>{if(e.target.id==='ovYld')closeYld();});
 
-const CLR={現金:'#6b7280',美股:'#4f8cff',台股:'#2ecc71',債券:'#b07cff',貸款:'#ff8a5c'};
+const CLR={現金:'#555555',美股:'#a5a5a5',台股:'#e4e4e4',債券:'#777777',貸款:'#444444'};
 function renderCharts(){
   Object.values(charts).forEach(c=>c&&c.destroy());charts={};
-  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#9aa3b5',font:{size:11},padding:12,usePointStyle:true}}}};
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#b4b4b4',font:{size:11},padding:12,usePointStyle:true}}}};
   const arr=curData();
 
   // 淨資產走勢：X 軸用距起點的天數(linear)反映真實間距，不需 date adapter
@@ -1194,8 +1239,8 @@ function renderCharts(){
     return gap>=36?4:gap>=18?2.5:0;
   };
   charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:vPts.map(p=>({x:p.x,y:p.y})),
-    borderColor:'#4f8cff',backgroundColor:'rgba(79,140,255,.12)',fill:true,tension:.3,
-    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#d4af37':'#4f8cff'),borderWidth:2,
+    borderColor:'#d4d4d4',backgroundColor:'rgba(212,212,212,.08)',fill:false,tension:0,
+    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#ffffff':'#a5a5a5'),borderWidth:2,
     pointRadius:ctx=>keyIdx.has(ctx.dataIndex)?5:baseRadius(ctx.chart),pointHoverRadius:6,pointHitRadius:8}]},
     options:{...base,animation:{duration:300},interaction:{mode:'nearest',axis:'x',intersect:false},plugins:{legend:{display:false},
       tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
@@ -1203,28 +1248,28 @@ function renderCharts(){
       scales:{
         x:{type:'linear',min:xMin,max:xMax,
           afterBuildTicks:axis=>{axis.ticks=tickVals.map(v=>({value:v}));},
-          ticks:{color:'#9aa3b5',font:{size:10},autoSkip:false,maxRotation:0,minRotation:0,
+          ticks:{color:'#b4b4b4',font:{size:12},autoSkip:false,maxRotation:0,minRotation:0,
             callback:v=>tickMap[v]||''},grid:{display:false}},
-        y:{ticks:{color:'#5c6479',callback:v=>(v/1e6).toFixed(2)+'M'},grid:{color:'#272c38'}}}}});
+        y:{ticks:{color:'#b4b4b4',maxTicksLimit:5,callback:v=>Number(v).toLocaleString('zh-TW')},grid:{color:'#333333'}}}}});
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
   charts.pc=new Chart(pieClass,{type:'doughnut',data:{labels:Object.keys(byCls),
-    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#171a21',borderWidth:2}]},
-    options:{...base,cutout:'62%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
+    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#111111',borderWidth:2}]},
+    options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/Object.values(byCls).reduce((a,b)=>a+b)*100).toFixed(1)}%)`}}}}});
   const t=totals(arr);
   charts.pf=new Chart(pieFx,{type:'doughnut',data:{labels:['TWD 台幣','USD 美元'],
-    datasets:[{data:[t.twd,t.usd],backgroundColor:['#2ecc71','#4f8cff'],borderColor:'#171a21',borderWidth:2}]},
-    options:{...base,cutout:'62%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
+    datasets:[{data:[t.twd,t.usd],backgroundColor:['#d4d4d4','#666666'],borderColor:'#111111',borderWidth:2}]},
+    options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/(t.twd+t.usd)*100).toFixed(1)}%)`}}}}});
   const pl=arr.filter(r=>pnl(r)!=null&&r.cls!=='貸款').map(r=>({c:r.code,v:pnl(r)})).sort((a,b)=>b.v-a.v);
   // 高度隨檔數自動調整：每檔約 30px，最低 260px，避免橫條被擠掉
   const pnlBox=document.getElementById('barPnl').parentElement;
   pnlBox.style.height=Math.max(260,pl.length*30+30)+'px';
   charts.bp=new Chart(barPnl,{type:'bar',data:{labels:pl.map(x=>x.c),datasets:[{data:pl.map(x=>x.v),
-    backgroundColor:pl.map(x=>x.v>=0?'#2ecc71':'#ff5c5c'),borderRadius:5}]},
+    backgroundColor:pl.map(x=>x.v>0?'#ff8b92':x.v<0?'#62d69d':'#a2a2a2'),borderRadius:5}]},
     options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+(c.parsed.x>=0?'+':'')+fmt(c.parsed.x)}}},
-      scales:{x:{ticks:{color:'#5c6479',callback:v=>(v/1000)+'k'},grid:{color:'#272c38'}},y:{ticks:{color:'#9aa3b5',font:{size:10}},grid:{display:false}}}}});
+      scales:{x:{ticks:{color:'#b4b4b4',callback:v=>(v/1000)+'k'},grid:{color:'#333333'}},y:{ticks:{color:'#b4b4b4',font:{size:12}},grid:{display:false}}}}});
 }
 
 function setTab(t){tab=t;
@@ -1549,7 +1594,7 @@ async function testSync(){
 async function syncPrices(){
   if(!isLive()){alert('請先回到「即時」再更新股價');return;}
   if(!sheetUrl){openSync();return;}
-  const btn=document.getElementById('syncBtn');const IDLE='🔄 從 Sheet 更新股價';
+  const btn=document.getElementById('syncBtn');const IDLE='更新報價';
   btn.textContent='更新中…';btn.disabled=true;
   try{
     const j=await fetchSheet(sheetUrl);
@@ -1578,7 +1623,7 @@ async function syncPrices(){
     const codesInData=new Set([...data.map(r=>r.code),...YIELD.map(y=>y.c)]);
     const unusedInSheet=Object.keys(j.prices).filter(c=>!codesInData.has(c));
 
-    console.group(`🔄 Sheet 對帳 ${new Date().toLocaleTimeString()}`);
+    console.group(` Sheet 對帳 ${new Date().toLocaleTimeString()}`);
     console.log('✅ 有對到並更新：', matched.join(', ')||'（無）');
     if(missing.length) console.warn('⚠️ 部位有、Sheet 沒報價（code 對不上或漏加列）：', missing.join(', '));
     if(invalid.length) console.warn('⚠️ Sheet 有列但報價無效（0/空/壞，已保留舊價）：', invalid.join(', '));
@@ -1609,13 +1654,13 @@ function stamp(){const d=new Date();return d.getFullYear()+
 function exportJSON(){
   persistNow();
   const now=new Date().toISOString();
-  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt};
+  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
   markBackedUp(now);
 }
 
-/* ===== 備份提醒：超過設定天數沒備份就在頁首提示（天數可在右上 ⏰ 選單調整） ===== */
+/* ===== 備份提醒：超過設定天數沒備份就在頁首提示（天數可在右上 選單調整） ===== */
 const REMIND_KEY='portfolio_backupRemindDays';   // 提醒天數（每台裝置各自設定）
 const REMIND_DEFAULT=30;                     // 預設 30 天；0 = 不提醒
 function remindDays(){
@@ -1631,7 +1676,7 @@ function renderRemindSel(){
   const sel=document.getElementById('bkRemindSel');if(!sel)return;
   const d=remindDays();
   if(![...sel.options].some(o=>+o.value===d)){   // 舊設定不在選單裡時補一個選項
-    const o=document.createElement('option');o.value=d;o.textContent=`⏰ ${d} 天`;sel.appendChild(o);
+    const o=document.createElement('option');o.value=d;o.textContent=`${d} 天`;sel.appendChild(o);
   }
   sel.value=String(d);
   let last='';try{last=localStorage.getItem(LASTBK_KEY)||'';}catch(e){}
@@ -1707,7 +1752,7 @@ function applyImport(){
     switchView('live');
     const btn=document.getElementById('importBtn');
     btn.textContent='✓ 已匯入';btn.classList.add('done');
-    setTimeout(()=>{btn.textContent='⬆ 匯入';btn.classList.remove('done');},2500);
+    setTimeout(()=>{btn.textContent='匯入備份';btn.classList.remove('done');},2500);
   }catch(err){showImport('匯入失敗','',err.message,false);}
 }
 
@@ -1908,12 +1953,12 @@ document.getElementById('trendRange').addEventListener('click',e=>{
   trendRange=b.dataset.r;try{localStorage.setItem('trendRange',trendRange);}catch(err){}
   renderCharts();
 });
-try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='STRATEGY ▾ 收合';}}}catch(e){}
+try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
 // 頁面載入後自動更新股價（如已設定 Sheet 網址）
 if(sheetUrl){
   setTimeout(()=>{
     const btn=document.getElementById('syncBtn');
-    if(btn)btn.textContent='🔄 自動更新中…';
+    if(btn)btn.textContent=' 自動更新中…';
     syncPrices();
   },800);
 }
@@ -1973,14 +2018,14 @@ ensureRowIds();
 function latestBaseline(){return archLabels().filter(k=>/^\d{6}$/.test(k)&&k<=todayLabel()).sort().pop();}
 function priceChange(r,key){const matches=(archives[key]||[]).filter(x=>x.code===r.code&&x.cls===r.cls);const old=matches.length===1?Number(matches[0].price):NaN,now=Number(r.price);return old>0&&now>0&&Number.isFinite(old)&&Number.isFinite(now)?{old,now,delta:now-old,rate:(now-old)/old}:null;}
 function changeLabel(c){return !c?'— 無紀錄':c.delta===0?'— 持平':`${c.delta>0?'▲ +':'▼ '}${(c.rate*100).toFixed(2)}%`;}
-function openExtra(title,html){let d=document.getElementById('extraDialog');if(!d){d=document.createElement('dialog');d.id='extraDialog';d.style.cssText='width:min(720px,94vw);max-height:85vh;overflow:auto;border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--bg,#fff);color:var(--ink,#222)';document.body.append(d);}d.innerHTML=`<button class="mini-btn" style="float:right" onclick="document.getElementById('extraDialog').close()">關閉</button><h3>${safeText(title)}</h3>${html}`;if(!d.open)d.showModal();}
+function openExtra(title,html){let d=document.getElementById('extraDialog');if(!d){d=document.createElement('dialog');d.id='extraDialog';d.style.cssText='width:min(720px,94vw);max-height:85vh;overflow:auto;border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--bg,#fff);color:var(--ink,#222)';document.body.append(d);}d.innerHTML=`<button class="mini-btn" style="float:right" onclick="document.getElementById('extraDialog').close()">關閉</button><h3 id="extraDialogTitle">${safeText(title)}</h3>${html}`;d.setAttribute('aria-labelledby','extraDialogTitle');if(!d.open)d.showModal();}
 function showCompare(){const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>({r,c:priceChange(r,key)})).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>(b.c?.rate??-Infinity)-(a.c?.rate??-Infinity));document.getElementById('compareResults').innerHTML=rows.map(({r,c})=>`<tr><td>${safeText(r.code)} ${safeText(r.name)}</td><td>${c?c.old:'—'}</td><td>${safeText(r.price)}</td><td>${c?c.delta.toFixed(2):'—'}</td><td style="color:${c?.delta>0?'#d33':c?.delta<0?'#198754':'inherit'}">${changeLabel(c)}</td></tr>`).join('')||'<tr><td colspan="5">無符合資料</td></tr>';}
 function openCompare(){const keys=archLabels().filter(k=>/^\d{6}$/.test(k)).reverse();openExtra('歷史價格比較',`<p>比較日期 <select id="compareDate" onchange="showCompare()">${keys.map(k=>`<option value="${k}">${fmtLabel(k)}</option>`).join('')}</select> <select id="compareDirection" onchange="showCompare()"><option value="all">全部（漲跌幅排序）</option><option value="up">上漲</option><option value="down">下跌</option></select></p><p>原幣價格比較，不含配息或分割調整。最近成功取得報價：${safeText(quoteUpdatedAt?new Date(quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}（部分標的可能未更新）</p><div style="overflow:auto"><table style="width:100%"><thead><tr><th>股票</th><th>歷史價格</th><th>目前價格</th><th>價差</th><th>漲跌幅</th></tr></thead><tbody id="compareResults"></tbody></table></div>`);showCompare();}
 const fieldNames={code:'代碼',name:'名稱',cls:'類別',shares:'股數／餘額',prin:'本金 TWD',avg:'均價',price:'現價',fx:'匯率',note:'備註',lastUp:'更新月份'};
 function auditDetails(a){if(!a.changes)return safeText(a.detail||'舊版紀錄');return a.changes.map(c=>{const b=c.before||{},n=c.after||{};return `<b>${safeText(n.code||b.code)} ${safeText(n.name||b.name)}</b><br>`+Object.keys(fieldNames).filter(k=>JSON.stringify(b[k])!==JSON.stringify(n[k])).map(k=>`${fieldNames[k]}：${safeText(b[k]??'—')} → ${safeText(n[k]??'—')}`).join('<br>');}).join('<hr>')+ (a.input?`<br>輸入方式：${safeText(a.input.source)}；股數 ${safeText(a.input.shares??'—')}；成交價 ${safeText(a.input.price??'—')}；金額 ${safeText(a.input.cost??'—')} TWD${a.input.proceeds!=null?`；估計賣出金額 ${safeText(a.input.proceeds)} TWD`:''}`:'');}
 function openAudit(id){const entries=audit.filter(a=>!id||a.changes?.some(c=>c.id===id));openExtra('操作紀錄',`<button class="mini-btn" onclick="undoLastTrade()">撤銷最近一次操作</button>${entries.slice().reverse().map(a=>`<section style="padding:14px 0;border-bottom:1px solid #aaa"><b>${safeText(a.at)} · ${safeText(a.label)}</b>${a.undone?'（已撤銷）':''}<p>${auditDetails(a)}</p></section>`).join('')||'<p>尚無操作紀錄</p>'}`);}
 const originalSaveRow=saveRow,originalDelRow=delRow;
-function recordAction(fn,label,input){ensureRowIds();const before=clone(data);fn();ensureRowIds();const changes=PortfolioCore.changes(before,data);if(!changes.length)return;audit.push({id:rowId(),at:new Date().toLocaleString('zh-TW'),label,changes,input});save();persistNow();renderTable();showToast('已儲存，可在操作紀錄核對',undoLastTrade);}
+function recordAction(fn,label,input){ensureRowIds();const before=clone(data);fn();ensureRowIds();const changes=PortfolioCore.changes(before,data);if(!changes.length)return;audit.push({id:rowId(),createdAt:new Date().toISOString(),at:new Date().toLocaleString('zh-TW'),label,changes,input});save();persistNow();renderTable();showToast('已儲存，可在操作紀錄核對',undoLastTrade);}
 function numberInput(id,optional=false){const value=document.getElementById(id).value.trim();if(optional&&!value)return null;const n=Number(value);if(!value||!Number.isFinite(n))throw Error('請填寫有效的數字');return n;}
 saveRow=function(){
   if(!isLive())return;
@@ -2010,10 +2055,10 @@ const fixed=document.getElementById('fgCost').style.display!=='none';const enter
   }catch(e){alert(e.message);}
 };
 delRow=function(){if(isLive())recordAction(originalDelRow,'刪除部位',null);};
-function undoLastTrade(){const a=audit.at(-1);try{const next=PortfolioCore.undo(data,a);if(!confirm('撤銷最近一次操作的修改欄位？其餘部位與後續報價會保留。'))return;const before=clone(data);data=next;a.undone=true;a.undoneAt=new Date().toISOString();audit.push({id:rowId(),at:new Date().toLocaleString('zh-TW'),label:'撤銷：'+a.label,changes:PortfolioCore.changes(before,data),undone:true,undoOf:a.id});save();persistNow();render();document.getElementById('extraDialog')?.close();}catch(e){alert(e.message);}}
+function undoLastTrade(){const a=audit.at(-1);try{const next=PortfolioCore.undo(data,a);if(!confirm('撤銷最近一次操作的修改欄位？其餘部位與後續報價會保留。'))return;const before=clone(data);data=next;a.undone=true;a.undoneAt=new Date().toISOString();audit.push({id:rowId(),createdAt:new Date().toISOString(),at:new Date().toLocaleString('zh-TW'),label:'撤銷：'+a.label,changes:PortfolioCore.changes(before,data),undone:true,undoOf:a.id});save();persistNow();render();document.getElementById('extraDialog')?.close();}catch(e){alert(e.message);}}
 const originalRenderTable=renderTable;
 renderTable=function(){originalRenderTable();if(!isLive())return;const key=latestBaseline();document.getElementById('hcount').textContent+=key?` · 較 ${fmtLabel(key)}`:' · 尚無快照';document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{const r=data[Number(tr.dataset.idx)];const history=document.createElement('button');history.className='mini-btn';history.textContent='◷';history.title='查看此部位操作紀錄';history.setAttribute('aria-label',r.code+' 操作紀錄');history.onclick=e=>{e.stopPropagation();openAudit(r._id);};tr.cells[0].append(history);if(['現金','貸款'].includes(r.cls))return;const c=priceChange(r,key),b=document.createElement('button');b.className='mini-btn';b.style.cssText='display:block;margin-top:5px';b.style.color=c?.delta>0?'#d33':c?.delta<0?'#198754':'inherit';b.textContent=changeLabel(c);b.title=c?`${fmtLabel(key)}：${c.old} → ${c.now}，價差 ${c.delta.toFixed(2)}\n報價取得時間：${r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無紀錄'}`:'該快照無有效價格';b.onclick=e=>{e.stopPropagation();alert(b.title);};tr.cells[0].append(b);});};
-const extraBar=document.createElement('div');extraBar.style.cssText='padding:12px;display:flex;flex-wrap:wrap;gap:8px';extraBar.innerHTML='<button class="mini-btn" onclick="openCompare()">歷史價格比較</button><button class="mini-btn" onclick="openAudit()">操作紀錄</button><button class="mini-btn" onclick="openCloud()">雲端同步</button><span id="cloudState" style="font-size:12px;align-self:center"></span>';document.getElementById('htable').before(extraBar);renderTable();
+
 
 // Sell reduces carrying principal proportionally; estimated proceeds are kept in the audit.
 const directionBox=document.createElement('div');directionBox.className='fg';directionBox.innerHTML='<label>操作</label><select id="tradeDirection" onchange="updateTradeDirection()"><option value="buy">加碼</option><option value="sell">減碼</option></select>';
@@ -2033,17 +2078,35 @@ openEdit=function(i){document.getElementById('tradeDirection').value='buy';baseO
 /* Hosted by Apps Script: google.script.run stays within the private deployment. */
 let cloudBusy=false,cloudTimer=null,cloudConflict=null,cloudPaused=false;
 const cloudAvailable=()=>typeof google!=='undefined'&&!!google.script?.run;
-function portfolioPayload(){return clone({v:5,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt});}
+function portfolioPayload(){return clone({v:5,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt});}
+function portfolioHasData(o){return !!o&&(!!o.notes?.trim()||['live','dca','cal','yield','recurring','audit'].some(k=>o[k]?.length>0)||Object.keys(o.archives||{}).length>0);}
 function cloudStatus(message){const el=document.getElementById('cloudState');if(el)el.textContent=message;}
 function persistCloudMeta(){saveDirty=true;persistNow();}
 function callCloud(method,...args){return new Promise((resolve,reject)=>{if(!cloudAvailable())return reject(Error('請從已部署的私人網頁開啟'));let done=false;const timer=setTimeout(()=>{done=true;reject(Error('連線逾時，資料留在本機；稍後可重試'));},25000);const ok=value=>{if(!done){done=true;clearTimeout(timer);resolve(value);}};const fail=e=>{if(!done){done=true;clearTimeout(timer);reject(Error(e.message||'連線失敗'));}};google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[method](...args);});}
 function formOpen(){return !!document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open||document.activeElement?.id==='noteArea';}
 function openCloud(){if(!cloudAvailable()){openExtra('啟用跨裝置同步','<p>本機版可正常記錄與比較。跨裝置同步請依專案的 CLOUD_SETUP.md 完成私人 Google 部署，再讓電腦與手機開啟同一網址、登入同一 Google 帳號。</p><p>首次使用：在本機匯出備份，再到私人網頁匯入。持倉資料不會隨程式部署上傳。</p>');return;}
 openExtra('雲端同步',`<p>狀態：${safeText(document.getElementById('cloudState').textContent)}</p><p>最後同步：${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未同步')}</p><p>修改後自動上傳；開啟、返回頁面及每 30 秒檢查更新。</p><button class="btn" onclick="document.getElementById('extraDialog').close();syncCloud(true)">立即同步／檢查版本</button>`);}
-function showCloudConflict(remote){cloudConflict=remote;cloudStatus(remote.revision?'版本不同，請選擇保留資料':'首次同步，請選擇資料來源');openExtra(remote.revision?'同步版本需要確認':'首次雲端同步',`<p>本機：${data.length} 筆持倉、${audit.length} 筆操作紀錄</p><p>雲端：${remote.payload?.live.length||0} 筆持倉；${safeText(remote.updatedAt||'尚無資料')}</p><p>選擇後會以該版本完整取代另一版本。取代前會自動下載被取代的資料作為備份。</p><button class="btn" onclick="resolveCloud('local')">保留本機，更新雲端</button> <button class="btn" ${remote.payload?'':'disabled'} onclick="resolveCloud('remote')">保留雲端，更新本機</button>`);}
+function showCloudConflict(remote){
+cloudConflict=remote;
+const localHas=portfolioHasData(portfolioPayload()),remoteHas=portfolioHasData(remote.payload);
+const summary=(o)=>`${o?.live?.length||0} 筆持倉 · ${Object.keys(o?.archives||{}).length} 份快照 · ${o?.audit?.length||0} 筆紀錄`;
+const title=remoteHas?(localHas?'同步版本需要確認':'載入雲端資料'):(localHas?'首次雲端同步':'尚無同步資料');
+cloudStatus(title);
+const intro=remoteHas&&!localHas?'這台裝置尚無資料。載入雲端版本即可繼續使用，不會覆蓋雲端紀錄。':localHas&&remoteHas?'兩邊都有資料，請確認要保留的版本。取代前會自動下載被取代的資料備份。':localHas?'將這台裝置的資料建立為雲端版本，之後手機就能載入。':'先匯入備份或新增第一筆持倉，再建立雲端資料。';
+openExtra(title,`<p>${intro}</p><div class="conflict-grid"><section><h4>這台裝置</h4><p>${summary(portfolioPayload())}</p><p>修改時間：${safeText(modifiedAt?new Date(modifiedAt).toLocaleString('zh-TW'):'尚無紀錄')}</p></section><section><h4>雲端版本</h4><p>${summary(remote.payload)}</p><p>更新時間：${safeText(remote.updatedAt?new Date(remote.updatedAt).toLocaleString('zh-TW'):'尚無紀錄')}</p></section></div><div class="conflict-actions">${remoteHas?`<button class="btn primary" onclick="resolveCloud('remote')">${localHas?'保留雲端，更新本機':'載入我的雲端資料'}</button>`:''}${localHas?`<button class="btn" onclick="resolveCloud('local')">${remoteHas?'保留本機，更新雲端':'建立我的雲端資料'}</button>`:''}${!remoteHas&&!localHas?`<button class="btn primary" onclick="cloudConflict=null;document.getElementById('extraDialog').close();focusSetting('backupPanel')">匯入備份</button><button class="btn" onclick="cloudConflict=null;document.getElementById('extraDialog').close();setTab('hold');openAdd()">新增第一筆</button>`:''}</div><p id="cloudConflictError" class="conflict-error" role="alert"></p>`);
+}
 function backupConflict(payload){download(new Blob([JSON.stringify({...payload,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),`同步取代前備份_${stamp()}.json`);}
-function acceptRemote(remote){validatePortfolio(remote.payload);const o=remote.payload;data=clone(o.live);dca=o.dca||[];archives=o.archives||{};CAL=o.cal||[];YIELD=o.yield||[];notes=o.notes||'';recurring=o.recurring||[];audit=o.audit||[];sheetUrl=o.sheetUrl||'';quoteUpdatedAt=o.quoteUpdatedAt||'';ensureRowIds();switchView('live');renderNotes();cloudMeta.revision=remote.revision;cloudMeta.ack=JSON.stringify(portfolioPayload());cloudMeta.syncedAt=new Date().toISOString();persistCloudMeta();if(saveDirty)throw Error('本機儲存失敗，請先匯出備份');if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);else localStorage.removeItem(URL_KEY);cloudStatus('已同步 · '+new Date().toLocaleTimeString('zh-TW'));}
-async function resolveCloud(choice){if(cloudBusy||!cloudConflict)return;const remote=cloudConflict;cloudBusy=true;try{if(choice==='remote'){backupConflict(portfolioPayload());acceptRemote(remote);}else{if(remote.payload)backupConflict(remote.payload);await pushCloud(remote.revision);}cloudConflict=null;document.getElementById('extraDialog')?.close();}catch(e){cloudStatus(e.message);}finally{cloudBusy=false;}}
+function acceptRemote(remote){validatePortfolio(remote.payload);const o=remote.payload;data=clone(o.live);dca=o.dca||[];archives=o.archives||{};CAL=o.cal||[];YIELD=o.yield||[];notes=o.notes||'';recurring=o.recurring||[];audit=o.audit||[];sheetUrl=o.sheetUrl||'';quoteUpdatedAt=o.quoteUpdatedAt||'';modifiedAt=o.modifiedAt||'';ensureRowIds();switchView('live');renderNotes();cloudMeta.revision=remote.revision;cloudMeta.ack=JSON.stringify(portfolioPayload());cloudMeta.syncedAt=new Date().toISOString();persistCloudMeta();if(saveDirty)throw Error('本機儲存失敗，請先匯出備份');if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);else localStorage.removeItem(URL_KEY);cloudStatus('已同步 · '+new Date().toLocaleTimeString('zh-TW'));}
+async function resolveCloud(choice){
+if(cloudBusy||!cloudConflict)return;
+const remote=cloudConflict,localHas=portfolioHasData(portfolioPayload()),remoteHas=portfolioHasData(remote.payload);
+if(choice==='local'&&!localHas){cloudStatus('沒有本機資料可上傳，請先載入雲端或匯入備份');return;}
+if(choice==='remote'&&!remote.payload)return;
+if(localHas&&remoteHas&&!confirm(choice==='local'?'確定用這台裝置的完整資料取代雲端版本？':'確定用雲端的完整資料取代這台裝置？'))return;
+cloudBusy=true;
+try{if(choice==='remote'){if(localHas)backupConflict(portfolioPayload());acceptRemote(remote);}else{if(remoteHas)backupConflict(remote.payload);await pushCloud(remote.revision);}cloudConflict=null;document.getElementById('extraDialog')?.close();}
+catch(e){if(cloudConflict!==remote)showCloudConflict(cloudConflict);cloudStatus(e.message);const el=document.getElementById('cloudConflictError');if(el)el.textContent=e.message;}
+finally{cloudBusy=false;}}
 async function pushCloud(revision){const payload=portfolioPayload(),sent=JSON.stringify(payload);persistCloudMeta();if(saveDirty)throw Error('本機尚未成功儲存，暫停上傳');const response=await callCloud('savePortfolio',revision,payload);if(response.conflict){cloudConflict=response;throw Error('雲端剛有新修改，請再次檢查版本');}cloudMeta.revision=response.revision;cloudMeta.ack=sent;cloudMeta.syncedAt=new Date().toISOString();persistCloudMeta();cloudStatus(JSON.stringify(portfolioPayload())===sent?'已同步 · '+new Date().toLocaleTimeString('zh-TW'):'待同步（有新修改）');}
 async function syncCloud(manual=false){if(!cloudAvailable()||cloudBusy||cloudPaused||(!manual&&(cloudConflict||formOpen())))return;if(!navigator.onLine){cloudStatus('離線，修改保存在本機');return;}cloudBusy=true;const started=JSON.stringify(portfolioPayload());cloudStatus('同步中…');try{const remote=await callCloud('readPortfolio');if(remote.payload)validatePortfolio(remote.payload);if(JSON.stringify(portfolioPayload())!==started||(!manual&&formOpen())){cloudStatus('有新修改，稍後再同步');return;}
 const same=remote.payload&&JSON.stringify(remote.payload)===started;
@@ -2058,6 +2121,114 @@ window.addEventListener('online',()=>syncCloud());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncCloud();});
 window.addEventListener('storage',e=>{if(e.key===KEY){cloudPaused=true;cloudStatus('另一分頁修改了資料：請先備份本頁，再重新整理');}});
 if(cloudAvailable()){cloudStatus('等待同步');setTimeout(()=>syncCloud(),1200);setInterval(()=>{if(document.visibilityState==='visible')syncCloud();},30000);}else cloudStatus('本機模式 · 雲端尚未部署');
+
+</script><script>
+/* Workspace navigation, responsive data views and guided setup. */
+let analysisSection='compare',setupChoice='new';
+const pageNames={hold:'我的持倉',analy:'比較與分析',records:'操作紀錄',plans:'投資計畫',settings:'設定'};
+function setTab(t){
+  if(!pageNames[t])t='hold';tab=t;
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+t));
+  document.querySelectorAll('.app-nav button').forEach(b=>{if(b.dataset.page===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  document.getElementById('pageTitle').textContent=pageNames[t];
+  document.getElementById('histBanner').classList.toggle('show',!isLive()&&(t==='hold'||t==='analy'));
+  if(t==='analy'){showAnalysis(analysisSection);refreshAiPreview();}
+  if(t==='records')renderAuditPage();
+  if(t==='settings')renderSettings();
+  if(t==='plans'){if(!isLive())switchView('live');document.getElementById('dcaCard').style.display='';document.getElementById('recurringCard').style.display='';}
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function showAnalysis(name){
+  analysisSection=name;
+  for(const [key,id] of Object.entries({compare:'comparisonPanel',charts:'analysisCharts',income:'analysisIncome'}))document.getElementById(id).hidden=key!==name;
+  document.querySelectorAll('[data-analysis]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.analysis===name)));
+  if(name==='compare')refreshComparison();
+  if(name==='charts'&&typeof Chart!=='undefined')requestAnimationFrame(()=>renderCharts());
+}
+function focusSetting(id){setTab('settings');const el=document.getElementById(id);el.scrollIntoView({block:'start',behavior:'instant'});el.focus({preventScroll:true});}
+openCloud=function(){focusSetting('cloudPanel');};
+openCompare=function(){analysisSection='compare';setTab('analy');};
+function refreshComparison(){
+  const select=document.getElementById('compareDate'),previous=select.value;
+  const keys=archLabels().filter(k=>/^\d{6}$/.test(k)).reverse();
+  select.innerHTML=keys.length?keys.map(k=>`<option value="${k}">${fmtLabel(k)}</option>`).join(''):'<option value="">尚無快照</option>';
+  if(keys.includes(previous))select.value=previous;
+  select.disabled=!keys.length;showCompare();
+}
+showCompare=function(){
+  const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;
+  const empty=document.getElementById('compareEmpty');empty.hidden=!!key;
+  empty.textContent='還沒有歷史快照。先儲存今日快照，下次更新價格後就能看變化。';
+  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>({r,c:priceChange(r,key)})).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>(b.c?.rate??-Infinity)-(a.c?.rate??-Infinity));
+  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading" aria-hidden="true"><span>標的</span><span>歷史價格</span><span>目前價格</span><span>價差</span><span>漲跌幅</span></div>`+rows.map(({r,c})=>`<article class="compare-row"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="difference">${c?signedNumber(c.delta):'—'}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div></article>`).join('');
+};
+function numberText(value){return value==null||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('zh-TW',{maximumFractionDigits:4});}
+function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value*10000)/10000);}
+renderKPI=function(){const t=totals(curData());document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="lbl">淨資產 · TWD</div><div class="val">${fmt(t.total)}</div><div class="delta">含現金，已扣除貸款</div></div><div class="kpi"><div class="lbl">未實現損益</div><div class="val ${t.pl>0?'pos':t.pl<0?'neg':''}">${signedNumber(t.pl)}</div><div class="delta">相對投入本金，不含息</div></div><div class="kpi"><div class="lbl">投入本金 · TWD</div><div class="val">${fmt(t.prin)}</div><div class="delta">投資部位，不含現金</div></div>`;};
+renderTable=function(){
+  originalRenderTable();const arr=curData(),key=latestBaseline();
+  document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):' · 歷史唯讀'}`;
+  document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'快照日期 '+fmtLabel(viewKey);
+  document.getElementById('addPositionBtn').disabled=!isLive();
+  document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{
+    const i=Number(tr.dataset.idx),r=arr[i],simple=['現金','貸款'].includes(r.cls),c=isLive()&&!simple?priceChange(r,key):null;
+    tr.removeAttribute('onclick');tr.classList.remove('clickable');
+    tr.cells[0].innerHTML=`<button class="position-name" onclick="${isLive()?'openEdit':'showPosition'}(${i})" aria-label="${safeText(r.code)} ${isLive()?'加減碼或編輯':'查看歷史部位'}"><span class="code">${safeText(r.name||r.code)}</span><small>${safeText(r.code)}${isLive()?' · '+(simple?'更新餘額':'加減碼'):''}</small></button><div class="position-actions"><button class="text-btn" onclick="showPosition(${i})">詳情</button>${isLive()?`<button class="text-btn" onclick="openAuditForRow(${i})">紀錄</button>`:''}</div>`;
+    tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">現價 · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
+    tr.cells[4].insertAdjacentHTML('afterbegin',`<span class="cell-label">${r.cls==='貸款'?'剩餘欠款':'市值'} · TWD</span>`);
+    tr.cells[8].insertAdjacentHTML('afterbegin','<span class="cell-label">相對成本損益</span>');
+    const profit=pnl(r);if(profit==null||profit===0){tr.cells[8].className='';tr.cells[9].className='';}
+    if(reorderMode&&isLive()){tr.cells[0].insertAdjacentHTML('afterbegin','<span class="drag-handle">↕ 拖曳排列</span>');}
+  });
+  if(!arr.length){document.getElementById('hbody').innerHTML='<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>';}
+  if(tab==='records')renderAuditPage();
+  if(tab==='analy'&&analysisSection==='compare')refreshComparison();
+};
+function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name,`<p>現價 ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<button class="btn primary" onclick="document.getElementById('extraDialog').close();openEdit(${i})">${['現金','貸款'].includes(r.cls)?'更新餘額':'加減碼或編輯'}</button>`:''}`);}
+function openAuditForRow(i){openAudit(data[i]?._id);}
+openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
+function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
+function auditDay(a){if(a.createdAt){const d=new Date(a.createdAt);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}const m=(a.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
+function renderAuditPage(){const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;const entries=audit.filter(a=>(!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day));document.getElementById('auditList').innerHTML=entries.length?entries.slice().reverse().map((a,i)=>`<details class="audit-entry" ${i===0?'open':''}><summary><strong>${safeText(a.label)}${a.undone?' · 已撤銷':''}</strong><span>${safeText(a.at)}</span></summary><p>${auditDetails(a)}</p></details>`).join(''):'<p class="empty-note">'+(audit.length?'沒有符合的操作紀錄。':'尚無操作紀錄。下次加減碼或編輯後，會在這裡保留修改前後的內容。')+'</p>';}
+function renderSettings(){document.getElementById('quoteConnectionState').textContent=sheetUrl?'已設定報價來源':'尚未設定報價來源';renderCloudSetup();}
+function chooseSetup(value){setupChoice=value;renderCloudSetup();}
+function savedPrivateUrl(){try{return localStorage.getItem('portfolio_private_url')||'';}catch{return '';}}
+function renderCloudSetup(){
+  const hosted=cloudAvailable(),hasData=portfolioHasData(portfolioPayload());
+  const status=document.getElementById('cloudState').textContent;
+  const urlForm=`<form class="private-link-form" onsubmit="event.preventDefault();rememberPrivateUrl()"><label for="privateAppUrl">你的私人網頁網址</label><input id="privateAppUrl" type="url" value="${safeText(savedPrivateUrl())}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="url" aria-describedby="privateUrlHelp"><p class="muted" id="privateUrlHelp">電腦和手機都開啟這個網址，並登入同一個 Google 帳號。網址保存在此裝置。</p><div class="setup-actions"><button class="btn" type="submit">儲存網址</button><button class="btn" type="button" onclick="visitPrivateApp()">開啟私人版</button><button class="btn" type="button" onclick="copyPrivateUrl()">複製給手機</button></div><p id="privateUrlStatus" class="status-note" role="status"></p></form>`;
+  const buttons=`<div class="setup-choice"><button class="btn" aria-pressed="${setupChoice==='new'}" onclick="chooseSetup('new')">第一次設定</button><button class="btn" aria-pressed="${setupChoice==='existing'}" onclick="chooseSetup('existing')">已有私人網址</button></div>`;
+  let body;
+  if(hosted){body=`<div class="setup-status"><strong>你正在使用私人版</strong><p id="settingsCloudStatus">${safeText(status)}</p><p>最後同步：<span id="lastCloudTime">${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未完成')}</span></p></div><div class="setup-actions"><button class="btn primary" onclick="syncCloud(true)">立即同步／檢查版本</button>${!hasData?'<button class="btn" onclick="focusSetting(\'backupPanel\')">匯入我的備份</button>':''}<button class="btn" onclick="exportJSON()">下載目前備份</button></div><p class="muted">修改後自動同步。離線時先留在本機；兩台裝置都改過時，會先請你選擇版本。</p>${urlForm}`;}
+  else{body=`<div class="setup-status"><strong>資料目前只存在這個瀏覽器</strong><p>啟用同步需要一次 Google 私人網頁設定。GitHub 網頁及「更新報價」不會自動啟用跨裝置同步。</p></div>${buttons}`;
+    if(setupChoice==='new'){body+=`<ol class="setup-steps"><li><h3>先保存目前資料</h3><p>換到新網址後，舊瀏覽器資料不會自動帶過去。</p><button class="btn" onclick="exportJSON()">下載目前資料備份</button></li><li><h3>建立私人 Google 專案</h3><p>建立獨立專案，不要覆蓋你原本抓股價的服務。</p><a class="btn" href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer">開啟 Google Apps Script</a></li><li><h3>貼入兩份檔案</h3><p>在 Google 專案中，將第一份貼進 Code.gs；再按「＋ → HTML」，名稱填 Index，貼入第二份。</p>${['server','page'].map((k)=>`<div class="code-copy"><strong>${k==='server'?'Code.gs':'Index.html'}</strong><button class="btn" onclick="copySetupFile('${k}')">複製${k==='server'?'服務程式':'網頁程式'}</button><button class="text-btn" onclick="downloadSetupFile('${k}')">下載檔案</button></div>`).join('')}<p class="status-note" id="setupCopyStatus" role="status"></p><details class="instructions"><summary>無法複製時，展開程式內容</summary><label for="setupCodeType">選擇檔案</label><select id="setupCodeType" onchange="showSetupCode()"><option value="server">Code.gs</option><option value="page">Index.html</option></select><textarea id="setupCodePreview" readonly aria-label="部署程式內容" onclick="this.select()"></textarea></details></li><li><h3>部署成僅自己可用的網頁</h3><p>按「部署 → 新增部署」，類型選「網頁應用程式」。執行身分選「我」，誰可以存取選「僅限自己」。完成 Google 授權後，複製以 /exec 結尾的網址。</p><p>程式會建立私人同步試算表，不需要公開你的持倉。</p></li><li><h3>開啟私人版，帶入資料</h3><p>在私人版匯入剛才的備份，再建立雲端資料。手機使用同一網址，選「載入我的雲端資料」。</p>${urlForm}</li></ol>`;}
+    else body+=`<p class="muted">在下方貼上已部署的私人網址。這會帶你前往私人版；目前這個頁面仍使用本機資料。</p><button class="btn" onclick="exportJSON()">先下載目前備份</button>${urlForm}`;
+  }
+  document.getElementById('cloudSetupBody').innerHTML=body;showSetupCode();
+}
+function setupFile(kind){const files=globalThis.CLOUD_INSTALL_FILES;if(!files?.[kind])throw Error('此版本沒有附部署檔案。請從專案的 apps-script 資料夾取得 Code.gs 與 Index.html。');return files[kind];}
+function showSetupCode(){const el=document.getElementById('setupCodePreview');if(el){try{el.value=setupFile(document.getElementById('setupCodeType').value);}catch(e){el.value=e.message;}}}
+async function copySetupFile(kind){const status=document.getElementById('setupCopyStatus');try{await navigator.clipboard.writeText(setupFile(kind));status.textContent='已複製 '+(kind==='server'?'Code.gs':'Index.html')+'，請到 Google 專案貼上。';}catch(e){status.textContent='無法自動複製，請下載檔案，或展開下方內容後全選複製。';document.querySelector('.instructions').open=true;document.getElementById('setupCodeType').value=kind;showSetupCode();}}
+function downloadSetupFile(kind){try{download(new Blob([setupFile(kind)],{type:'text/plain;charset=utf-8'}),kind==='server'?'Code.gs':'Index.html');document.getElementById('setupCopyStatus').textContent='已開始下載，請開啟檔案並貼入 Google 專案。';}catch(e){alert(e.message);}}
+function validPrivateUrl(raw){try{const u=new URL(raw.trim());if(u.protocol!=='https:'||u.hostname!=='script.google.com'||u.username||u.password||u.port||!/^\/macros\/s\/[\w-]+\/exec$/.test(u.pathname))return null;return u.origin+u.pathname;}catch{return null;}}
+function rememberPrivateUrl(){const url=validPrivateUrl(document.getElementById('privateAppUrl').value);const status=document.getElementById('privateUrlStatus');if(!url){status.textContent='請貼上 Google 部署得到、以 /exec 結尾的私人網址。';return null;}try{localStorage.setItem('portfolio_private_url',url);document.getElementById('privateAppUrl').value=url;status.textContent='網址已儲存。請開啟私人版後完成資料載入。';return url;}catch{status.textContent='此瀏覽器無法保存網址，請先自行收藏。';return url;}}
+function visitPrivateApp(){const url=rememberPrivateUrl();if(url)window.open(url,'_blank','noopener,noreferrer');}
+async function copyPrivateUrl(){const url=rememberPrivateUrl();if(!url)return;try{await navigator.clipboard.writeText(url);document.getElementById('privateUrlStatus').textContent='已複製網址。請在手機開啟並登入同一 Google 帳號。';}catch{document.getElementById('privateAppUrl').select();document.getElementById('privateUrlStatus').textContent='請複製已選取的網址。';}}
+// Keep overlays reachable and return keyboard focus to the invoking control.
+const overlayFocus=new WeakMap();
+for(const ov of document.querySelectorAll('.ov')){
+  const panel=ov.querySelector('.modal');if(!panel)continue;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');const title=panel.querySelector('h3');if(title){if(!title.id)title.id='title-'+ov.id;panel.setAttribute('aria-labelledby',title.id);}
+  new MutationObserver(()=>{if(ov.classList.contains('show')){overlayFocus.set(ov,document.activeElement);const target=panel.querySelector('input:not([type=hidden]),select,button');target?.focus();}else{const prior=overlayFocus.get(ov);if(prior?.isConnected)prior.focus();}}).observe(ov,{attributes:true,attributeFilter:['class']});
+}
+document.addEventListener('keydown',e=>{const ov=document.querySelector('.ov.show');if(!ov)return;const focusables=[...ov.querySelectorAll('button,input,select,textarea,a[href]')].filter(x=>!x.disabled&&x.getClientRects().length);if(e.key==='Escape'){e.preventDefault();ov.classList.remove('show');if(ov.id==='ovImport')pendingImport=null;}if(e.key==='Tab'&&focusables.length){const first=focusables[0],last=focusables.at(-1);if(e.shiftKey&&(document.activeElement===first||!ov.contains(document.activeElement))){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+const statusBeforeUI=cloudStatus;
+cloudStatus=function(message){statusBeforeUI(message);const detail=document.getElementById('settingsCloudStatus');if(detail)detail.textContent=message;const time=document.getElementById('lastCloudTime');if(time)time.textContent=cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未完成';};
+const saveSyncBeforeUI=saveSync;saveSync=function(){saveSyncBeforeUI();if(tab==='settings')renderSettings();};
+const archiveBeforeUI=archiveNow;archiveNow=function(){archiveBeforeUI();if(tab==='analy')refreshComparison();};
+// Tone down legacy labels and keep all five pages initialized without changing their data.
+document.querySelectorAll('.tag').forEach(el=>{if(!el.id&&/^[A-Z\s·/&]+$/.test(el.textContent.trim()))el.remove();});
+renderKPI();renderTable();renderSettings();setTab('hold');
+if(!cloudAvailable())cloudStatus('僅此裝置 · 未啟用同步');
 
 </script></body>
 </html>
