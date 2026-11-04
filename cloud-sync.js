@@ -1,11 +1,26 @@
 /* Hosted by Apps Script: google.script.run stays within the private deployment. */
 let cloudBusy=false,cloudTimer=null,cloudConflict=null,cloudPaused=false;
-const cloudAvailable=()=>typeof google!=='undefined'&&!!google.script?.run;
+const legacyCloudAvailable=()=>typeof google!=='undefined'&&!!google.script?.run;
+const SYNC_CONFIG_KEY='portfolio_sync_connection';
+function readSyncConnection(){try{const o=JSON.parse(localStorage.getItem(SYNC_CONFIG_KEY)||'null');return o&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(o.url)&&/^[a-f0-9]{64}$/.test(o.token)?o:null;}catch{return null;}}
+let syncConnection=readSyncConnection();
+const cloudAvailable=()=>!!syncConnection||legacyCloudAvailable();
+async function callDriveService(connection,method,args=[]){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
+ try{const response=await fetch(connection.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',cache:'no-store',signal:controller.signal,body:JSON.stringify({token:connection.token,method,revision:args[0],payload:args[1]})});
+ if(!response.ok)throw Error('服務連線失敗，請檢查部署網址與存取設定');
+ let result;try{result=await response.json();}catch{throw Error('服務未回傳資料，請確認部署存取權為「任何人」');}
+ if(!result.ok)throw Error(result.error||'同步失敗');
+ if(method==='info'&&(result.service!=='stock-tracker-drive'||result.api!==1))throw Error('這不是資產追蹤同步服務');
+ if(method!=='info'&&(!Number.isInteger(result.revision)||result.revision<0))throw Error('服務版本資訊不正確');
+ return result;
+ }catch(e){if(e.name==='AbortError')throw Error('連線逾時，資料留在本機；請重試');throw e;}finally{clearTimeout(timer);}
+}
 function portfolioPayload(){return clone({v:5,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt});}
 function portfolioHasData(o){return !!o&&(!!o.notes?.trim()||['live','dca','cal','yield','recurring','audit'].some(k=>o[k]?.length>0)||Object.keys(o.archives||{}).length>0);}
 function cloudStatus(message){const el=document.getElementById('cloudState');if(el)el.textContent=message;}
 function persistCloudMeta(){saveDirty=true;persistNow();}
-function callCloud(method,...args){return new Promise((resolve,reject)=>{if(!cloudAvailable())return reject(Error('請從已部署的私人網頁開啟'));let done=false;const timer=setTimeout(()=>{done=true;reject(Error('連線逾時，資料留在本機；稍後可重試'));},25000);const ok=value=>{if(!done){done=true;clearTimeout(timer);resolve(value);}};const fail=e=>{if(!done){done=true;clearTimeout(timer);reject(Error(e.message||'連線失敗'));}};google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[method](...args);});}
+function callCloud(method,...args){if(syncConnection)return callDriveService(syncConnection,method,args);return new Promise((resolve,reject)=>{if(!cloudAvailable())return reject(Error('請從已部署的私人網頁開啟'));let done=false;const timer=setTimeout(()=>{done=true;reject(Error('連線逾時，資料留在本機；稍後可重試'));},25000);const ok=value=>{if(!done){done=true;clearTimeout(timer);resolve(value);}};const fail=e=>{if(!done){done=true;clearTimeout(timer);reject(Error(e.message||'連線失敗'));}};google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[method](...args);});}
 function formOpen(){return !!document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open||document.activeElement?.id==='noteArea';}
 function openCloud(){if(!cloudAvailable()){openExtra('啟用跨裝置同步','<p>本機版可正常記錄與比較。跨裝置同步請依專案的 CLOUD_SETUP.md 完成私人 Google 部署，再讓電腦與手機開啟同一網址、登入同一 Google 帳號。</p><p>首次使用：在本機匯出備份，再到私人網頁匯入。持倉資料不會隨程式部署上傳。</p>');return;}
 openExtra('雲端同步',`<p>狀態：${safeText(document.getElementById('cloudState').textContent)}</p><p>最後同步：${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未同步')}</p><p>修改後自動上傳；開啟、返回頁面及每 30 秒檢查更新。</p><button class="btn" onclick="document.getElementById('extraDialog').close();syncCloud(true)">立即同步／檢查版本</button>`);}
@@ -42,5 +57,6 @@ else cloudStatus('已同步 · '+new Date(cloudMeta.syncedAt).toLocaleTimeString
 window.addEventListener('portfoliochange',()=>{if(cloudAvailable()){cloudStatus(navigator.onLine?'待同步':'離線，修改保存在本機');clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>syncCloud(),1600);}});
 window.addEventListener('online',()=>syncCloud());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncCloud();});
-window.addEventListener('storage',e=>{if(e.key===KEY){cloudPaused=true;cloudStatus('另一分頁修改了資料：請先備份本頁，再重新整理');}});
-if(cloudAvailable()){cloudStatus('等待同步');setTimeout(()=>syncCloud(),1200);setInterval(()=>{if(document.visibilityState==='visible')syncCloud();},30000);}else cloudStatus('本機模式 · 雲端尚未部署');
+window.addEventListener('storage',e=>{if(e.key===KEY||e.key===SYNC_CONFIG_KEY){cloudPaused=true;cloudStatus('另一分頁修改了資料：請先備份本頁，再重新整理');}});
+if(cloudAvailable()){cloudStatus('等待同步');setTimeout(()=>syncCloud(),1200);}else cloudStatus('僅此裝置 · 尚未連線');
+setInterval(()=>{if(document.visibilityState==='visible')syncCloud();},30000);

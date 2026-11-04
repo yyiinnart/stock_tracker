@@ -102,3 +102,4 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 [hidden]{display:none!important}
+#generatedSyncToken{display:block;width:100%;margin-top:12px;padding:10px 12px;min-height:44px;background:var(--panel2);border:1px solid #647084;border-radius:5px;color:var(--ink);font:13px var(--mono)}#setupCodePreview{background:var(--panel);color:var(--ink);border:1px solid #647084;padding:10px}

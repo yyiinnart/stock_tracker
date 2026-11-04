@@ -18,12 +18,11 @@ await page.locator('#hbody .position-name').first().click();await page.locator('
 // Settings assets work without fetching source files; mobile values stay visible.
 assert.ok((await page.locator('#hbody tr').first().boundingBox()).y<506);
 assert.notEqual(await page.locator('#hbody tr').first().locator('td').nth(3).evaluate(el=>getComputedStyle(el).display),'none');
-await page.locator('.sync-entry').click();await page.getByText('第一次設定',{exact:true}).waitFor();
+await page.locator('.sync-entry').click();await page.getByText('第一次設定 Google 同步服務',{exact:true}).waitFor();
 assert.equal(await page.evaluate(()=>setupFile('server').includes('function doGet')),true);
 assert.equal(await page.evaluate(()=>setupFile('page').includes('src="interface.js"')),false);
 const codeDownload=page.waitForEvent('download');await page.evaluate(()=>downloadSetupFile('page'));assert.ok(fs.readFileSync(await (await codeDownload).path(),'utf8').includes('function renderCloudSetup'));
-await page.getByText('已有私人網址',{exact:true}).click();await page.locator('#privateAppUrl').fill('https://example.com/exec');await page.getByRole('button',{name:'儲存網址',exact:true}).click();assert.match(await page.locator('#privateUrlStatus').innerText(),/請貼上 Google/);
-await page.locator('#privateAppUrl').fill('https://script.google.com/macros/s/TEST/exec');await page.getByRole('button',{name:'儲存網址',exact:true}).click();assert.equal(await page.evaluate(()=>savedPrivateUrl()),'https://script.google.com/macros/s/TEST/exec');
+await page.locator('#syncServiceUrl').fill('https://example.com/exec');await page.evaluate(()=>connectDriveSync());assert.match(await page.locator('#syncConnectionStatus').innerText(),/請填入/);
 await page.evaluate(()=>setTab('hold'));await page.locator('#addPositionBtn').click();await page.keyboard.press('Escape');assert.equal(await page.locator('.ov.show').count(),0);await page.waitForTimeout(30);assert.equal(await page.evaluate(()=>document.activeElement.id),'addPositionBtn');
 await page.evaluate(()=>{switchView('261101');setTab('plans');});assert.equal(await page.evaluate(()=>isLive()),true);
 // The generated Apps Script page must also run without any relative assets.
@@ -35,11 +34,38 @@ await page.evaluate(()=>checkAppUpdate(true));assert.match(await page.locator('#
 await page.route('**/version.json?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({version:'0123456789abcdef'})}));
 await page.evaluate(()=>checkAppUpdate(true));assert.equal(await page.locator('#reloadUpdateBtn').isVisible(),true);assert.equal(await page.locator('#appUpdateBanner').count(),1);
 await page.evaluate(()=>{notes='update preservation';save();});
-await Promise.all([page.waitForURL('**_app=0123456789abcdef*'),page.locator('#reloadUpdateBtn').click()]);
+await Promise.all([page.waitForEvent('domcontentloaded'),page.locator('#reloadUpdateBtn').click()]);
+assert.equal(new URL(page.url()).search,'');
 assert.equal(await page.evaluate(()=>data[0].shares),900);assert.ok(await page.evaluate(()=>audit.length>=3));
 // A failed probe must not expose a destructive fallback or clear local data.
 await page.route('**/version.json?*',route=>route.abort());await page.evaluate(()=>checkAppUpdate(true));assert.match(await page.locator('#appUpdateStatus').innerText(),/無法檢查/);assert.equal(await page.evaluate(()=>data[0].shares),900);
-console.log('PASS: current/stale/offline version checks, cache-busting reload and data preservation');
+// Passive opening updates once; a CDN still returning old HTML cannot cause a reload loop.
+const auto=await context.newPage();let documentLoads=0;auto.on('request',r=>{if(r.isNavigationRequest()&&r.frame()===auto.mainFrame())documentLoads++;});
+await auto.route('**/version.json?*',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({version:'fedcba9876543210'})}));
+await auto.goto(url+'/?keep=1#hold');await auto.waitForFunction(()=>sessionStorage.getItem(appUpdateAttemptKey())==='fedcba9876543210');
+await auto.waitForTimeout(3500);assert.equal(documentLoads,2);assert.equal(new URL(auto.url()).search,'?keep=1');assert.equal(new URL(auto.url()).hash,'#hold');assert.equal(await auto.evaluate(()=>data[0].shares),900);
+// Any in-progress input defers automatic navigation.
+await auto.locator('#hbody .position-name').first().click();await auto.locator('#a_shares').fill('42');await auto.route('**/version.json?*',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({version:'aaaaaaaaaaaaaaaa'})}));
+await auto.evaluate(()=>checkAppUpdate());assert.equal(documentLoads,2);assert.equal(await auto.locator('#a_shares').inputValue(),'42');await auto.close();
+console.log('PASS: clean URL, passive auto update, one-attempt loop protection, edit deferral and data preservation');
+// GitHub-style clients talk through POST to a Drive service; no Google-hosted UI required.
+let driveRemote={revision:0,payload:null,updatedAt:null},postCount=0;
+const serviceUrl='https://script.google.com/macros/s/TEST/exec',secret='a'.repeat(64);
+async function httpDevice(seed){const ctx=await browser.newContext();await ctx.route('https://**/*',r=>r.abort());await ctx.route(serviceUrl,async route=>{
+ const req=route.request();assert.equal(req.method(),'POST');assert.equal(req.url().includes(secret),false);const body=req.postDataJSON();postCount++;
+ let result;if(body.token!==secret)result={ok:false,error:'驗證失敗'};else if(body.method==='info')result={ok:true,service:'stock-tracker-drive',api:1};else if(body.method==='readPortfolio')result={ok:true,...driveRemote};else if(body.revision!==driveRemote.revision)result={ok:true,conflict:true,...driveRemote};else {driveRemote={revision:driveRemote.revision+1,payload:body.payload,updatedAt:new Date().toISOString()};result={ok:true,revision:driveRemote.revision,updatedAt:driveRemote.updatedAt};}
+ await route.fulfill({contentType:'application/json',body:JSON.stringify(result)});
+ });await ctx.addInitScript(seed=>localStorage.setItem('portfolioDemo_v3',JSON.stringify(seed)),seed);const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('dialog',d=>d.accept());await p.goto(url);await p.locator('.sync-entry').click();return p;}
+async function connect(p,t=secret){await p.locator('#syncServiceUrl').fill(serviceUrl);await p.locator('#syncServiceToken').fill(t);await p.getByRole('button',{name:'測試並儲存連線'}).click();}
+const h1=await httpDevice(fixture);await connect(h1,'b'.repeat(64));await h1.waitForFunction(()=>!cloudBusy);assert.equal(await h1.evaluate(()=>syncConnection),null);assert.equal(driveRemote.revision,0);
+await connect(h1);await h1.getByRole('button',{name:'建立我的雲端資料',exact:true}).click();await h1.waitForFunction(()=>cloudMeta.revision===1&&!cloudBusy);
+const h2=await httpDevice({live:[],audit:[],archives:{}});await connect(h2);await h2.getByRole('button',{name:'載入我的雲端資料',exact:true}).click();await h2.waitForFunction(()=>data.length===1&&!cloudBusy);
+await h1.evaluate(async()=>{notes='Drive shared note';save();await syncCloud(true);});await h2.evaluate(()=>syncCloud(true));assert.equal(await h2.evaluate(()=>notes),'Drive shared note');
+assert.equal(JSON.stringify(driveRemote.payload).includes(secret),false);
+await h2.evaluate(async()=>{notes='conflict B';save();});await h1.evaluate(async()=>{notes='conflict A';save();await syncCloud(true);});await h2.evaluate(()=>syncCloud(true));assert.equal(await h2.locator('#extraDialog h3').innerText(),'同步版本需要確認');
+await h2.getByRole('button',{name:'保留雲端，更新本機',exact:true}).click();await h2.waitForFunction(()=>!cloudBusy&&notes==='conflict A');
+await h2.evaluate(()=>disconnectDriveSync());assert.equal(await h2.evaluate(()=>syncConnection),null);assert.equal(await h2.evaluate(()=>data.length),1);assert.equal(driveRemote.payload.notes,'conflict A');
+assert.ok(postCount>5);await h1.context().close();await h2.context().close();console.log('PASS: HTTP token auth, first connection, two-device Drive sync, conflict, credential exclusion and disconnect');
 // Two isolated devices call the real client transport against an in-memory CAS server.
 let remote={revision:0,payload:null,updatedAt:null};
 async function device(seed){const c=await browser.newContext();await c.route('https://**/*',r=>r.abort());await c.exposeBinding('testCloud',(_,method,args)=>{if(method==='readPortfolio')return JSON.parse(JSON.stringify(remote));if(args[0]!==remote.revision)return {...remote,conflict:true};remote={revision:remote.revision+1,payload:args[1],updatedAt:new Date().toISOString()};return {revision:remote.revision,updatedAt:remote.updatedAt};});await c.addInitScript(seed=>{localStorage.setItem('portfolioDemo_v3',JSON.stringify(seed));function runner(ok=()=>{},fail=()=>{}){return new Proxy({withSuccessHandler:f=>runner(f,fail),withFailureHandler:f=>runner(ok,f)},{get:(o,k)=>o[k]||((...args)=>window.testCloud(k,args).then(ok,fail))});}window.google={script:{run:runner()}};},seed);const p=await c.newPage();p.on('dialog',d=>d.accept());p.on('pageerror',e=>errors.push(e.message));await p.goto(url);return p;}

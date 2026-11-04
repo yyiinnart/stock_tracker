@@ -69,21 +69,43 @@ function renderSettings(){document.getElementById('quoteConnectionState').textCo
 function chooseSetup(value){setupChoice=value;renderCloudSetup();}
 function savedPrivateUrl(){try{return localStorage.getItem('portfolio_private_url')||'';}catch{return '';}}
 function renderCloudSetup(){
-  const hosted=cloudAvailable(),hasData=portfolioHasData(portfolioPayload());
-  const status=document.getElementById('cloudState').textContent;
-  const urlForm=`<form class="private-link-form" onsubmit="event.preventDefault();rememberPrivateUrl()"><label for="privateAppUrl">你的私人網頁網址</label><input id="privateAppUrl" type="url" value="${safeText(savedPrivateUrl())}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="url" aria-describedby="privateUrlHelp"><p class="muted" id="privateUrlHelp">電腦和手機都開啟這個網址，並登入同一個 Google 帳號。網址保存在此裝置。</p><div class="setup-actions"><button class="btn" type="submit">儲存網址</button><button class="btn" type="button" onclick="visitPrivateApp()">開啟私人版</button><button class="btn" type="button" onclick="copyPrivateUrl()">複製給手機</button></div><p id="privateUrlStatus" class="status-note" role="status"></p></form>`;
-  const buttons=`<div class="setup-choice"><button class="btn" aria-pressed="${setupChoice==='new'}" onclick="chooseSetup('new')">第一次設定</button><button class="btn" aria-pressed="${setupChoice==='existing'}" onclick="chooseSetup('existing')">已有私人網址</button></div>`;
-  let body;
-  if(hosted){body=`<div class="setup-status"><strong>你正在使用私人版</strong><p id="settingsCloudStatus">${safeText(status)}</p><p>最後同步：<span id="lastCloudTime">${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未完成')}</span></p></div><div class="setup-actions"><button class="btn primary" onclick="syncCloud(true)">立即同步／檢查版本</button>${!hasData?'<button class="btn" onclick="focusSetting(\'backupPanel\')">匯入我的備份</button>':''}<button class="btn" onclick="exportJSON()">下載目前備份</button></div><p class="muted">修改後自動同步。離線時先留在本機；兩台裝置都改過時，會先請你選擇版本。</p>${urlForm}`;}
-  else{body=`<div class="setup-status"><strong>資料目前只存在這個瀏覽器</strong><p>啟用同步需要一次 Google 私人網頁設定。GitHub 網頁及「更新報價」不會自動啟用跨裝置同步。</p></div>${buttons}`;
-    if(setupChoice==='new'){body+=`<ol class="setup-steps"><li><h3>先保存目前資料</h3><p>換到新網址後，舊瀏覽器資料不會自動帶過去。</p><button class="btn" onclick="exportJSON()">下載目前資料備份</button></li><li><h3>建立私人 Google 專案</h3><p>建立獨立專案，不要覆蓋你原本抓股價的服務。</p><a class="btn" href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer">開啟 Google Apps Script</a></li><li><h3>貼入兩份檔案</h3><p>在 Google 專案中，將第一份貼進 Code.gs；再按「＋ → HTML」，名稱填 Index，貼入第二份。</p>${['server','page'].map((k)=>`<div class="code-copy"><strong>${k==='server'?'Code.gs':'Index.html'}</strong><button class="btn" onclick="copySetupFile('${k}')">複製${k==='server'?'服務程式':'網頁程式'}</button><button class="text-btn" onclick="downloadSetupFile('${k}')">下載檔案</button></div>`).join('')}<p class="status-note" id="setupCopyStatus" role="status"></p><details class="instructions"><summary>無法複製時，展開程式內容</summary><label for="setupCodeType">選擇檔案</label><select id="setupCodeType" onchange="showSetupCode()"><option value="server">Code.gs</option><option value="page">Index.html</option></select><textarea id="setupCodePreview" readonly aria-label="部署程式內容" onclick="this.select()"></textarea></details></li><li><h3>部署成僅自己可用的網頁</h3><p>按「部署 → 新增部署」，類型選「網頁應用程式」。執行身分選「我」，誰可以存取選「僅限自己」。完成 Google 授權後，複製以 /exec 結尾的網址。</p><p>程式會建立私人同步試算表，不需要公開你的持倉。</p></li><li><h3>開啟私人版，帶入資料</h3><p>在私人版匯入剛才的備份，再建立雲端資料。手機使用同一網址，選「載入我的雲端資料」。</p>${urlForm}</li></ol>`;}
-    else body+=`<p class="muted">在下方貼上已部署的私人網址。這會帶你前往私人版；目前這個頁面仍使用本機資料。</p><button class="btn" onclick="exportJSON()">先下載目前備份</button>${urlForm}`;
-  }
-  document.getElementById('cloudSetupBody').innerHTML=body;showSetupCode();
+ const connected=!!syncConnection,legacy=legacyCloudAvailable()&&!connected;
+ document.getElementById('cloudSetupBody').innerHTML=`<div class="setup-status"><strong>${connected?'已連接 Google Drive 同步':legacy?'目前使用舊版 Google 私人頁面':'在原本網址啟用跨裝置同步'}</strong><p id="settingsCloudStatus">${safeText(document.getElementById('cloudState').textContent)}</p><p>電腦與手機都開啟相同的 GitHub 網址，填入同一組服務網址與驗證碼。持倉、快照及紀錄保存在你的 Google Drive。</p>${connected?`<p>最後同步：<span id="lastCloudTime">${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未完成')}</span></p>`:''}</div>
+ ${legacy?'<p class="muted">如果要改用 GitHub 網址，先在此下載備份，再到 GitHub 網頁匯入並連接新服務。舊試算表不會自動搬移。</p>':''}
+ <form class="private-link-form" onsubmit="event.preventDefault();connectDriveSync()"><label for="syncServiceUrl">同步服務網址</label><input id="syncServiceUrl" type="url" value="${safeText(syncConnection?.url||'')}" placeholder="https://script.google.com/macros/s/…/exec" required><label for="syncServiceToken">同步驗證碼</label><input id="syncServiceToken" type="password" autocomplete="off" spellcheck="false" placeholder="${connected?'未變更網址時，可留空沿用已保存驗證碼':'貼上相同的 64 字元驗證碼'}"><p class="muted">驗證碼可讀寫你的同步資料，請自行保存並只交給自己的裝置。它不會包含在持倉備份內。</p><div class="setup-actions"><button id="connectDriveBtn" class="btn primary" type="submit">測試並儲存連線</button>${connected?'<button class="btn" type="button" onclick="syncCloud(true)">立即同步</button><button class="btn" type="button" onclick="disconnectDriveSync()">中斷連線</button>':''}</div><p id="syncConnectionStatus" class="status-note" role="status"></p></form>
+ <details class="instructions" ${connected?'':'open'}><summary>第一次設定 Google 同步服務</summary><ol class="setup-steps">
+ <li><h3>備份目前資料</h3><button class="btn" onclick="exportJSON()">下載目前資料備份</button></li>
+ <li><h3>建立專用 Google 專案</h3><p>不要覆蓋接案追蹤器或報價服務。只需要 Code.gs，不需要新增 Index.html。</p><a class="btn" href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer">開啟 Google Apps Script</a><div class="code-copy"><button class="btn" onclick="copySetupFile('server')">複製服務程式</button><button class="text-btn" onclick="downloadSetupFile('server')">下載 Code.gs</button></div><p id="setupCopyStatus" class="status-note" role="status"></p><details class="instructions"><summary>無法複製時，展開程式內容</summary><select id="setupCodeType" onchange="showSetupCode()" aria-label="部署檔案"><option value="server">Code.gs</option></select><textarea id="setupCodePreview" readonly aria-label="部署程式內容" onclick="this.select()"></textarea></details></li>
+ <li><h3>設定同步驗證碼</h3><button class="btn" onclick="generateSyncToken()">產生新驗證碼</button><input id="generatedSyncToken" readonly aria-label="新產生的同步驗證碼" onclick="this.select()"><p>複製並自行保存。到 Google 專案「專案設定 → 指令碼屬性」新增 SYNC_TOKEN，值貼上驗證碼並儲存。不要把驗證碼貼進程式碼。</p></li>
+ <li><h3>部署同步服務</h3><p>「部署 → 新增部署 → 網頁應用程式」，執行身分選「我」，誰可以存取選「任何人」。完成 Google 授權，再複製 /exec 網址填到上方。資料夾不需公開分享；服務會驗證每次請求的驗證碼。</p></li>
+ <li><h3>連接電腦與手機</h3><p>電腦在上方測試連線後，選「建立我的雲端資料」。手機開啟同一個 GitHub 網址，填入相同服務網址與驗證碼，再選「載入我的雲端資料」。之後開啟、返回頁面及修改後會自動同步。</p></li></ol></details>`;
+ showSetupCode();
 }
+function generateSyncToken(){const bytes=crypto.getRandomValues(new Uint8Array(32));const token=[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');document.getElementById('generatedSyncToken').value=token;document.getElementById('syncServiceToken').value=token;}
+async function connectDriveSync(){
+ const status=document.getElementById('syncConnectionStatus'),url=validPrivateUrl(document.getElementById('syncServiceUrl').value),token=document.getElementById('syncServiceToken').value.trim()||(url===syncConnection?.url?syncConnection.token:'');
+ if(!url||!/^[a-f0-9]{64}$/.test(token)){status.textContent='請填入 /exec 服務網址與 64 字元驗證碼。';return;}
+ if(cloudBusy){status.textContent='目前正在同步，請稍後再試。';return;}
+ cloudBusy=true;document.getElementById('connectDriveBtn').disabled=true;status.textContent='正在測試連線…';
+ try{
+ const connection={url,token};await callDriveService(connection,'info');
+ const changed=JSON.stringify(connection)!==JSON.stringify(syncConnection);
+ if(changed){cloudMeta={revision:null,ack:null,syncedAt:null};saveDirty=true;persistNow();if(saveDirty)throw Error('本機無法保存設定，請先備份');}
+ localStorage.setItem(SYNC_CONFIG_KEY,JSON.stringify(connection));syncConnection=connection;cloudConflict=null;cloudPaused=false;cloudStatus('連線成功 · 準備檢查雲端版本');renderCloudSetup();
+ }catch(e){const el=document.getElementById('syncConnectionStatus');if(el)el.textContent='連線未儲存：'+e.message;return;}
+ finally{cloudBusy=false;const button=document.getElementById('connectDriveBtn');if(button)button.disabled=false;}
+ await syncCloud(true);
+}
+function disconnectDriveSync(){
+ if(cloudBusy){document.getElementById('syncConnectionStatus').textContent='請等待同步完成後再中斷。';return;}
+ if(!confirm('中斷這台裝置的自動同步？本機及 Google Drive 資料都會保留。'))return;
+ try{localStorage.removeItem(SYNC_CONFIG_KEY);}catch{document.getElementById('syncConnectionStatus').textContent='瀏覽器無法移除設定，請稍後再試。';return;}
+ syncConnection=null;cloudConflict=null;clearTimeout(cloudTimer);cloudMeta={revision:null,ack:null,syncedAt:null};persistCloudMeta();cloudStatus(legacyCloudAvailable()?'已回到舊版 Google 同步':'僅此裝置 · 已中斷連線');renderCloudSetup();
+}
+
 function setupFile(kind){const files=globalThis.CLOUD_INSTALL_FILES;if(!files?.[kind])throw Error('此版本沒有附部署檔案。請從專案的 apps-script 資料夾取得 Code.gs 與 Index.html。');return files[kind];}
 function showSetupCode(){const el=document.getElementById('setupCodePreview');if(el){try{el.value=setupFile(document.getElementById('setupCodeType').value);}catch(e){el.value=e.message;}}}
-async function copySetupFile(kind){const status=document.getElementById('setupCopyStatus');try{await navigator.clipboard.writeText(setupFile(kind));status.textContent='已複製 '+(kind==='server'?'Code.gs':'Index.html')+'，請到 Google 專案貼上。';}catch(e){status.textContent='無法自動複製，請下載檔案，或展開下方內容後全選複製。';document.querySelector('.instructions').open=true;document.getElementById('setupCodeType').value=kind;showSetupCode();}}
+async function copySetupFile(kind){const status=document.getElementById('setupCopyStatus');try{await navigator.clipboard.writeText(setupFile(kind));status.textContent='已複製 '+(kind==='server'?'Code.gs':'Index.html')+'，請到 Google 專案貼上。';}catch(e){status.textContent='無法自動複製，請下載檔案，或展開下方內容後全選複製。';document.getElementById('setupCodePreview').closest('details').open=true;document.getElementById('setupCodeType').value=kind;showSetupCode();}}
 function downloadSetupFile(kind){try{download(new Blob([setupFile(kind)],{type:'text/plain;charset=utf-8'}),kind==='server'?'Code.gs':'Index.html');document.getElementById('setupCopyStatus').textContent='已開始下載，請開啟檔案並貼入 Google 專案。';}catch(e){alert(e.message);}}
 function validPrivateUrl(raw){try{const u=new URL(raw.trim());if(u.protocol!=='https:'||u.hostname!=='script.google.com'||u.username||u.password||u.port||!/^\/macros\/s\/[\w-]+\/exec$/.test(u.pathname))return null;return u.origin+u.pathname;}catch{return null;}}
 function rememberPrivateUrl(){const url=validPrivateUrl(document.getElementById('privateAppUrl').value);const status=document.getElementById('privateUrlStatus');if(!url){status.textContent='請貼上 Google 部署得到、以 /exec 結尾的私人網址。';return null;}try{localStorage.setItem('portfolio_private_url',url);document.getElementById('privateAppUrl').value=url;status.textContent='網址已儲存。請開啟私人版後完成資料載入。';return url;}catch{status.textContent='此瀏覽器無法保存網址，請先自行收藏。';return url;}}
@@ -105,27 +127,46 @@ document.querySelectorAll('.tag').forEach(el=>{if(!el.id&&/^[A-Z\s·/&]+$/.test(
 renderKPI();renderTable();renderSettings();setTab('hold');
 if(!cloudAvailable())cloudStatus('僅此裝置 · 未啟用同步');
 
-// Static deployments: probe the manifest without cache, then let the user reload safely.
+// Cache-busting is only used during navigation; keep the address bar/bookmarks clean.
+if(!cloudAvailable()&&/^https?:$/.test(location.protocol)){
+ const clean=new URL(location.href);
+ if(clean.searchParams.has('_app')||clean.searchParams.has('_refresh')){
+  clean.searchParams.delete('_app');clean.searchParams.delete('_refresh');
+  history.replaceState(history.state,'',clean.pathname+clean.search+clean.hash);
+ }
+}
+let appUpdateUserEditing=false;
+document.addEventListener('input',()=>{appUpdateUserEditing=true;},true);
+document.addEventListener('change',()=>{appUpdateUserEditing=true;},true);
+function appUpdateAttemptKey(){return 'tracker-update:'+location.pathname;}
+function canAutoUpdate(){
+ if(appUpdateUserEditing||document.visibilityState!=='visible'||document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open||document.activeElement?.matches('input,textarea,select,[contenteditable="true"]')||cloudBusy)return false;
+ try{return sessionStorage.getItem(appUpdateAttemptKey())!==availableAppVersion;}catch{return false;}
+}
+// Probe without cache; never reload automatically twice for the same deployed version.
 const runningAppVersion=document.querySelector('meta[name="app-version"]')?.content||'';
 let availableAppVersion='',appUpdateChecking=false,lastAppUpdateCheck=0;
 function updateAppMessage(message){document.getElementById('appUpdateStatus').textContent=message;}
 async function checkAppUpdate(manual=false){
  if(appUpdateChecking)return;
- if(cloudAvailable()){updateAppMessage('私人版需先在 Google 更新部署版本，再重新開啟私人網址。');return;}
+ if(legacyCloudAvailable()){updateAppMessage('私人版需先在 Google 更新部署版本，再重新開啟私人網址。');return;}
  if(!/^https?:$/.test(location.protocol)){updateAppMessage('本機檔案請更新專案後重新開啟；GitHub 網頁版可線上檢查更新。');return;}
  appUpdateChecking=true;lastAppUpdateCheck=Date.now();const button=document.getElementById('checkUpdateBtn');button.disabled=true;if(manual)updateAppMessage('正在檢查…');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
  try{const url=new URL('version.json',location.href);url.searchParams.set('_check',Date.now());const response=await fetch(url,{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('版本資訊尚未發布');const manifest=await response.json();if(!/^[a-f0-9]{16}$/.test(manifest.version))throw Error('版本資訊格式錯誤');
  availableAppVersion=manifest.version;const changed=availableAppVersion!==runningAppVersion;document.getElementById('reloadUpdateBtn').hidden=!changed;updateAppMessage(changed?'發現新版。完成目前編輯後，可保存資料並重新載入。':'目前已是最新版本。');
  let banner=document.getElementById('appUpdateBanner');if(changed&&!banner){banner=document.createElement('div');banner.id='appUpdateBanner';banner.className='histbanner show';banner.setAttribute('role','status');banner.innerHTML='<span>程式有新版可用；資料會保留。</span><button class="btn" onclick="focusSetting(\'updatePanel\')">查看更新</button>';document.querySelector('.app-nav').after(banner);}else if(!changed)banner?.remove();
+ if(changed&&!manual&&canAutoUpdate())reloadAppUpdate(true);
  }catch(e){if(manual)updateAppMessage('無法檢查更新，請確認網路與網站部署後重試。現有資料不受影響。');}
  finally{clearTimeout(timer);appUpdateChecking=false;button.disabled=false;}
 }
-function reloadAppUpdate(){
+function reloadAppUpdate(automatic=false){
  if(!availableAppVersion||availableAppVersion===runningAppVersion)return;
+ if(automatic&&!canAutoUpdate())return;
  if(document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open){updateAppMessage('請先儲存或關閉目前的編輯視窗，再更新。');return;}
  if(typeof cloudBusy!=='undefined'&&cloudBusy){updateAppMessage('資料正在同步，請完成後再更新。');return;}
  saveNotes(true);saveDirty=true;persistNow();if(saveDirty){updateAppMessage('本機資料未能保存，已停止重新載入。請先下載備份。');return;}
+ try{sessionStorage.setItem(appUpdateAttemptKey(),availableAppVersion);}catch{if(automatic)return;}
  const url=new URL(location.href);url.searchParams.set('_app',availableAppVersion);url.searchParams.set('_refresh',Date.now());location.replace(url.href);
 }
 document.getElementById('appVersionLabel').textContent='目前程式版本：'+(runningAppVersion||'開發版本');
