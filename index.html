@@ -593,6 +593,10 @@ const URL_KEY='portfolio_sheetUrl';   // 獨立存，不跟主資料混在一起
 let store=loadStore();
 let data=store.live, dca=store.dca, archives=store.archives;
 let recurring=store.recurring||[];
+let audit=Array.isArray(store.audit)?store.audit:[];
+if(!store.audit){try{const old=JSON.parse(localStorage.getItem('portfolio_audit_v1')||'[]');if(Array.isArray(old))audit=old;}catch(e){}}
+let cloudMeta=store.cloudMeta||{};
+let quoteUpdatedAt=store.quoteUpdatedAt||'';
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
 sheetUrl=sheetUrl||store.sheetUrl||'';
@@ -607,7 +611,7 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
+    return {audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
   return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:'',recurring:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
@@ -617,12 +621,12 @@ function persistNow(){
   clearTimeout(saveTimer);saveTimer=null;
   if(!saveDirty)return;
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring}));
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt}));
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);
     saveDirty=false;
   }catch(e){console.error('資料儲存失敗',e);showToast?.('儲存失敗：請先匯出備份，確認瀏覽器儲存空間',null);}
 }
-function save(){saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);}
+function save(){saveDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(persistNow,180);window.dispatchEvent(new Event('portfoliochange'));}
 window.addEventListener('pagehide',persistNow);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistNow();});
 const curMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
@@ -1450,7 +1454,7 @@ function saveRow(){
       avg:parseFloat(f_avg.value)||0,prin:prinTWD,note:f_note.value.trim()};
     if(!r.code){alert('請填代碼');return;}
     const isNew=editIdx<0;
-    if(editIdx>=0){if(data[editIdx].lastUp)r.lastUp=data[editIdx].lastUp;data[editIdx]=r;}  // 保留本月已扣標記
+    if(editIdx>=0){r._id=data[editIdx]._id;if(data[editIdx].quoteUpdatedAt&&r.price===data[editIdx].price)r.quoteUpdatedAt=data[editIdx].quoteUpdatedAt;if(data[editIdx].lastUp)r.lastUp=data[editIdx].lastUp;data[editIdx]=r;}  // 保留本月已扣標記
     else data.push(r);
     save();closeModal();render();
     // 新標的且沒手填現價 → 立刻嘗試向 Sheet 抓一次，抓不到就提醒去 Sheet 補這檔
@@ -1472,7 +1476,7 @@ async function autoPullNew(code){
       return;
     }
     const r=data.find(x=>x.code===code);
-    if(r){r.price=px;const fxv=validNum(q.fx);if(fxv&&fxv>1.5)r.fx=fxv;save();render();}
+    if(r){r.price=px;r.quoteUpdatedAt=new Date().toISOString();const fxv=validNum(q.fx);if(fxv&&fxv>1.5)r.fx=fxv;save();render();}
   }catch(err){/* 靜默：手動按更新股價時仍會再試 */}
 }
 function delRow(){if(editIdx>=0&&confirm('刪除這個部位？')){data.splice(editIdx,1);save();closeModal();render();}}
@@ -1556,7 +1560,7 @@ async function syncPrices(){
       if(!q){ if(r.cls!=='現金'&&r.cls!=='貸款') missing.push(r.code); return; }
       const px=validNum(q.price);
       if(px==null){skip++;invalid.push(r.code);return;}   // 報價無效（0/空/壞）→ 保留舊價，不洗掉
-      r.price=px;
+      r.price=px;r.quoteUpdatedAt=new Date().toISOString();
       const fxv=validNum(q.fx);
       if(fxv&&fxv>1.5)r.fx=fxv;       // 只更新美股匯率，台股維持 1
       hit++; matched.push(r.code);
@@ -1581,6 +1585,7 @@ async function syncPrices(){
     if(unusedInSheet.length) console.info('ℹ️ Sheet 有報價但前端沒部位（可忽略或待新增）：', unusedInSheet.join(', '));
     console.groupEnd();
 
+    if(hit||yHit)quoteUpdatedAt=new Date().toISOString();
     save();render();
     btn.textContent=skip?`✓ 更新 ${hit}+${yHit} 檔（${skip} 檔報價無效已略過）`:`✓ 已更新 ${hit} 檔部位、${yHit} 檔殖利率標的`;
     setTimeout(()=>{btn.textContent=IDLE;btn.disabled=false;},2500);
@@ -1604,7 +1609,7 @@ function stamp(){const d=new Date();return d.getFullYear()+
 function exportJSON(){
   persistNow();
   const now=new Date().toISOString();
-  const payload={v:4,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring};
+  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
   markBackedUp(now);
@@ -1670,7 +1675,7 @@ function importJSON(input){
     try{
       const o=JSON.parse(e.target.result);
       if(!o.live||!Array.isArray(o.live))throw new Error('檔案格式不符（缺 live 持倉）');
-      pendingImport=o;
+      validatePortfolio(o);pendingImport=o;
       const archN=o.archives?Object.keys(o.archives).length:0;
       showImport('以備份覆蓋目前資料？',file.name,
         `持倉 <b>${o.live.length}</b> 筆、歷史快照 <b>${archN}</b> 個、DCA <b>${o.dca?o.dca.length:0}</b> 檔。<br>目前裝置上的資料會被取代。`,true);
@@ -1691,7 +1696,8 @@ function applyImport(){
   const o=pendingImport;if(!o)return closeImport();
   closeImport();
   try{
-    data=o.live; dca=o.dca||[]; archives=o.archives||{};
+    audit=Array.isArray(o.audit)?o.audit:[];quoteUpdatedAt=o.quoteUpdatedAt||'';
+    data=o.live; ensureRowIds(); dca=o.dca||[]; archives=o.archives||{};
     CAL=o.cal||[]; YIELD=o.yield||[]; recurring=Array.isArray(o.recurring)?o.recurring:[];
     if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
     if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
@@ -1912,5 +1918,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-</body>
+<script src="portfolio-core.js"></script><script src="enhancements.js"></script><script src="cloud-sync.js"></script></body>
 </html>
