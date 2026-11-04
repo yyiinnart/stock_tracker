@@ -1142,7 +1142,7 @@ async function autoPullNewYield(code){
 function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個殖利率標的？')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
 document.getElementById('ovYld').addEventListener('click',e=>{if(e.target.id==='ovYld')closeYld();});
 
-const CLR={現金:'#555555',美股:'#a5a5a5',台股:'#e4e4e4',債券:'#777777',貸款:'#444444'};
+const CLR={現金:'#c9ced8',美股:'#63c8d8',台股:'#83b6ff',債券:'#edcd8c',貸款:'#b5a6cf'};
 function renderCharts(){
   Object.values(charts).forEach(c=>c&&c.destroy());charts={};
   const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#b4b4b4',font:{size:11},padding:12,usePointStyle:true}}}};
@@ -1205,8 +1205,8 @@ function renderCharts(){
     return gap>=36?4:gap>=18?2.5:0;
   };
   charts.lt=new Chart(lineTrend,{type:'line',data:{datasets:[{data:vPts.map(p=>({x:p.x,y:p.y})),
-    borderColor:'#d4d4d4',backgroundColor:'rgba(212,212,212,.08)',fill:false,tension:0,
-    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#ffffff':'#a5a5a5'),borderWidth:2,
+    borderColor:'#edcd8c',backgroundColor:'rgba(212,212,212,.08)',fill:false,tension:0,
+    pointBackgroundColor:vKeys.map(k=>k==='__now'?'#ff951f':'#edcd8c'),borderWidth:2,
     pointRadius:ctx=>keyIdx.has(ctx.dataIndex)?5:baseRadius(ctx.chart),pointHoverRadius:6,pointHitRadius:8}]},
     options:{...base,animation:{duration:300},interaction:{mode:'nearest',axis:'x',intersect:false},plugins:{legend:{display:false},
       tooltip:{callbacks:{title:i=>{const p=trendPts.find(p=>p.x===i[0].parsed.x);return p?p.lbl:'';},
@@ -1220,12 +1220,12 @@ function renderCharts(){
 
   const byCls={};arr.forEach(r=>{if(r.cls==='貸款')return;byCls[r.cls]=(byCls[r.cls]||0)+mv(r);});
   charts.pc=new Chart(pieClass,{type:'doughnut',data:{labels:Object.keys(byCls),
-    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#111111',borderWidth:2}]},
+    datasets:[{data:Object.values(byCls),backgroundColor:Object.keys(byCls).map(c=>CLR[c]),borderColor:'#10141c',borderWidth:2}]},
     options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/Object.values(byCls).reduce((a,b)=>a+b)*100).toFixed(1)}%)`}}}}});
   const t=totals(arr);
   charts.pf=new Chart(pieFx,{type:'doughnut',data:{labels:['TWD 台幣','USD 美元'],
-    datasets:[{data:[t.twd,t.usd],backgroundColor:['#d4d4d4','#666666'],borderColor:'#111111',borderWidth:2}]},
+    datasets:[{data:[t.twd,t.usd],backgroundColor:['#83b6ff','#edcd8c'],borderColor:'#10141c',borderWidth:2}]},
     options:{...base,cutout:'72%',plugins:{...base.plugins,legend:{...base.plugins.legend,position:'right'},
       tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/(t.twd+t.usd)*100).toFixed(1)}%)`}}}}});
   const pl=arr.filter(r=>pnl(r)!=null&&r.cls!=='貸款').map(r=>({c:r.code,v:pnl(r)})).sort((a,b)=>b.v-a.v);
