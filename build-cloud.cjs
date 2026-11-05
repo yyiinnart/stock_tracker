@@ -1,7 +1,7 @@
 const fs=require('node:fs'),crypto=require('node:crypto');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex').slice(0,16);
 let source=fs.readFileSync('index.html','utf8').replace(/(<(?:script|link)\b[^>]*(?:src|href)="[^"?]+)\?v=[a-f0-9]+/g,'$1').replace(/<meta name="app-version" content="[^"]*">\s*/g,'');
-const scripts=['portfolio-core.js','enhancements.js','cloud-sync.js','interface.js','dividends.js'];
+const scripts=['strategy-core.js','strategies.js','portfolio-core.js','enhancements.js','cloud-sync.js','interface.js','dividends.js'];
 const version=hash(source+['interface.css',...scripts,'apps-script/Code.gs','sync-service/Code.gs'].map(f=>fs.readFileSync(f,'utf8')).join('\n'));
 source=source.replace('<head>','<head>\n<meta name="app-version" content="'+version+'">');
 let html=source.replace('<link rel="stylesheet" href="interface.css">',()=>`<style>\n${fs.readFileSync('interface.css','utf8')}\n</style>`).replace('<script src="setup-assets.js"></script>','');

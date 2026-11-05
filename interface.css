@@ -156,3 +156,48 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 @media(max-width:640px){.yield-filter select{min-height:44px}#cal .income-menu{min-height:36px}}
 .yield-filter select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 28px 6px 10px;color-scheme:dark}
 .yield-filter select:focus-visible,.income-menu:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* Compact actions use the existing danger button palette, not price direction colors. */
+.action-menu{position:relative;display:inline-block;flex:none;vertical-align:middle;text-align:left}
+.action-menu>summary{list-style:none;display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;color:var(--ink2);font-size:20px;line-height:1;border-radius:6px}
+.action-menu>summary::-webkit-details-marker{display:none}
+.action-menu>summary:hover,.action-menu[open]>summary{background:var(--panel2);color:var(--ink)}
+.action-menu>summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.action-menu-items{position:absolute;right:0;top:100%;min-width:168px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;z-index:30;box-shadow:0 6px 20px #0006}
+.action-menu-items button{display:block;width:100%;min-height:44px;text-align:left;border:0;border-radius:4px;padding:10px 12px;background:transparent;color:var(--ink);font:inherit;font-size:13px;white-space:nowrap;cursor:pointer}
+.action-menu-items button:hover{background:var(--panel2)}
+.action-menu-items .btn.danger{color:var(--gain);background:transparent}
+#cal .cal-m{position:relative;container-type:normal;overflow:visible}#cal .cal-m:has(.action-menu[open]){z-index:31}
+#cal .income-month-head{height:32px}#cal .mo{font-size:17px;font-weight:650}#cal .income-month-head .action-menu{margin-right:-8px}
+#cal .income-total strong{font-size:22px}#cal .income-code,#cal .income-value{font-size:13px}
+#cal .income-status,#cal .income-empty,#cal .income-warning{font-size:11px;font-weight:400;color:var(--ink3)}
+#cal .income-actual{color:var(--ink2);font-size:11px}
+#cal .income-total small{font-size:11px;color:var(--ink2)}
+#incomeUnscheduled p{font-size:11px;margin:4px 0}#incomeUnscheduled .text-btn{font-size:11px}
+.income-import-list>.action-menu{grid-column:2}.im-main{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.im-main>.action-menu{margin-left:auto}
+.ytable .action-menu-items{position:relative;top:auto;right:auto}.ytable td:has(.action-menu){vertical-align:top}
+.strategy-group{padding:12px 0;border-top:1px solid var(--line)}.strategy-heading,.strategy-card-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.strategy-heading h3{font-size:16px;margin:0;color:var(--ink)}.strategy-card{background:var(--panel2);border-radius:6px;padding:0 12px;margin:8px 0}
+.strategy-fold{border:0;background:none;color:var(--ink);font:inherit;text-align:left;min-height:44px;cursor:pointer;overflow-wrap:anywhere}
+.strategy-content{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin:0;padding:8px 0 16px}
+.strategy-rule{display:grid;grid-template-columns:minmax(100px,1fr) minmax(100px,1fr);gap:4px 16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.strategy-rule p{grid-column:1/-1;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink2)}.strategy-threshold{text-align:right;font-variant-numeric:tabular-nums}
+.strategy-rule-editor{border:1px solid var(--line);padding:12px;margin:12px 0;border-radius:6px;min-width:0}.strategy-rule-editor label{display:block;font-size:13px}.strategy-rule-editor input,.strategy-rule-editor select,.strategy-rule-editor textarea,#strategyCardContent,#strategyCardTitle,#strategyGroupName,#strategyGroupNote{box-sizing:border-box;width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+.strategy-rule-inputs{display:flex;gap:8px;margin:8px 0}.strategy-rule-inputs>label{flex:1;min-width:0}.strategy-rule-inputs>[hidden]{display:none}
+#stratToggle{float:right}.strategy-card .action-menu-items{min-width:150px}
+@media(max-width:640px){#cal .mo{font-size:18px}#cal .income-status{font-size:12px}.strategy-rule-inputs{flex-wrap:wrap}.strategy-heading h3{font-size:15px}}
+.strategy-rule-editor .action-menu-items{left:0;right:auto}
+.strategy-heading h3{overflow-wrap:anywhere;min-width:0}.yield-filter select{min-width:0}
+@media(max-width:640px){.strategy-rule-inputs>label:first-child{flex-basis:100%}.strategy-rule-editor input,.strategy-rule-editor select{min-height:44px}}
+/* Sector navigation is view state only; names still come from user strategy data. */
+.sector-switch{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 12px}
+.sector-switch>button{flex:0 0 44px;width:44px;height:44px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink2);font-size:25px;line-height:1;cursor:pointer}
+.sector-switch>button:hover{background:var(--panel2);color:var(--ink)}.sector-switch>button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sector-switch>span{min-width:180px;text-align:center;font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.strategy-switch-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.strategy-switch-row .sector-switch{margin-bottom:0;min-width:0}.strategy-switch-row .sector-switch>span{min-width:0;width:220px}.strategy-group{border-top:0;padding-top:8px}
+#cal{--income-month:#a8c7ec;--income-secondary:#c4cedc;--income-muted:#939fb1}
+#cal .mo{color:var(--income-month)}#cal .income-total strong{color:var(--gold);font-weight:700}
+#cal .income-code{color:var(--income-secondary);font-weight:500}#cal .income-value,#cal .income-entry.is-actual .income-value{color:var(--income-secondary)}
+#cal .income-total small,#cal .income-actual,#cal .income-status,#cal .income-empty,#cal .income-warning{color:var(--income-muted)}
+#cal .income-badge{color:var(--income-month);border-color:var(--line)}#cal .action-menu>summary{color:var(--income-muted)}
+#incomeUnscheduled .muted,#incomeUnscheduled .text-btn{color:#939fb1}
+@media(max-width:640px){.sector-switch{width:100%}.sector-switch>span{flex:1;min-width:0}.strategy-switch-row .sector-switch{flex:1}.strategy-switch-row .sector-switch>span{width:auto;font-size:13px}}

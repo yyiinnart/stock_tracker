@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="41486f13129274ee">
+<meta name="app-version" content="f9b3698d6f560557">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -427,6 +427,51 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 @media(max-width:640px){.yield-filter select{min-height:44px}#cal .income-menu{min-height:36px}}
 .yield-filter select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 28px 6px 10px;color-scheme:dark}
 .yield-filter select:focus-visible,.income-menu:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* Compact actions use the existing danger button palette, not price direction colors. */
+.action-menu{position:relative;display:inline-block;flex:none;vertical-align:middle;text-align:left}
+.action-menu>summary{list-style:none;display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;color:var(--ink2);font-size:20px;line-height:1;border-radius:6px}
+.action-menu>summary::-webkit-details-marker{display:none}
+.action-menu>summary:hover,.action-menu[open]>summary{background:var(--panel2);color:var(--ink)}
+.action-menu>summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.action-menu-items{position:absolute;right:0;top:100%;min-width:168px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;z-index:30;box-shadow:0 6px 20px #0006}
+.action-menu-items button{display:block;width:100%;min-height:44px;text-align:left;border:0;border-radius:4px;padding:10px 12px;background:transparent;color:var(--ink);font:inherit;font-size:13px;white-space:nowrap;cursor:pointer}
+.action-menu-items button:hover{background:var(--panel2)}
+.action-menu-items .btn.danger{color:var(--gain);background:transparent}
+#cal .cal-m{position:relative;container-type:normal;overflow:visible}#cal .cal-m:has(.action-menu[open]){z-index:31}
+#cal .income-month-head{height:32px}#cal .mo{font-size:17px;font-weight:650}#cal .income-month-head .action-menu{margin-right:-8px}
+#cal .income-total strong{font-size:22px}#cal .income-code,#cal .income-value{font-size:13px}
+#cal .income-status,#cal .income-empty,#cal .income-warning{font-size:11px;font-weight:400;color:var(--ink3)}
+#cal .income-actual{color:var(--ink2);font-size:11px}
+#cal .income-total small{font-size:11px;color:var(--ink2)}
+#incomeUnscheduled p{font-size:11px;margin:4px 0}#incomeUnscheduled .text-btn{font-size:11px}
+.income-import-list>.action-menu{grid-column:2}.im-main{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.im-main>.action-menu{margin-left:auto}
+.ytable .action-menu-items{position:relative;top:auto;right:auto}.ytable td:has(.action-menu){vertical-align:top}
+.strategy-group{padding:12px 0;border-top:1px solid var(--line)}.strategy-heading,.strategy-card-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.strategy-heading h3{font-size:16px;margin:0;color:var(--ink)}.strategy-card{background:var(--panel2);border-radius:6px;padding:0 12px;margin:8px 0}
+.strategy-fold{border:0;background:none;color:var(--ink);font:inherit;text-align:left;min-height:44px;cursor:pointer;overflow-wrap:anywhere}
+.strategy-content{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin:0;padding:8px 0 16px}
+.strategy-rule{display:grid;grid-template-columns:minmax(100px,1fr) minmax(100px,1fr);gap:4px 16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.strategy-rule p{grid-column:1/-1;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink2)}.strategy-threshold{text-align:right;font-variant-numeric:tabular-nums}
+.strategy-rule-editor{border:1px solid var(--line);padding:12px;margin:12px 0;border-radius:6px;min-width:0}.strategy-rule-editor label{display:block;font-size:13px}.strategy-rule-editor input,.strategy-rule-editor select,.strategy-rule-editor textarea,#strategyCardContent,#strategyCardTitle,#strategyGroupName,#strategyGroupNote{box-sizing:border-box;width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit}
+.strategy-rule-inputs{display:flex;gap:8px;margin:8px 0}.strategy-rule-inputs>label{flex:1;min-width:0}.strategy-rule-inputs>[hidden]{display:none}
+#stratToggle{float:right}.strategy-card .action-menu-items{min-width:150px}
+@media(max-width:640px){#cal .mo{font-size:18px}#cal .income-status{font-size:12px}.strategy-rule-inputs{flex-wrap:wrap}.strategy-heading h3{font-size:15px}}
+.strategy-rule-editor .action-menu-items{left:0;right:auto}
+.strategy-heading h3{overflow-wrap:anywhere;min-width:0}.yield-filter select{min-width:0}
+@media(max-width:640px){.strategy-rule-inputs>label:first-child{flex-basis:100%}.strategy-rule-editor input,.strategy-rule-editor select{min-height:44px}}
+/* Sector navigation is view state only; names still come from user strategy data. */
+.sector-switch{display:flex;align-items:center;gap:8px;width:fit-content;max-width:100%;margin:0 0 12px}
+.sector-switch>button{flex:0 0 44px;width:44px;height:44px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink2);font-size:25px;line-height:1;cursor:pointer}
+.sector-switch>button:hover{background:var(--panel2);color:var(--ink)}.sector-switch>button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sector-switch>span{min-width:180px;text-align:center;font-size:14px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.strategy-switch-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.strategy-switch-row .sector-switch{margin-bottom:0;min-width:0}.strategy-switch-row .sector-switch>span{min-width:0;width:220px}.strategy-group{border-top:0;padding-top:8px}
+#cal{--income-month:#a8c7ec;--income-secondary:#c4cedc;--income-muted:#939fb1}
+#cal .mo{color:var(--income-month)}#cal .income-total strong{color:var(--gold);font-weight:700}
+#cal .income-code{color:var(--income-secondary);font-weight:500}#cal .income-value,#cal .income-entry.is-actual .income-value{color:var(--income-secondary)}
+#cal .income-total small,#cal .income-actual,#cal .income-status,#cal .income-empty,#cal .income-warning{color:var(--income-muted)}
+#cal .income-badge{color:var(--income-month);border-color:var(--line)}#cal .action-menu>summary{color:var(--income-muted)}
+#incomeUnscheduled .muted,#incomeUnscheduled .text-btn{color:#939fb1}
+@media(max-width:640px){.sector-switch{width:100%}.sector-switch>span{flex:1;min-width:0}.strategy-switch-row .sector-switch{flex:1}.strategy-switch-row .sector-switch>span{width:auto;font-size:13px}}
 
 </style>
 </head>
@@ -518,23 +563,23 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
     </div><div id="analysisIncome">
     <div class="card">
       <h2>配息行事曆<span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button></span></h2>
-      <p class="muted">金額＝全年每股配息 ÷ 年發放次數 × 目前庫存股數（平均分配的估算，非實際入帳）。台幣 NT$、美元 US$ 分開加總；「實」為手動記錄的實際入帳。每月「編輯」管理，配息資料由殖利率追蹤維護。</p><div class="income-summary-bar" id="incomeSummary"></div><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
+      <p class="muted">金額＝全年每股配息 ÷ 年發放次數 × 目前庫存股數（平均分配的估算，非實際入帳）。台幣 NT$、美元 US$ 分開加總；「實」為手動記錄的實際入帳。每月 ⋯ 管理，配息資料由殖利率追蹤維護。</p><div class="income-summary-bar" id="incomeSummary"></div><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
     </div>
     <div class="card">
       <h2 id="yieldHeading">殖利率追蹤
         <span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button><button class="text-btn" onclick="openYieldEdit(-1)">新增標的</button></span></h2>
-      <div class="yield-filter"><label for="yieldGroup">板塊</label><select id="yieldGroup" onchange="renderYield()"><option value="all">全部板塊</option><option value="b1">板塊一：一般股票</option><option value="b2" selected>板塊二：高股息</option><option value="b3">板塊三</option><option value="b4">板塊四</option><option value="exit">出場程序中</option></select></div>
+      <div class="sector-switch" role="group" aria-label="殖利率追蹤板塊"><button type="button" onclick="stepYieldGroup(-1)" aria-label="上一個追蹤板塊">‹</button><span id="yieldGroup" aria-live="polite"></span><button type="button" onclick="stepYieldGroup(1)" aria-label="下一個追蹤板塊">›</button></div>
       <div class="tscroll">
       <table class="ytable">
         <thead><tr><th class="l">標的</th><th class="hide-sm">年配息</th><th class="hide-sm">股價</th><th class="hide-sm">每領1元成本</th><th>殖利率</th><th class="l">簡評</th><th></th></tr></thead>
         <tbody id="ybody"></tbody>
       </table>
       </div>
-      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息修改全年配息；點殖利率直接輸入百分比，有股價時會同步換算年配息。按「編輯」可設定發放月份、策略板塊或刪除標的。</div>
+      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息修改全年配息；點殖利率直接輸入百分比，有股價時會同步換算年配息。按 ⋯ 可設定發放月份、策略板塊或刪除標的。</div>
     </div>
     <div class="card">
-      <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">展開</span></h2>
-      <div id="stratMap" style="display:none"></div>
+      <h2>操作策略<button class="text-btn" id="stratToggle" onclick="toggleStrat()" aria-label="展開或收合操作策略">展開</button></h2>
+      <div id="stratMap" style="display:none"><div class="strategy-switch-row"><div class="sector-switch" role="group" aria-label="操作策略板塊"><button type="button" onclick="stepStrategyGroup(-1)" aria-label="上一個策略板塊">‹</button><span id="strategyGroupLabel" aria-live="polite"></span><button type="button" onclick="stepStrategyGroup(1)" aria-label="下一個策略板塊">›</button></div><div id="strategyGroupActions"></div></div><div id="strategyGroupContent"></div></div>
     </div>
     <div class="card">
       <h2>交給 AI 分析</h2>
@@ -543,12 +588,6 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
       <label style="font-size:12px"><input id="aiIncludeHistory" type="checkbox" checked onchange="refreshAiPreview()"> 包含歷史快照（月末摘要，不含逐筆個資）</label>
       <textarea id="aiOutput" class="notepad" style="margin-top:10px;min-height:220px;font-family:var(--mono);font-size:11px" readonly></textarea>
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
-    </div>
-    <div class="card">
-      <h2>操作策略筆記
-        <span class="act"><span class="note-status" id="noteStatus"></span></span></h2>
-      <textarea class="notepad" id="noteArea" placeholder="記錄你的操作策略、加減碼條件、觀察心得…&#10;例如：QQQ 跌破 $500 分三批進、0056 殖利率低於 5% 停止加碼。" oninput="noteChanged()" onblur="saveNotes(true)"></textarea>
-      <div class="hint" style="margin-top:8px">輸入後約 1 秒自動存檔到本機；「下載備份 / 匯入備份」會一併包含筆記內容。</div>
     </div>
   </div></div>
   <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><button class="btn" onclick="undoLastTrade()">撤銷最近一次操作</button></div><p class="muted">核對加減碼與編輯前後的數值。只撤銷最近一次操作，後續報價會保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
@@ -757,6 +796,86 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 </div>
 
 <script>
+/* User-owned strategy data. Defaults contain names only, never trading rules. */
+(function(root){
+ const names=['板塊一：一般股票','板塊二：高股息','板塊三：債券','板塊四：出場觀察'];
+ const ids=['b1','b2','b3','b4'];
+ function groupId(id){return id==='exit'||id==='出場程序中'?'b4':ids.includes(id)?id:null;}
+ function defaults(){return {version:1,groups:ids.map((id,i)=>({id,name:names[i],cards:[],rules:[],note:''})),legacyNotesImported:false};}
+ function validate(value){
+  if(value==null)return;
+  if(typeof value!=='object'||Array.isArray(value)||value.version!==1||!Array.isArray(value.groups)||value.groups.length!==4)throw Error('操作策略格式不正確');
+  if(new Set(value.groups.map(g=>g?.id)).size!==4)throw Error('操作策略板塊重複');
+  for(const g of value.groups){
+   if(!ids.includes(g.id)||typeof g.name!=='string'||!g.name.trim()||typeof g.note!=='string'||!Array.isArray(g.cards)||!Array.isArray(g.rules))throw Error('操作策略板塊格式不正確');
+   const cardIds=new Set();
+   for(const c of g.cards){if(!c||typeof c.id!=='string'||cardIds.has(c.id)||typeof c.title!=='string'||typeof c.content!=='string'||typeof c.collapsed!=='boolean')throw Error('策略卡格式不正確');cardIds.add(c.id);}
+   for(const r of g.rules){if(!r||typeof r.action!=='string'||!r.action.trim()||typeof r.description!=='string'||!['lt','lte','gt','gte','between'].includes(r.op)||!Number.isFinite(r.value)||r.value<0||(r.op==='between'&&(!Number.isFinite(r.upper)||r.upper<r.value)))throw Error('殖利率規則格式不正確');}
+  }
+ }
+ function normalize(value,notes){
+  validate(value);const out=value?JSON.parse(JSON.stringify(value)):defaults();
+  out.groups.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+  if(!out.legacyNotesImported){
+   if(typeof notes==='string'&&notes.trim()&&!out.groups[0].cards.some(c=>c.content===notes))out.groups[0].cards.push({id:'legacy-notes',title:'操作策略筆記',content:notes,collapsed:false});
+   out.legacyNotesImported=true;
+  }
+  return out;
+ }
+ function match(rule,yieldValue){const n=Number((yieldValue*100).toPrecision(12));return rule.op==='lt'?n<rule.value:rule.op==='lte'?n<=rule.value:rule.op==='gt'?n>rule.value:rule.op==='gte'?n>=rule.value:n>=rule.value&&n<=rule.upper;}
+ function hasData(value){return !!value?.groups?.some((g,i)=>g.name!==names[i]||g.note||g.cards?.length||g.rules?.length);}
+ root.StrategyCore={defaults,normalize,validate,groupId,match,hasData};
+ if(typeof module!=='undefined')module.exports=root.StrategyCore;
+})(globalThis);
+
+</script>
+<script>
+/* Strategy controls share the app's dialogs, typography and palette. */
+function actionMenu(label,content){return `<details class="action-menu"><summary aria-label="${escapeIncomeText(label)}" title="${escapeIncomeText(label)}">⋯</summary><div class="action-menu-items">${content}</div></details>`;}
+function strategyGroup(id){return strategies.groups.find(g=>g.id===StrategyCore.groupId(id));}
+function groupLabel(id){return strategyGroup(id)?.name||'未分類';}
+function strategyOptions(selected,all=false){return (all?'<option value="all">全部板塊</option>':'')+'<option value="unclassified"'+(!selected||selected==='unclassified'?' selected':'')+'>未分類</option>'+strategies.groups.map(g=>`<option value="${g.id}" ${g.id===selected?'selected':''}>${escapeIncomeText(g.name)}</option>`).join('');}
+let yieldGroupId='b2',strategyGroupId='b1';
+const yieldGroupOrder=['all','b1','b2','b3','b4','unclassified'];
+function stepYieldGroup(delta){yieldGroupId=yieldGroupOrder[(yieldGroupOrder.indexOf(yieldGroupId)+delta+yieldGroupOrder.length)%yieldGroupOrder.length];renderYield();}
+function stepStrategyGroup(delta){const ids=strategies.groups.map(g=>g.id);strategyGroupId=ids[(ids.indexOf(strategyGroupId)+delta+ids.length)%ids.length];renderStrat();}
+function refreshGroupFilter(){const el=document.getElementById('yieldGroup');if(el){el.textContent=yieldGroupId==='all'?'全部板塊':groupLabel(yieldGroupId);el.dataset.group=yieldGroupId;}}
+
+function verdict(y){const g=strategyGroup(y?.g),v=yldOf(y);if(!g||g.id==='b1'||v==null)return null;const r=g.rules.find(r=>StrategyCore.match(r,v));return r?{cls:'v-hold',text:r.action,description:r.description}:null;}
+function ruleThreshold(r){return r.op==='between'?`${r.value}% ～ ${r.upper}%（含端點）`:`${{lt:'<',lte:'≤',gt:'>',gte:'≥'}[r.op]} ${r.value}%`;}
+function renderStrat(){
+ const host=document.getElementById('strategyGroupContent');if(!host)return;
+ host.innerHTML=strategies.groups.filter(g=>g.id===strategyGroupId).map(g=>{
+  const menu=actionMenu(g.name+'操作',`<button onclick="editStrategyGroup('${g.id}')">編輯板塊${g.id==='b1'?'名稱':'與規則'}</button>${g.id==='b1'?'<button onclick="editStrategyCard(-1)">新增策略卡</button>':''}`);
+  document.getElementById('strategyGroupLabel').textContent=g.name;
+  document.getElementById('strategyGroupActions').innerHTML=menu;
+  const body=g.id==='b1'?g.cards.map((c,i)=>`<section class="strategy-card"><div class="strategy-card-heading"><button class="strategy-fold" aria-expanded="${!c.collapsed}" onclick="toggleStrategyCard(${i})">${c.collapsed?'▸':'▾'} ${escapeIncomeText(c.title||'未命名策略')}</button>${actionMenu('策略卡操作',`<button onclick="editStrategyCard(${i})">改名與編輯</button><button class="btn danger" onclick="deleteStrategyCard(${i})">刪除策略卡</button>`)}</div>${!c.collapsed?`<p class="strategy-content">${escapeIncomeText(c.content)||'<span class="muted">空白</span>'}</p>`:''}</section>`).join('')||'<p class="muted">尚無策略卡</p>':g.rules.map(r=>`<div class="strategy-rule"><strong>${escapeIncomeText(r.action)}</strong><span class="strategy-threshold">${escapeIncomeText(ruleThreshold(r))}</span><p>${escapeIncomeText(r.description)}</p></div>`).join('')||'<p class="muted">尚無規則</p>';
+  return `<section class="strategy-group" data-group="${g.id}" aria-label="${escapeIncomeText(g.name)}">${body}${g.note?`<p class="strategy-content muted">${escapeIncomeText(g.note)}</p>`:''}</section>`;
+ }).join('');
+}
+function saveStrategyData(){StrategyCore.validate(strategies);save();persistNow();refreshGroupFilter();renderYield();refreshAiPreview();}
+function toggleStrategyCard(i){const c=strategies.groups[0].cards[i];c.collapsed=!c.collapsed;saveStrategyData();}
+function deleteStrategyCard(i){if(!confirm('刪除這張策略卡？此操作無法復原。'))return;strategies.groups[0].cards.splice(i,1);saveStrategyData();}
+function editStrategyCard(i){const c=strategies.groups[0].cards[i];openExtra(c?'編輯策略卡':'新增策略卡',`<div class="fg"><label for="strategyCardTitle">名稱</label><input id="strategyCardTitle" value="${escapeIncomeText(c?.title||'')}"></div><div class="fg"><label for="strategyCardContent">內容</label><textarea id="strategyCardContent" rows="10">${escapeIncomeText(c?.content||'')}</textarea></div><button class="btn primary" onclick="saveStrategyCard(${i})">儲存</button>`);}
+function saveStrategyCard(i){const title=document.getElementById('strategyCardTitle').value.trim(),content=document.getElementById('strategyCardContent').value;if(!title){alert('請填寫策略卡名稱');return;}const cards=strategies.groups[0].cards;if(i<0)cards.push({id:crypto.randomUUID(),title,content,collapsed:false});else{Object.assign(cards[i],{title,content});if(cards[i].id==='legacy-notes')notes=content;}document.getElementById('extraDialog').close();saveStrategyData();}
+function strategyRuleEditor(r={action:'',op:'gte',value:'',upper:'',description:''}){return `<fieldset class="strategy-rule-editor"><legend>殖利率規則</legend><label>行動<input data-field="action" value="${escapeIncomeText(r.action)}"></label><div class="strategy-rule-inputs"><label>比較<select data-field="op" onchange="this.closest('fieldset').querySelector('[data-upper]').hidden=this.value!=='between'">${[['lt','小於'],['lte','小於或等於'],['gt','大於'],['gte','大於或等於'],['between','區間（含端點）']].map(([v,n])=>`<option value="${v}" ${r.op===v?'selected':''}>${n}</option>`).join('')}</select></label><label>殖利率（%）<input data-field="value" type="number" min="0" step="any" value="${r.value}"></label><label data-upper ${r.op==='between'?'':'hidden'}>上限（%）<input data-field="upper" type="number" min="0" step="any" value="${r.upper??''}"></label></div><label>說明<textarea data-field="description" rows="2">${escapeIncomeText(r.description)}</textarea></label>${actionMenu('此規則操作','<button class="btn danger" onclick="this.closest(\'fieldset\').remove()">移除規則</button>')}</fieldset>`;}
+function editStrategyGroup(id){const g=strategyGroup(id);openExtra('編輯操作策略',`<div class="fg"><label for="strategyGroupName">板塊名稱</label><input id="strategyGroupName" value="${escapeIncomeText(g.name)}"></div>${id==='b1'?'':`<p class="muted">依排列順序採用第一條符合的殖利率規則；其他條件僅作說明，需自行確認。</p><div id="strategyRules">${g.rules.map(strategyRuleEditor).join('')}</div><button class="text-btn" onclick="document.getElementById('strategyRules').insertAdjacentHTML('beforeend',strategyRuleEditor())">新增規則</button><div class="fg"><label for="strategyGroupNote">備註</label><textarea id="strategyGroupNote" rows="3">${escapeIncomeText(g.note)}</textarea></div>`}<div><button class="btn primary" onclick="saveStrategyGroup('${id}')">儲存</button></div>`);}
+function saveStrategyGroup(id){
+ const name=document.getElementById('strategyGroupName').value.trim();if(!name){alert('請填寫板塊名稱');return;}
+ const next=clone(strategies),g=next.groups.find(g=>g.id===id);g.name=name;
+ if(id!=='b1'){
+  const fields=[...document.querySelectorAll('#strategyRules fieldset')];
+  if(fields.some(el=>el.querySelector('[data-field=value]').value.trim()===''||(el.querySelector('[data-field=op]').value==='between'&&el.querySelector('[data-field=upper]').value.trim()===''))){alert('請填寫殖利率門檻');return;}
+  g.rules=fields.map(el=>{const val=k=>el.querySelector(`[data-field=${k}]`).value;return {action:val('action').trim(),op:val('op'),value:Number(val('value')),upper:val('op')==='between'?Number(val('upper')):null,description:val('description')};});g.note=document.getElementById('strategyGroupNote').value;
+ }
+ try{StrategyCore.validate(next);}catch(e){alert(e.message);return;}strategies=next;document.getElementById('extraDialog').close();saveStrategyData();
+}
+// Details menus stay keyboard accessible and close on Escape or outside click.
+document.addEventListener('click',e=>{document.querySelectorAll('.action-menu[open]').forEach(menu=>{if(!menu.contains(e.target)||e.target.closest('button'))menu.open=false;});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.action-menu[open]').forEach(menu=>{menu.open=false;menu.querySelector('summary').focus();e.preventDefault();e.stopImmediatePropagation();});},true);
+
+</script>
+<script>
 const ARCHIVE_SEED={};  // 歷史快照將從備份還原
 const TREND_SEED=[];  // 淨資產走勢種子，從備份還原（勿寫死真實金額）
 
@@ -778,7 +897,8 @@ let modifiedAt=store.modifiedAt||'';
 // sheetUrl 優先從獨立 key 讀，fallback 到主 store（向下相容舊版）
 let sheetUrl='';try{sheetUrl=localStorage.getItem(URL_KEY)||'';}catch(e){}
 sheetUrl=sheetUrl||store.sheetUrl||'';
-let notes=store.notes||'';   // 操作策略筆記
+let notes=store.notes||'';
+let strategies=StrategyCore.normalize(store.strategies,notes);   // 操作策略筆記
 CAL=store.cal; YIELD=store.yield;
 let filter='全部', editIdx=-1, mode='add', tab='hold', charts={};
 let trendRange='6M';
@@ -789,7 +909,7 @@ let reorderMode=false, dragIdx=null;   // 拖曳排序狀態
 
 function loadStore(){
   try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);
-    return {modifiedAt:o.modifiedAt,audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
+    return {modifiedAt:o.modifiedAt,audit:o.audit,cloudMeta:o.cloudMeta,quoteUpdatedAt:o.quoteUpdatedAt,live:o.live||[],dca:o.dca||[],archives:o.archives||{},sheetUrl:o.sheetUrl||'',cal:o.cal||[],yield:o.yield||[],notes:o.notes||'',strategies:o.strategies,recurring:Array.isArray(o.recurring)?o.recurring:[]};}}catch(e){}
   return {live:[],dca:[],archives:{},sheetUrl:'',cal:[],yield:[],notes:'',recurring:[]};
 }
 function clone(x){return JSON.parse(JSON.stringify(x));}
@@ -799,7 +919,7 @@ function persistNow(){
   clearTimeout(saveTimer);saveTimer=null;
   if(!saveDirty)return;
   try{
-    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,cloudMeta,quoteUpdatedAt,modifiedAt}));
+    localStorage.setItem(KEY,JSON.stringify({live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,strategies,recurring,audit,cloudMeta,quoteUpdatedAt,modifiedAt}));
     if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);
     saveDirty=false;
   }catch(e){console.error('資料儲存失敗',e);showToast?.('儲存失敗：請先匯出備份，確認瀏覽器儲存空間',null);}
@@ -1077,103 +1197,11 @@ function renderCal(){
       <div class="mo">${c.m}${c.m===nowM?'<span class="n">本月</span>':''}</div>
       <div class="et">${c.e}</div></div>`).join('');
 }
-/* ===== 殖利率策略地圖（板塊二/三/四） ===== */
-// 殖利率以「小數」儲存（0.10 = 10%）。verdict() 依板塊門檻回傳行動標籤。
-// 規則本身不寫標的代碼：哪一檔屬於哪個板塊，存在使用者資料（YIELD[].g），在 ⚙ 編輯視窗指定。
-const STRAT=[
-  {
-    id:'b2', name:'板塊二 · 其他高股息 ETF', tag:'現金流擴充',
-    tagBg:'rgba(46,204,113,.16)', tagCol:'var(--gain)',
-    metric:'年化殖利率',
-    rules:[
-      {v:'v-buy',  act:'加倉',     cond:'可用現金 > 50 萬 且 年化殖利率 > 10%', sub:'兩條件同時滿足才執行，現金閘門優先'},
-      {v:'v-hold', act:'持倉/觀察', cond:'年化殖利率 7% – 10%',                  sub:'不主動加碼；等待殖利率升破 10% 再行動'},
-      {v:'v-low',  act:'低優先',   cond:'年化殖利率 < 7%'},
-      {v:'v-sell', act:'賣出',     cond:'年化殖利率跌破 5%'},
-    ],
-    foot:'加倉前確認配息來源結構。若主要來自資本利得而非現金股息，大盤回調時配息率可能快速衰退。',
-    // 自動核對門檻（小數）
-    eval:y=>y<0.05?'v-sell':y<0.07?'v-low':y<=0.10?'v-hold':'v-buy',
-    label:v=>({['v-sell']:'賣出',['v-low']:'低優先',['v-hold']:'持倉/觀察',['v-buy']:'加倉（待現金>50萬）'}[v]),
-  },
-  {
-    id:'b3', name:'板塊三 · 債券加倉', tag:'鎖利防禦',
-    tagBg:'rgba(79,140,255,.16)', tagCol:'var(--accent)',
-    metric:'配息殖利率',
-    rules:[
-      {v:'v-buy',  act:'加倉', cond:'可用現金 > 50 萬 且 配息殖利率 > 5.0%', sub:'降息前、預期尚未完全發酵時執行。Fed 大幅降息後殖利率往往已壓縮，不宜追進'},
-      {v:'v-hold', act:'持倉', cond:'配息殖利率 > 3.5%'},
-      {v:'v-warn', act:'警示', cond:'配息殖利率接近 3.5%（±0.2%）', sub:'評估縮減部位，追蹤後續配息公告'},
-      {v:'v-sell', act:'賣出', cond:'配息殖利率跌破 3.0%，且持續 2 個月以上', sub:'確認配息無回升跡象；短暫波動不觸發'},
-    ],
-    foot:'配息殖利率 > 5.0% 進入加倉區，仍須同時通過現金閘門。「降息前」屬利率環境條件，程式不自動判定，加倉前需人工確認當下利率循環。',
-    eval:y=>y<0.03?'v-sell':y<=0.037?'v-warn':y<=0.05?'v-hold':'v-buy',
-    label:v=>({['v-sell']:'賣出（需連2月）',['v-warn']:'警示',['v-hold']:'持倉',['v-buy']:'加倉（待現金>50萬）'}[v]),
-  },
-  {
-    id:'b4', name:'板塊四 · 債券防禦底線', tag:'汰弱留強',
-    tagBg:'rgba(212,175,55,.16)', tagCol:'var(--gold)',
-    metric:'殖利率',
-    rules:[
-      {v:'v-warn', act:'當前狀態', cond:'殖利率逼近 3.5% 警戒線，持續監控中', sub:'維持待機，不加碼'},
-      {v:'v-sell', act:'賣出',     cond:'殖利率跌破 3.0%，且持續 2 個月以上未回升', sub:'資金轉換為現金或攻擊彈藥（MA60 扣款 / 50 萬奇兵計畫）'},
-    ],
-    foot:'本板塊為防禦底線，原則只守不攻；跌破 3.0% 且連 2 月未回升才汰除。',
-    eval:y=>y<0.03?'v-sell':'v-warn',
-    label:v=>({['v-sell']:'賣出（需連2月）',['v-warn']:'待機監控'}[v]),
-  },
-];
-const EXIT_GROUP='exit';   // 「出場程序中」：不套用殖利率門檻
-function groupLabel(g){
-  if(g===EXIT_GROUP)return '出場程序中';
-  const s=STRAT.find(x=>x.id===g);return s?s.name:'';
-}
-function stratOf(y){return y&&y.g?STRAT.find(s=>s.id===y.g):null;}
 // 有年配息與股價時，殖利率 = 年配息 ÷ 股價、每領1元成本 = 股價 ÷ 年配息；缺資料才沿用手填值
 function hasDP(y){return y&&Number.isFinite(y.d)&&y.d>=0&&Number.isFinite(y.p)&&y.p>0;}
 function yldOf(y){return hasDP(y)?y.d/y.p:(y?y.y:null);}
 function costOf(y){return hasDP(y)?(y.d>0?Math.round(y.p/y.d*100)/100:null):(y?y.cost:null);}
 function syncDerived(y){if(hasDP(y)){y.y=yldOf(y);y.cost=costOf(y);}}   // 讓備份檔裡的值也跟著更新
-// 回傳 {cls, text}；未指定板塊則回傳 null
-function verdict(y){
-  if(!y)return null;
-  if(y.g===EXIT_GROUP)return {cls:'v-watch',text:'出場程序中'};
-  const s=stratOf(y),v0=yldOf(y);
-  if(!s||v0==null||isNaN(v0))return null;
-  const v=s.eval(v0);
-  return {cls:v,text:s.label(v)};
-}
-function renderStrat(){
-  const host=document.getElementById('stratMap');if(!host)return;
-  // 把目前 YIELD 表中、屬於各板塊的標的即時殖利率帶進註腳
-  host.innerHTML=STRAT.map(s=>{
-    const members=YIELD.filter(y=>!y.trackingHidden&&y.g===s.id);
-    const codes=members.map(y=>y.c);
-    const live=members.map(y=>{
-      const v0=yldOf(y);
-      if(v0==null||isNaN(v0))return null;
-      const vd=verdict(y);
-      return `${y.c} ${(v0*100).toFixed(2)}%（${vd?vd.text:'—'}）`;
-    }).filter(Boolean);
-    const rows=s.rules.map(r=>`<div class="sb-row">
-      <span class="sb-dot" style="background:${dotColor(r.v)}"></span>
-      <span class="sb-act">${r.act}</span>
-      <span class="sb-cond">${r.cond}${r.sub?`<span class="sub">${r.sub}</span>`:''}</span>
-    </div>`).join('');
-    const liveLine=live.length?`<div class="sb-foot" style="border-left-color:var(--accent);background:rgba(79,140,255,.08)"><b>目前持有：</b>${live.join('　·　')}</div>`:'';
-    return `<div class="strat-blk">
-      <div class="sb-head">
-        <span class="sb-tag" style="background:${s.tagBg};color:${s.tagCol}">${s.tag}</span>
-        <span style="font-size:12px;font-weight:700;color:var(--ink)">${s.name}</span>
-        <span class="sb-codes">${codes.length?codes.join(' / '):'尚無標的'}</span>
-      </div>
-      ${rows}
-      <div class="sb-foot">${s.foot}</div>
-      ${liveLine}
-    </div>`;
-  }).join('');
-}
-function dotColor(v){return {['v-buy']:'var(--gain)',['v-hold']:'var(--accent)',['v-watch']:'var(--gold)',['v-warn']:'#ff9d72',['v-sell']:'var(--loss)',['v-low']:'#6b7280'}[v]||'var(--ink3)';}
 function toggleStrat(){
   const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');
   const open=m.style.display==='none';
@@ -1184,14 +1212,16 @@ function toggleStrat(){
 
 function escapeIncomeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function renderYield(){
+  refreshGroupFilter();
   const yb=document.getElementById('ybody');
   if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「匯入備份」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
   YIELD.forEach(syncDerived);
   yb.innerHTML=YIELD.map((y,i)=>{
-    const group=document.getElementById("yieldGroup")?.value||"b2";
-    if(y.trackingHidden||(group!=="all"&&(y.g||"b1")!==group))return "";
+    const group=yieldGroupId;
+    if(y.trackingHidden||(group!=="all"&&(StrategyCore.groupId(y.g)||"unclassified")!==group))return "";
     const vd=verdict(y);
-    const noteTxt=vd?vd.text:(y.note||'—');
+    const noteTxt=escapeIncomeText(vd?vd.text:(y.note||'—'));
+    const groupText=escapeIncomeText(groupLabel(y.g));
     const noteCol=vd?verdictColor(vd.cls):(y.g?'var(--ink2)':'var(--ink3)');
     const yv=yldOf(y),cv=costOf(y),auto=hasDP(y);
     const tip='點一下修改殖利率（%）';
@@ -1205,7 +1235,7 @@ function renderYield(){
     <td class="l"><span class="code">${escapeIncomeText(y.c)}</span><div class="nm">${escapeIncomeText(y.n)}</div></td>
     <td class="hide-sm" id="yd${i}"><span class="yld-cell" onclick="editDivCell(${i})" title="點一下修改年配息"${(y.d!=null&&y.d!=='')?'':' style="color:var(--ink3)"'}>${(y.d!=null&&y.d!=='')?y.d:'—'}</span></td><td class="hide-sm">${(y.p!=null&&y.p!=='')?y.p:'—'}</td><td class="hide-sm">${cv!=null?cv:'—'}</td>
     <td id="yc${i}">${yldCell}${sub}</td>
-    <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
+    <td class="l" style="font-family:var(--sans);color:${noteCol}">${groupText}<div title="${escapeIncomeText(vd?.description||'')}">${noteTxt}</div></td>
     <td><button class="mini-btn x" onclick="openYieldEdit(${i})" title="編輯／刪除">⚙</button></td>
   </tr>`;}).join('');
   if(!yb.innerHTML)yb.innerHTML='<tr><td colspan="7" class="l">此板塊尚無顯示中的標的，可切換板塊或從庫存加入。</td></tr>';
@@ -1265,9 +1295,8 @@ function openYieldEdit(idx){
   document.getElementById('y_cost').value=(y&&y.cost!=null)?y.cost:'';
   document.getElementById('y_y').value=(y&&y.y!=null)?(y.y*100).toFixed(2):'';
   const gs=document.getElementById('y_g');
-  gs.innerHTML='<option value="b1">板塊一：一般股票</option>'+STRAT.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')+
-    `<option value="${EXIT_GROUP}">出場程序中</option>`;
-  gs.value=y&&y.g?y.g:'b1';
+  gs.innerHTML=strategyOptions(StrategyCore.groupId(y?.g));
+  gs.value=StrategyCore.groupId(y?.g)||'unclassified';
   document.getElementById('ovYld').classList.add('show');
 }
 function closeYld(){document.getElementById('ovYld').classList.remove('show');}
@@ -1281,7 +1310,7 @@ function yldSave(){
   const cost=num(document.getElementById('y_cost').value);
   const yRaw=document.getElementById('y_y').value.trim();
   const yv=yRaw===''?null:(isNaN(parseFloat(yRaw))?null:parseFloat(yRaw)/100);
-  const g=document.getElementById('y_g').value||null;
+  const g=StrategyCore.groupId(document.getElementById('y_g').value);
   const isNew=yldEditIdx<0;
   if(isNew){
     const o={c,n,d,p,cost,y:yv,g,yUp:(yv!=null||d!=null)?curMonth():null};
@@ -1791,7 +1820,7 @@ function stamp(){const d=new Date();return d.getFullYear()+
 function exportJSON(){
   persistNow();
   const now=new Date().toISOString();
-  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt};
+  const payload={v:5,exportedAt:now,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,strategies,recurring,audit,quoteUpdatedAt,modifiedAt};
   download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),
     `資產備份_${stamp()}.json`);
   markBackedUp(now);
@@ -1836,7 +1865,7 @@ function checkBackupReminder(){
   const limit=remindDays();
   let last='',snooze='';
   try{last=localStorage.getItem(LASTBK_KEY)||'';snooze=localStorage.getItem(SNOOZE_KEY)||'';}catch(e){}
-  const hasData=data.length||dca.length||Object.keys(archives).length||CAL.length||YIELD.length||notes;
+  const hasData=data.length||dca.length||Object.keys(archives).length||CAL.length||YIELD.length||notes||StrategyCore.hasData(strategies);
   if(!limit||!hasData||snooze===stamp()){el.classList.remove('show');return;}
   const t=last?Date.parse(last):NaN;
   const days=isNaN(t)?null:Math.floor((Date.now()-t)/86400000);
@@ -1878,11 +1907,14 @@ function applyImport(){
   const o=pendingImport;if(!o)return closeImport();
   closeImport();
   try{
+    validatePortfolio(o);
+    const nextStrategies=StrategyCore.normalize(o.strategies,typeof o.notes==='string'?o.notes:notes);
     audit=Array.isArray(o.audit)?o.audit:[];quoteUpdatedAt=o.quoteUpdatedAt||'';
     data=o.live; ensureRowIds(); dca=o.dca||[]; archives=o.archives||{};
     CAL=o.cal||[]; YIELD=o.yield||[]; recurring=Array.isArray(o.recurring)?o.recurring:[];
     if(o.sheetUrl&&!sheetUrl)sheetUrl=o.sheetUrl;   // 手機首次匯入順便帶入 Sheet 網址
     if(typeof o.notes==='string')notes=o.notes;     // 舊備份沒有筆記時保留現有內容
+    strategies=nextStrategies;
     applyDueRecurring();save();
     markBackedUp(o.exportedAt||new Date().toISOString());   // 剛匯入的檔案本身就是一份備份
     renderNotes();
@@ -2044,7 +2076,7 @@ function makeAiReport(){
   const t=totals(data),question=document.getElementById('aiQuestion').value.trim();
   const monthly=recurring.filter(x=>x.enabled).map(x=>({名稱:x.name,類型:x.type,持倉:x.code,金額_TWD:x.amount,每月日期:x.day,開始月份:x.start,已記帳月份:x.applied?.slice(-6)||[]}));
   const positions=data.map(x=>({代碼:x.code,名稱:x.name,類別:x.cls,數量:x.shares,幣別匯率:x.fx,目前價格:x.price,市值_TWD:mv(x),本金_TWD:x.prin??null,未實現損益_TWD:pnl(x),權重百分比:t.total?+(mv(x)/t.total*100).toFixed(2):null}));
-  const content={資料日期:localToday(),淨資產_TWD:t.total,投資本金_TWD:t.prin,未實現損益_TWD:t.pl,持倉:positions,定期定額:dca,每月固定收支:monthly,殖利率追蹤:YIELD.map(x=>({代碼:x.c,名稱:x.n,年配息:x.d,價格:x.p,殖利率:x.y})),備註:notes};
+  const content={資料日期:localToday(),淨資產_TWD:t.total,投資本金_TWD:t.prin,未實現損益_TWD:t.pl,持倉:positions,定期定額:dca,每月固定收支:monthly,殖利率追蹤:YIELD.map(x=>({代碼:x.c,名稱:x.n,年配息:x.d,價格:x.p,殖利率:x.y,板塊:groupLabel(x.g),簡評:verdict(x)?.text||x.note||''})),操作策略:strategies.groups,備註:notes};
   if(document.getElementById('aiIncludeHistory').checked){
     const monthlyLast={};Object.keys(archives).sort().forEach(k=>{const m=/^\d{6}$/.test(k)?`20${k.slice(0,2)}-${k.slice(2,4)}`:k.slice(0,7);monthlyLast[m]={快照日期:fmtLabel(k),淨資產_TWD:totals(archives[k]).total};});
     content.歷史月末淨資產=Object.values(monthlyLast);
@@ -2058,25 +2090,7 @@ async function copyAiReport(){
 }
 function downloadAiReport(){download(new Blob([makeAiReport()],{type:'text/plain;charset=utf-8'}),`AI財務分析_${stamp()}.txt`);}
 
-/* ===== 操作策略筆記 ===== */
-let noteTimer=null;
-function renderNotes(){const na=document.getElementById('noteArea');if(na)na.value=notes;}
-function noteChanged(){
-  const st=document.getElementById('noteStatus');
-  if(st){st.textContent='輸入中…';st.classList.remove('saved');}
-  clearTimeout(noteTimer);
-  noteTimer=setTimeout(()=>saveNotes(),1000);
-}
-function saveNotes(force){
-  clearTimeout(noteTimer);
-  const na=document.getElementById('noteArea');if(!na)return;
-  if(na.value===notes&&!force)return;
-  notes=na.value;save();
-  const st=document.getElementById('noteStatus');
-  if(st){const d=new Date();
-    st.textContent='✓ 已儲存 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-    st.classList.add('saved');}
-}
+function renderNotes(){renderStrat();}
 
 let chartRenderTimer=null;
 function render(){renderViewSel();renderKPI();renderMeta();renderDCA();renderRecurring();renderFilter();renderTable();renderCal();renderYield();if(tab==='analy'){clearTimeout(chartRenderTimer);chartRenderTimer=setTimeout(()=>{refreshAiPreview();if(typeof Chart!=='undefined')renderCharts();},110);}}
@@ -2084,7 +2098,7 @@ applyDueRecurring();
 render();
 renderNotes();
 checkBackupReminder();
-// 還原策略地圖收合狀態（預設收合）
+// 還原操作策略收合狀態（預設收合）
 document.getElementById('trendRange').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.dataset.r===trendRange)return;
   trendRange=b.dataset.r;try{localStorage.setItem('trendRange',trendRange);}catch(err){}
@@ -2111,6 +2125,7 @@ if(sheetUrl){
       if(!r||typeof r.code!=='string'||typeof r.cls!=='string')throw Error('持倉代碼或類別不正確');
       for(const k of ['shares','price','fx','avg','prin'])if(r[k]!=null&&(typeof r[k]!=='number'||!Number.isFinite(r[k])))throw Error('持倉數值不正確：'+k);
     };
+    (root.StrategyCore||(typeof require==='function'?require('./strategy-core.js'):null))?.validate(o.strategies);
     o.live.forEach(row);
     for(const k of ['dca','cal','yield','recurring','audit'])if(o[k]!=null&&!Array.isArray(o[k]))throw Error('資料格式不正確：'+k);
     if(o.archives!=null){if(typeof o.archives!=='object'||Array.isArray(o.archives))throw Error('快照格式不正確');for(const a of Object.values(o.archives)){if(!Array.isArray(a))throw Error('快照格式不正確');a.forEach(row);}}
@@ -2230,12 +2245,12 @@ async function callDriveService(connection,method,args=[]){
  return result;
  }catch(e){if(e.name==='AbortError')throw Error('連線逾時，資料留在本機；請重試');throw e;}finally{clearTimeout(timer);}
 }
-function portfolioPayload(){return clone({v:5,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,recurring,audit,quoteUpdatedAt,modifiedAt});}
-function portfolioHasData(o){return !!o&&(!!o.notes?.trim()||['live','dca','cal','yield','recurring','audit'].some(k=>o[k]?.length>0)||Object.keys(o.archives||{}).length>0);}
+function portfolioPayload(){return clone({v:5,live:data,dca,archives,sheetUrl,cal:CAL,yield:YIELD,notes,strategies,recurring,audit,quoteUpdatedAt,modifiedAt});}
+function portfolioHasData(o){return !!o&&(!!o.notes?.trim()||StrategyCore.hasData(o.strategies)||['live','dca','cal','yield','recurring','audit'].some(k=>o[k]?.length>0)||Object.keys(o.archives||{}).length>0);}
 function cloudStatus(message){const el=document.getElementById('cloudState');if(el)el.textContent=message;}
 function persistCloudMeta(){saveDirty=true;persistNow();}
 function callCloud(method,...args){if(syncConnection)return callDriveService(syncConnection,method,args);return new Promise((resolve,reject)=>{if(!cloudAvailable())return reject(Error('請從已部署的私人網頁開啟'));let done=false;const timer=setTimeout(()=>{done=true;reject(Error('連線逾時，資料留在本機；稍後可重試'));},25000);const ok=value=>{if(!done){done=true;clearTimeout(timer);resolve(value);}};const fail=e=>{if(!done){done=true;clearTimeout(timer);reject(Error(e.message||'連線失敗'));}};google.script.run.withSuccessHandler(ok).withFailureHandler(fail)[method](...args);});}
-function formOpen(){return !!document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open||document.activeElement?.id==='noteArea';}
+function formOpen(){return !!document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open;}
 function openCloud(){if(!cloudAvailable()){openExtra('啟用跨裝置同步','<p>本機版可正常記錄與比較。跨裝置同步請依專案的 CLOUD_SETUP.md 完成私人 Google 部署，再讓電腦與手機開啟同一網址、登入同一 Google 帳號。</p><p>首次使用：在本機匯出備份，再到私人網頁匯入。持倉資料不會隨程式部署上傳。</p>');return;}
 openExtra('雲端同步',`<p>狀態：${safeText(document.getElementById('cloudState').textContent)}</p><p>最後同步：${safeText(cloudMeta.syncedAt?new Date(cloudMeta.syncedAt).toLocaleString('zh-TW'):'尚未同步')}</p><p>修改後自動上傳；開啟、返回頁面及每 30 秒檢查更新。</p><button class="btn" onclick="document.getElementById('extraDialog').close();syncCloud(true)">立即同步／檢查版本</button>`);}
 function showCloudConflict(remote){
@@ -2248,7 +2263,7 @@ const intro=remoteHas&&!localHas?'這台裝置尚無資料。載入雲端版本�
 openExtra(title,`<p>${intro}</p><div class="conflict-grid"><section><h4>這台裝置</h4><p>${summary(portfolioPayload())}</p><p>修改時間：${safeText(modifiedAt?new Date(modifiedAt).toLocaleString('zh-TW'):'尚無紀錄')}</p></section><section><h4>雲端版本</h4><p>${summary(remote.payload)}</p><p>更新時間：${safeText(remote.updatedAt?new Date(remote.updatedAt).toLocaleString('zh-TW'):'尚無紀錄')}</p></section></div><div class="conflict-actions">${remoteHas?`<button class="btn primary" onclick="resolveCloud('remote')">${localHas?'保留雲端，更新本機':'載入我的雲端資料'}</button>`:''}${localHas?`<button class="btn" onclick="resolveCloud('local')">${remoteHas?'保留本機，更新雲端':'建立我的雲端資料'}</button>`:''}${!remoteHas&&!localHas?`<button class="btn primary" onclick="cloudConflict=null;document.getElementById('extraDialog').close();focusSetting('backupPanel')">匯入備份</button><button class="btn" onclick="cloudConflict=null;document.getElementById('extraDialog').close();setTab('hold');openAdd()">新增第一筆</button>`:''}</div><p id="cloudConflictError" class="conflict-error" role="alert"></p>`);
 }
 function backupConflict(payload){download(new Blob([JSON.stringify({...payload,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),`同步取代前備份_${stamp()}.json`);}
-function acceptRemote(remote){validatePortfolio(remote.payload);const o=remote.payload;data=clone(o.live);dca=o.dca||[];archives=o.archives||{};CAL=o.cal||[];YIELD=o.yield||[];notes=o.notes||'';recurring=o.recurring||[];audit=o.audit||[];sheetUrl=o.sheetUrl||'';quoteUpdatedAt=o.quoteUpdatedAt||'';modifiedAt=o.modifiedAt||'';ensureRowIds();switchView('live');renderNotes();cloudMeta.revision=remote.revision;cloudMeta.ack=JSON.stringify(portfolioPayload());cloudMeta.syncedAt=new Date().toISOString();persistCloudMeta();if(saveDirty)throw Error('本機儲存失敗，請先匯出備份');if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);else localStorage.removeItem(URL_KEY);cloudStatus('已同步 · '+new Date().toLocaleTimeString('zh-TW'));}
+function acceptRemote(remote){validatePortfolio(remote.payload);const o=remote.payload;data=clone(o.live);dca=o.dca||[];archives=o.archives||{};CAL=o.cal||[];YIELD=o.yield||[];notes=o.notes||'';strategies=StrategyCore.normalize(o.strategies,notes);recurring=o.recurring||[];audit=o.audit||[];sheetUrl=o.sheetUrl||'';quoteUpdatedAt=o.quoteUpdatedAt||'';modifiedAt=o.modifiedAt||'';ensureRowIds();switchView('live');renderNotes();cloudMeta.revision=remote.revision;cloudMeta.ack=JSON.stringify(portfolioPayload());cloudMeta.syncedAt=new Date().toISOString();persistCloudMeta();if(saveDirty)throw Error('本機儲存失敗，請先匯出備份');if(sheetUrl)localStorage.setItem(URL_KEY,sheetUrl);else localStorage.removeItem(URL_KEY);cloudStatus('已同步 · '+new Date().toLocaleTimeString('zh-TW'));}
 async function resolveCloud(choice){
 if(cloudBusy||!cloudConflict)return;
 const remote=cloudConflict,localHas=portfolioHasData(portfolioPayload()),remoteHas=portfolioHasData(remote.payload);
@@ -2444,7 +2459,7 @@ function reloadAppUpdate(automatic=false){
  if(automatic&&!canAutoUpdate())return;
  if(document.querySelector('.ov.show')||document.getElementById('extraDialog')?.open){updateAppMessage('請先儲存或關閉目前的編輯視窗，再更新。');return;}
  if(typeof cloudBusy!=='undefined'&&cloudBusy){updateAppMessage('資料正在同步，請完成後再更新。');return;}
- saveNotes(true);saveDirty=true;persistNow();if(saveDirty){updateAppMessage('本機資料未能保存，已停止重新載入。請先下載備份。');return;}
+ saveDirty=true;persistNow();if(saveDirty){updateAppMessage('本機資料未能保存，已停止重新載入。請先下載備份。');return;}
  try{sessionStorage.setItem(appUpdateAttemptKey(),availableAppVersion);}catch{if(automatic)return;}
  const url=new URL(location.href);url.searchParams.set('_app',availableAppVersion);url.searchParams.set('_refresh',Date.now());location.replace(url.href);
 }
@@ -2492,8 +2507,10 @@ function incomeMonthModel(month){
 function incomeRefresh(){save();persistNow();renderYield();renderCal();}
 
 /* ── 每月 ⋯ 管理：統一處理該月份的項目 ── */
-function removeIncomeMonth(i,month){const y=YIELD[i];if(!y||!confirm('只把 '+y.c+' 移出 '+month+' 月？\n其他月份、年配息與追蹤都保留；單次估算金額不變。'))return;y.frequency=incomeFrequency(y);y.months=incomeMonths(y).filter(m=>m!==month);if(y.actual)delete y.actual[incomeActualKey(month)];incomeRefresh();manageIncomeMonth(month);}
-function cancelIncomeTracking(i,month){const y=YIELD[i];if(!y||!confirm('完全取消 '+y.c+' 的配息追蹤？\n將刪除它的年配息、發放月份、備註與實際入帳紀錄；庫存不受影響。'))return;YIELD.splice(i,1);incomeRefresh();manageIncomeMonth(month);}
+function removeIncomeMonth(i,month){const y=YIELD[i];if(!y||!confirm('只把 '+y.c+' 移出 '+month+' 月？\n其他月份、年配息與追蹤都保留；單次估算金額不變。'))return;y.frequency=incomeFrequency(y);y.months=incomeMonths(y).filter(m=>m!==month);incomeRefresh();manageIncomeMonth(month);}
+function cancelIncomeTracking(i,month){const y=YIELD[i];if(!y)return;y.trackingHidden=true;incomeRefresh();manageIncomeMonth(month);}
+function deleteIncomeTracking(i,month){const y=YIELD[i];if(!y||!confirm('刪除 '+y.c+' 的全部配息設定與入帳紀錄？此操作無法復原，庫存不受影響。'))return;YIELD.splice(i,1);incomeRefresh();if(month)manageIncomeMonth(month);else openIncomeImport();}
+function incomeTrackingMenu(i){return actionMenu(YIELD[i].c+'配息操作',`<button onclick="incomeEdit(${i})">編輯設定</button><button class="btn danger" onclick="deleteIncomeTracking(${i})">刪除配息設定</button>`);}
 function saveIncomeActual(i,month){
  const y=YIELD[i],el=document.getElementById('incomeActual'+i);if(!y||!el)return;const t=el.value.trim();
  if(t!==''&&(!Number.isFinite(Number(t))||Number(t)<0)){alert('實際入帳請填零或正數。');return;}
@@ -2510,9 +2527,9 @@ function addIncomeMonth(month){
 }
 function manageIncomeMonth(month){
  const model=incomeMonthModel(month),year=new Date().getFullYear();
- const addable=YIELD.map((y,i)=>({y,i})).filter(({y})=>!incomeMonths(y).includes(month)||!y.trackingHidden&&y.calendarEnabled===false);
- const row=r=>`<div class="income-manage-row"><div class="im-main"><strong>${safeText(r.y.c)}</strong> ${safeText(r.y.n)}<span class="muted"> · 庫存 ${numberText(r.shares)} 股 · ${r.est===null?'年配息未設定':'預估 '+incomeShort(r.cur,r.est)}</span></div><div class="im-actual"><label for="incomeActual${r.index}">${year} 年 ${month} 月實際入帳（${safeText(r.cur)}）</label><input id="incomeActual${r.index}" type="number" min="0" step="any" value="${r.act===null?'':r.act}" placeholder="${r.est===null?'':Math.round(r.est*100)/100}"><button class="text-btn" onclick="saveIncomeActual(${r.index},${month})">記錄</button></div><div class="im-actions"><button class="text-btn" onclick="incomeEdit(${r.index})">編輯設定</button><button class="text-btn" onclick="removeIncomeMonth(${r.index},${month})">只移出本月</button><button class="text-btn danger" onclick="cancelIncomeTracking(${r.index},${month})">刪除配息設定</button></div></div>`;
- openExtra(month+'月配息管理',`<p class="muted">配息資料統一在殖利率追蹤維護。「只移出本月」保留追蹤與其他月份；「刪除配息設定」會刪除該標的全部配息設定。實際入帳選填，與預估分開顯示。</p><div class="income-manage">${model.rows.map(row).join('')||'<p class="muted">本月沒有標的。可從下方加入已追蹤的標的。</p>'}</div>${addable.length?`<div class="income-add"><select id="incomeAddSel" aria-label="加入本月的標的">${addable.map(({y,i})=>`<option value="${i}">${safeText(y.c)} ${safeText(y.n)}</option>`).join('')}</select><button class="text-btn" onclick="addIncomeMonth(${month})">加入 ${month} 月</button></div>`:''}`);
+ const addable=YIELD.map((y,i)=>({y,i})).filter(({y})=>!incomeMonths(y).includes(month)||y.trackingHidden||y.calendarEnabled===false);
+ const row=r=>`<div class="income-manage-row"><div class="im-main"><strong>${safeText(r.y.c)}</strong> ${safeText(r.y.n)}<span class="muted"> · ${numberText(r.shares)} 股 · ${r.est===null?'—':'預估 '+incomeShort(r.cur,r.est)}</span>${actionMenu(r.y.c+'本月配息操作',`<button onclick="saveIncomeActual(${r.index},${month})">記錄實際入帳</button><button onclick="incomeEdit(${r.index})">編輯設定</button><button onclick="removeIncomeMonth(${r.index},${month})">只移出本月</button><button onclick="cancelIncomeTracking(${r.index},${month})">隱藏追蹤</button><button class="btn danger" onclick="deleteIncomeTracking(${r.index},${month})">刪除配息設定</button>`)}</div><div class="im-actual"><label for="incomeActual${r.index}">${year} 年 ${month} 月實際入帳（${safeText(r.cur)}）</label><input id="incomeActual${r.index}" type="number" min="0" step="any" value="${r.act===null?'':r.act}" placeholder="${r.est===null?'':Math.round(r.est*100)/100}"></div></div>`;
+ openExtra(month+'月配息管理',`<p class="muted">配息資料統一在殖利率追蹤維護。「只移出本月」保留追蹤、其他月份與入帳紀錄；「隱藏追蹤」保留全部設定；「刪除配息設定」會刪除該標的全部配息設定。實際入帳選填，與預估分開顯示。</p><div class="income-manage">${model.rows.map(row).join('')||'<p class="muted">本月沒有標的。可從下方加入已追蹤的標的。</p>'}</div>${addable.length?`<div class="income-add"><select id="incomeAddSel" aria-label="加入本月的標的">${addable.map(({y,i})=>`<option value="${i}">${safeText(y.c)} ${safeText(y.n)}</option>`).join('')}</select><button class="text-btn" onclick="addIncomeMonth(${month})">加入 ${month} 月</button></div>`:''}`);
 }
 
 /* ── 行事曆（緊湊版）── */
@@ -2522,17 +2539,17 @@ renderCal=function(){
   const month=i+1,m=incomeMonthModel(month);
   Object.entries(m.est).forEach(([c,v])=>{yearEst[c]=(yearEst[c]||0)+v;});Object.entries(m.act).forEach(([c,v])=>{yearAct[c]=(yearAct[c]||0)+v;});
   const entries=m.rows.map(r=>{
-   const value=r.act!==null?`<i class="income-badge" title="已記錄實際入帳">實</i>${incomeShort(r.cur,r.act)}`:r.shares<=0?'無庫存':r.est===null?'待設定':incomeShort(r.cur,r.est);
+   const value=r.act!==null?`<i class="income-badge" title="已記錄實際入帳">實</i>${incomeShort(r.cur,r.act)}`:r.shares<=0?'<span class="income-status" title="目前無庫存，未計入預估">無庫存</span>':r.est===null?'<span class="income-status" title="請設定全年配息與發放次數">未設定</span>':incomeShort(r.cur,r.est);
    const tip=`${r.y.n||''} · 庫存 ${numberText(r.shares)} 股`+(r.est===null?'':` · 預估 ${incomeShort(r.cur,r.est)}（年配息 ${numberText(r.y.d)} ÷ ${incomeFrequency(r.y)} 次）`);
    return `<li class="income-entry${r.act!==null?' is-actual':''}" title="${safeText(tip)}"><span class="income-code">${safeText(r.y.c)}</span><span class="income-name">${safeText(r.y.n)}</span><span class="income-value">${value}</span></li>`;}).join('');
-  return `<section class="cal-m ${month===now?'now':''}"><div class="income-month-head"><div class="mo">${month}月${month===now?'<span class="n">本月</span>':''}</div><button class="text-btn income-menu" onclick="manageIncomeMonth(${month})" aria-label="管理 ${month} 月配息">編輯</button></div><div class="income-total">${Object.entries(m.est).map(([cur,value])=>`<div><small>預估 ${safeText(cur)}</small> <strong>${incomeNum(cur,value)}</strong></div>`).join('')||'<small>預估</small> —'}</div>${m.received?`<div class="income-actual">實際 ${incomeTotals(m.act)}（${m.received}/${m.rows.length} 檔）</div>`:''}${m.unknown?`<small class="income-warning">${m.unknown} 檔未設定年配息，未計入</small>`:''}${entries?`<ul class="income-list">${entries}</ul>`:'<div class="income-empty">未設定標的</div>'}</section>`;
+  return `<section class="cal-m ${month===now?'now':''}"><div class="income-month-head"><div class="mo">${month}月${month===now?'<span class="n">本月</span>':''}</div>${actionMenu(month+'月配息操作',`<button onclick="manageIncomeMonth(${month})">管理本月配息</button>`)}</div><div class="income-total">${Object.entries(m.est).map(([cur,value])=>`<div><small>預估 ${safeText(cur)}</small> <strong>${incomeNum(cur,value)}</strong></div>`).join('')||'<small>預估</small> —'}</div>${m.received?`<div class="income-actual">實際 ${incomeTotals(m.act)}（${m.received}/${m.rows.length} 檔）</div>`:''}${m.unknown?`<small class="income-warning" title="未設定年配息的標的不計入預估總額">${m.unknown} 檔待設定</small>`:''}${entries?`<ul class="income-list">${entries}</ul>`:'<div class="income-empty" title="尚未安排本月發放標的">—</div>'}</section>`;
  }).join('');
  const summary=document.getElementById('incomeSummary');
  if(summary)summary.innerHTML=`<span><b>全年預估</b> ${incomeTotals(yearEst)||'—'}</span>${Object.keys(yearAct).length?`<span><b>已記錄實際</b> ${incomeTotals(yearAct)}</span>`:''}<span class="muted">估算值，各幣別分開，不含未設定年配息的標的</span>`;
  const missing=YIELD.map((y,i)=>({y,i})).filter(({y})=>!y.trackingHidden&&y.calendarEnabled!==false&&(!incomeMonths(y).length||incomeFrequency(y)!==incomeMonths(y).length));
  const hidden=YIELD.map((y,i)=>({y,i})).filter(({y})=>!y.trackingHidden&&y.calendarEnabled===false);
  const chips=list=>list.map(({y,i})=>`<button class="text-btn" onclick="incomeEdit(${i})">${safeText(y.c)}</button>`).join('');
- document.getElementById('incomeUnscheduled').innerHTML=(missing.length?'<p class="muted">月份未完整設定（未分配部分不計入行事曆）：'+chips(missing)+'</p>':'')+(hidden.length?'<p class="muted">已追蹤但未顯示於行事曆（編輯後勾選「顯示於配息行事曆」）：'+chips(hidden)+'</p>':'');
+ document.getElementById('incomeUnscheduled').innerHTML=(missing.length?'<p class="muted"><span title="未分配的月份不計入行事曆預估">待排月份</span>：'+chips(missing)+'</p>':'')+(hidden.length?'<p class="muted"><span title="設定保留；可在配息設定中恢復顯示">已隱藏</span>：'+chips(hidden)+'</p>':'');
  document.getElementById('legacyCalendar').hidden=!CAL.length;
  document.getElementById('legacyCalendarText').textContent=CAL.map(c=>`${c.m}：${String(c.e??'').replace(/<br\s*\/?\s*>/gi,'、').replace(/<[^>]*>/g,'')}`).join('\n');
 };
@@ -2575,7 +2592,7 @@ yldDel=function(){incomeOriginalDelete();incomeRefresh();};
 const incomeOriginalRenderYield=renderYield;
 renderYield=function(){incomeOriginalRenderYield();document.querySelectorAll('#ybody tr').forEach((tr,i)=>{
   const y=YIELD[Number(tr.dataset.yieldIndex)];if(!y)return;const sub=document.createElement('small');sub.className='income-summary';sub.textContent=incomeCurrency(y)+' · '+(y.calendarEnabled===false?'已移出行事曆':incomeMonths(y).length?'發放 '+incomeMonths(y).join('、')+' 月':'待設定月份');tr.cells[0].append(sub);
-  const button=tr.querySelector('button');if(button){button.className='income-edit';button.textContent='編輯';button.setAttribute('aria-label','編輯 '+y.c);}
+  const button=tr.querySelector('button');if(button)button.outerHTML=incomeTrackingMenu(Number(tr.dataset.yieldIndex));
 });};
 
 /* ── 從庫存加入追蹤：勾選控制顯示狀態；取消勾選保留 YIELD 配息資料 ── */
@@ -2583,7 +2600,7 @@ function openIncomeImport(){
   const held=[...new Map(data.filter(r=>!['現金','貸款'].includes(r.cls)&&Number(r.shares)>0).map(r=>[incomeKey(r.code),r])).values()];
   const heldKeys=new Set(held.map(r=>incomeKey(r.code)));
   const tags=y=>[y.calendarEnabled===false?'未顯示於行事曆':'',y&&(y.d==null||y.d==='')?'未設定年配息':'',!y||incomeMonths(y).length?'':'未設定月份'].filter(Boolean).join(' · ');
-  const line=(code,name,note,tracked)=>`<label><input type="checkbox" data-code="${safeText(code)}" ${tracked?'checked':''} onchange="toggleIncomeTracking(this)"><span>${safeText(code)} ${safeText(name)}${note?` <span class="im-tag">· ${safeText(note)}</span>`:''}</span></label>${YIELD.some(y=>incomeKey(y.c)===incomeKey(code))?`<button class="text-btn" onclick="incomeEdit(${YIELD.findIndex(y=>incomeKey(y.c)===incomeKey(code))})">編輯設定</button>`:''}`;
+  const line=(code,name,note,tracked)=>`<label><input type="checkbox" data-code="${safeText(code)}" ${tracked?'checked':''} onchange="toggleIncomeTracking(this)"><span>${safeText(code)} ${safeText(name)}${note?` <span class="im-tag">· ${safeText(note)}</span>`:''}</span></label>${YIELD.some(y=>incomeKey(y.c)===incomeKey(code))?incomeTrackingMenu(YIELD.findIndex(y=>incomeKey(y.c)===incomeKey(code))):''}`;
   const heldHtml=held.map(r=>{const y=YIELD.find(y=>incomeKey(y.c)===incomeKey(r.code));return line(r.code,r.name,y?tags(y):'',!!y&&!y.trackingHidden);}).join('');
   const extraHtml=YIELD.filter(y=>!heldKeys.has(incomeKey(y.c))).map(y=>line(y.c,y.n,'目前無庫存'+(tags(y)?' · '+tags(y):''),!y.trackingHidden)).join('');
   openExtra('從庫存加入配息追蹤',`<p class="muted">勾選顯示標的；取消勾選只隱藏，所有配息設定與入帳紀錄均保留。重新勾選即可恢復；刪除請使用「編輯設定」內的刪除按鈕。</p><div class="income-import-list">${heldHtml||'<p>目前沒有可加入的庫存。</p>'}${extraHtml?`<h4 class="im-sub">已追蹤但目前無庫存</h4>${extraHtml}`:''}</div><button class="btn" type="button" onclick="document.getElementById('extraDialog').close()">完成</button>`);

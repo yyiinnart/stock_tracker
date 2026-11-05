@@ -8,6 +8,7 @@
       if(!r||typeof r.code!=='string'||typeof r.cls!=='string')throw Error('持倉代碼或類別不正確');
       for(const k of ['shares','price','fx','avg','prin'])if(r[k]!=null&&(typeof r[k]!=='number'||!Number.isFinite(r[k])))throw Error('持倉數值不正確：'+k);
     };
+    (root.StrategyCore||(typeof require==='function'?require('./strategy-core.js'):null))?.validate(o.strategies);
     o.live.forEach(row);
     for(const k of ['dca','cal','yield','recurring','audit'])if(o[k]!=null&&!Array.isArray(o[k]))throw Error('資料格式不正確：'+k);
     if(o.archives!=null){if(typeof o.archives!=='object'||Array.isArray(o.archives))throw Error('快照格式不正確');for(const a of Object.values(o.archives)){if(!Array.isArray(a))throw Error('快照格式不正確');a.forEach(row);}}
