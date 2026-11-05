@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="38e7ae0db56463ad">
+<meta name="app-version" content="8f998db4c0e4c991">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資產追蹤儀表板</title>
@@ -266,7 +266,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=ad73f6e01baf1318">
+<link rel="stylesheet" href="interface.css?v=0007d93eb627ecfd">
 </head>
 <body>
 <div class="wrap">
@@ -327,8 +327,8 @@
   <!-- ===== 分析 PAGE ===== -->
   <div class="page" id="page-analy">
     <div class="subnav" aria-label="分析分類"><button data-analysis="compare" onclick="showAnalysis('compare')">價格比較</button><button data-analysis="charts" onclick="showAnalysis('charts')">資產分析</button><button data-analysis="income" onclick="showAnalysis('income')">配息與筆記</button></div>
-    <section class="card" id="comparisonPanel"><h2>歷史價格比較</h2><p class="muted">比較原幣價格，不含配息或分割調整。</p>
-      <div class="comparison-controls"><label>比較快照<select id="compareDate" onchange="showCompare()"></select></label><label>篩選<select id="compareDirection" onchange="showCompare()"><option value="all">全部，依漲跌幅排序</option><option value="up">上漲</option><option value="down">下跌</option></select></label><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="openSnap()">管理快照</button></div>
+    <section class="card" id="comparisonPanel"><h2>歷史價格比較</h2><p class="muted">台幣相對損益＝原幣價差 × 目前庫存股數 × 目前匯率；相對所選快照，不含配息、匯差或分割調整，非實際持有期間損益。</p>
+      <div class="comparison-controls"><label>比較快照<select id="compareDate" onchange="showCompare()"></select></label><label>篩選<select id="compareDirection" onchange="showCompare()"><option value="all">全部</option><option value="up">上漲</option><option value="down">下跌</option></select></label><button class="btn" onclick="archiveNow()">儲存今日快照</button><label>排序<select id="compareSort" onchange="showCompare()"><option value="rate">漲跌幅：高到低</option><option value="pnlDesc">台幣相對損益：高到低</option><option value="pnlAsc">台幣相對損益：低到高</option></select></label><button class="btn" onclick="openSnap()">管理快照</button></div>
       <p id="compareEmpty" class="empty-note" hidden></p><div id="compareResults"></div>
     </section>
     <div id="analysisCharts"><div class="analysis-scope">        <label class="viewsel"><span>檢視時點</span>
@@ -355,19 +355,19 @@
     </div>
     </div><div id="analysisIncome">
     <div class="card">
-      <h2>配息行事曆</h2>
-      <div class="calmini" id="cal"></div>
+      <h2>配息行事曆<span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button></span></h2>
+      <p class="muted">依標的設定的發放月份顯示，非已確認入帳。點標的可編輯；配息資料由殖利率追蹤手動維護。</p><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
     </div>
     <div class="card">
-      <h2>殖利率追蹤
-        <span class="act"><button class="mini-btn" onclick="openYieldEdit(-1)">＋ 增減標的</button></span></h2>
+      <h2 id="yieldHeading">殖利率追蹤
+        <span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button><button class="text-btn" onclick="openYieldEdit(-1)">新增標的</button></span></h2>
       <div class="tscroll">
       <table class="ytable">
         <thead><tr><th class="l">標的</th><th class="hide-sm">年配息</th><th class="hide-sm">股價</th><th class="hide-sm">每領1元成本</th><th>殖利率</th><th class="l">簡評</th><th></th></tr></thead>
         <tbody id="ybody"></tbody>
       </table>
       </div>
-      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。⚙ 可設定策略板塊、編輯或刪除標的。</div>
+      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。按「編輯」可設定發放月份、策略板塊或刪除標的。</div>
     </div>
     <div class="card">
       <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">展開</span></h2>
@@ -523,14 +523,16 @@
 <div class="ov" id="ovYld">
   <div class="modal" style="max-width:400px">
     <h3 id="yldTitle">新增殖利率標的</h3>
-    <div class="msub">追蹤配息標的的殖利率；簡評會依策略地圖門檻自動核對</div>
+    <div class="msub">在這裡維護年配息與發放月份，行事曆會同步更新。</div>
     <div class="fg"><label>代碼</label><input id="y_code" placeholder="例 00878"><div class="hint">需與 Sheet 代碼一致才會自動更新股價</div></div>
     <div class="fg"><label>策略板塊</label><select id="y_g"></select><div class="hint">決定簡評套用哪個板塊的門檻</div></div>
     <div class="fg"><label>名稱</label><input id="y_name" placeholder="例 國泰永續高股息"></div>
-    <div class="fg"><label>年配息</label><input id="y_d" placeholder="例 1.2"><div class="hint">建議填近 12 個月實際配息總額</div></div>
+    <div class="fg"><label>年配息（每股／原幣）</label><input id="y_d" placeholder="例 1.2"><div class="hint">建議填近 12 個月實際配息總額</div></div>
+    <div id="incomeEditor"></div>
     <div class="fg"><label>股價</label><input id="y_p" placeholder="例 22.5（可留空）"></div>
     <div class="fg"><label>每領1元成本</label><input id="y_cost" type="number" step="any" placeholder="有年配息與股價時自動計算"></div>
     <div class="fg"><label>殖利率 (%)</label><input id="y_y" type="number" step="0.01" placeholder="有年配息與股價時自動計算"><div class="hint">這兩欄只在缺年配息或股價時使用</div></div>
+
     <div class="modal-actions">
       <button class="btn danger" id="yldDelBtn" onclick="yldDel()">刪除</button>
       <button class="btn" onclick="closeYld()">取消</button>
@@ -965,9 +967,9 @@ function groupLabel(g){
 }
 function stratOf(y){return y&&y.g?STRAT.find(s=>s.id===y.g):null;}
 // 有年配息與股價時，殖利率 = 年配息 ÷ 股價、每領1元成本 = 股價 ÷ 年配息；缺資料才沿用手填值
-function hasDP(y){return y&&typeof y.d==='number'&&y.d>0&&typeof y.p==='number'&&y.p>0;}
+function hasDP(y){return y&&Number.isFinite(y.d)&&y.d>=0&&Number.isFinite(y.p)&&y.p>0;}
 function yldOf(y){return hasDP(y)?y.d/y.p:(y?y.y:null);}
-function costOf(y){return hasDP(y)?Math.round(y.p/y.d*100)/100:(y?y.cost:null);}
+function costOf(y){return hasDP(y)?(y.d>0?Math.round(y.p/y.d*100)/100:null):(y?y.cost:null);}
 function syncDerived(y){if(hasDP(y)){y.y=yldOf(y);y.cost=costOf(y);}}   // 讓備份檔裡的值也跟著更新
 // 回傳 {cls, text}；未指定板塊則回傳 null
 function verdict(y){
@@ -1017,13 +1019,14 @@ function toggleStrat(){
   try{localStorage.setItem('stratOpen',open?'1':'0');}catch(e){}
 }
 
+function escapeIncomeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function renderYield(){
   const yb=document.getElementById('ybody');
   if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「匯入備份」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
   YIELD.forEach(syncDerived);
   yb.innerHTML=YIELD.map((y,i)=>{
     const vd=verdict(y);
-    const noteTxt=vd?vd.text:(y.g?(y.note||'—'):'未指定板塊（按 ⚙ 設定）');
+    const noteTxt=vd?vd.text:(y.g?(y.note||'—'):'未指定板塊（按編輯設定）');
     const noteCol=vd?verdictColor(vd.cls):(y.g?'var(--ink2)':'var(--ink3)');
     const yv=yldOf(y),cv=costOf(y),auto=hasDP(y);
     const tip=auto?'點一下修改年配息（殖利率自動計算）':'點一下手動修改殖利率';
@@ -1034,7 +1037,7 @@ function renderYield(){
       : `${mark}<span class="yld-cell" onclick="editYield(${i})" style="color:var(--ink3)" title="${tip}">—</span>`;
     const sub=auto?`<div class="yld-sub">年配 ${y.d} ÷ 價 ${y.p}</div>`:'';
     return `<tr>
-    <td class="l"><span class="code">${y.c}</span><div class="nm">${y.n}</div></td>
+    <td class="l"><span class="code">${escapeIncomeText(y.c)}</span><div class="nm">${escapeIncomeText(y.n)}</div></td>
     <td class="hide-sm" id="yd${i}"><span class="yld-cell" onclick="editDivCell(${i})" title="點一下修改年配息"${(y.d!=null&&y.d!=='')?'':' style="color:var(--ink3)"'}>${(y.d!=null&&y.d!=='')?y.d:'—'}</span></td><td class="hide-sm">${(y.p!=null&&y.p!=='')?y.p:'—'}</td><td class="hide-sm">${cv!=null?cv:'—'}</td>
     <td id="yc${i}">${yldCell}${sub}</td>
     <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
@@ -1673,8 +1676,8 @@ function checkBackupReminder(){
   const days=isNaN(t)?null:Math.floor((Date.now()-t)/86400000);
   if(days!==null&&days<limit){el.classList.remove('show');return;}
   document.getElementById('bkMsg').innerHTML=days===null
-    ? '⚠ 這台裝置上還沒有備份紀錄。資料只存在瀏覽器裡，清除瀏覽資料就會消失。'
-    : `⚠ 已經 <b>${days}</b> 天沒有備份了。資料只存在瀏覽器裡，建議下載一份備份檔。`;
+    ? '提醒：這台裝置上還沒有備份紀錄。資料只存在瀏覽器裡，清除瀏覽資料就會消失。'
+    : `提醒：已經 <b>${days}</b> 天沒有備份了。資料只存在瀏覽器裡，建議下載一份備份檔。`;
   el.classList.add('show');
 }
 // 匯入流程改用頁內對話框：瀏覽器的 confirm()/alert() 在部分環境（預覽框、內嵌 WebView、
@@ -1931,5 +1934,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=fcbdf318c4a7cb63"></script><script src="setup-assets.js?v=3b6c04b894df64b7"></script><script src="interface.js?v=814d13821cd67e73"></script></body>
+<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=fcbdf318c4a7cb63"></script><script src="setup-assets.js?v=412bad2f5a585ba4"></script><script src="interface.js?v=1cc2b6835c743984"></script><script src="dividends.js?v=bb315baf596654a1"></script></body>
 </html>

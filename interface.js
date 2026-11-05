@@ -34,8 +34,9 @@ showCompare=function(){
   const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;
   const empty=document.getElementById('compareEmpty');empty.hidden=!!key;
   empty.textContent='還沒有歷史快照。先儲存今日快照，下次更新價格後就能看變化。';
-  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>({r,c:priceChange(r,key)})).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>(b.c?.rate??-Infinity)-(a.c?.rate??-Infinity));
-  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading" aria-hidden="true"><span>標的</span><span>歷史價格</span><span>目前價格</span><span>價差</span><span>漲跌幅</span></div>`+rows.map(({r,c})=>`<article class="compare-row" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="difference">${c?signedNumber(c.delta):'—'}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div></article>`).join('');
+  const sort=document.getElementById('compareSort').value;
+  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>{const c=priceChange(r,key);return {r,c,pnl:comparisonPnl(r,c)};}).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>{const av=sort==='rate'?a.c?.rate:a.pnl,bv=sort==='rate'?b.c?.rate:b.pnl;if(av==null)return bv==null?0:1;if(bv==null)return -1;return sort==='pnlAsc'?av-bv:bv-av;});
+  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading" aria-hidden="true"><span>標的</span><span>歷史價格</span><span>目前價格</span><span>價差</span><span>漲跌幅</span><span>台幣相對損益</span></div>`+rows.map(({r,c,pnl})=>`<article class="compare-row" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="difference">${c?signedNumber(c.delta):'—'}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">台幣相對損益</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>庫存 ${numberText(r.shares)} 股 · 匯率 ${numberText(r.fx)}</small></div></article>`).join('');
 };
 function numberText(value){return value==null||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('zh-TW',{maximumFractionDigits:4});}
 function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value*10000)/10000);}
@@ -172,3 +173,10 @@ function reloadAppUpdate(automatic=false){
 document.getElementById('appVersionLabel').textContent='目前程式版本：'+(runningAppVersion||'開發版本');
 setTimeout(()=>checkAppUpdate(),2500);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastAppUpdateCheck>300000)checkAppUpdate();});
+
+// Current inventory exposure at today's exchange rate, relative to the selected price snapshot.
+function comparisonPnl(r,c){
+  if(!c||r.shares==null||r.shares===''||r.fx==null||r.fx==='')return null;
+  const shares=Number(r.shares),fx=Number(r.fx),value=c.delta*shares*fx;
+  return Number.isFinite(shares)&&shares>=0&&Number.isFinite(fx)&&fx>0&&Number.isFinite(value)?value:null;
+}
