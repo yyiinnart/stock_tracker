@@ -1,9 +1,9 @@
 /* Deploy this project as a Web App: Execute as me, Who has access: Only myself. */
 function ownerOnly_(){const active=Session.getActiveUser().getEmail();const owner=Session.getEffectiveUser().getEmail();if(!active||active!==owner)throw Error('僅限部署者本人登入使用');}
-function doGet(){ownerOnly_();return HtmlService.createHtmlOutputFromFile('Index').setTitle('資產追蹤').addMetaTag('viewport','width=device-width, initial-scale=1');}
+function doGet(){ownerOnly_();return HtmlService.createHtmlOutputFromFile('Index').setTitle('StockTracker').addMetaTag('viewport','width=device-width, initial-scale=1');}
 function storeSheet_(){
   const props=PropertiesService.getScriptProperties();let id=props.getProperty('PORTFOLIO_SHEET_ID');
-  if(!id){const book=SpreadsheetApp.create('Stock Tracker 私人同步資料');id=book.getId();props.setProperty('PORTFOLIO_SHEET_ID',id);}
+  if(!id){const book=SpreadsheetApp.create('StockTracker 私人同步資料');id=book.getId();props.setProperty('PORTFOLIO_SHEET_ID',id);}
   const book=SpreadsheetApp.openById(id);return book.getSheetByName('State')||book.insertSheet('State');
 }
 function readState_(sheet){

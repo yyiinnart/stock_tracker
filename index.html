@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="8f998db4c0e4c991">
+<meta name="app-version" content="c4c8cbd8929634b6">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>資產追蹤儀表板</title>
+<title>StockTracker</title>
+<meta name="application-name" content="StockTracker">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%227%22%20fill%3D%22%2310141c%22%2F%3E%3Cpath%20d%3D%22M7%2024V9M7%2024h19%22%20fill%3D%22none%22%20stroke%3D%22%23adb8c9%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22m10%2020%205-6%204%203%206-9m-5%200h5v5%22%20fill%3D%22none%22%20stroke%3D%22%23ffb866%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -266,12 +268,12 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=0007d93eb627ecfd">
+<link rel="stylesheet" href="interface.css?v=00d4b949c81ca58b">
 </head>
 <body>
 <div class="wrap">
   <header class="app-header">
-    <div><p class="brand">資產追蹤</p><h1 id="pageTitle">我的持倉</h1></div>
+    <div><p class="brand stocktracker-brand"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#10141c"/><path d="M7 24V9M7 24h19" fill="none" stroke="#adb8c9" stroke-width="2" stroke-linecap="round"/><path d="m10 20 5-6 4 3 6-9m-5 0h5v5" fill="none" stroke="#ffb866" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>StockTracker</span></p><h1 id="pageTitle">我的持倉</h1></div>
     <button class="sync-entry" onclick="openCloud()" aria-label="跨裝置同步設定"><span id="cloudState" role="status" aria-live="polite">僅此裝置</span><span class="sync-link">同步設定</span></button>
   </header>
   <nav class="app-nav" aria-label="主要功能">
@@ -356,7 +358,7 @@
     </div><div id="analysisIncome">
     <div class="card">
       <h2>配息行事曆<span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button></span></h2>
-      <p class="muted">依標的設定的發放月份顯示，非已確認入帳。點標的可編輯；配息資料由殖利率追蹤手動維護。</p><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
+      <p class="muted">金額＝全年每股配息 ÷ 年發放次數 × 目前庫存股數（平均分配的估算，非實際入帳）。台幣 NT$、美元 US$ 分開加總；「實」為手動記錄的實際入帳。每月 ⋯ 管理，配息資料由殖利率追蹤維護。</p><div class="income-summary-bar" id="incomeSummary"></div><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
     </div>
     <div class="card">
       <h2 id="yieldHeading">殖利率追蹤
@@ -527,7 +529,7 @@
     <div class="fg"><label>代碼</label><input id="y_code" placeholder="例 00878"><div class="hint">需與 Sheet 代碼一致才會自動更新股價</div></div>
     <div class="fg"><label>策略板塊</label><select id="y_g"></select><div class="hint">決定簡評套用哪個板塊的門檻</div></div>
     <div class="fg"><label>名稱</label><input id="y_name" placeholder="例 國泰永續高股息"></div>
-    <div class="fg"><label>年配息（每股／原幣）</label><input id="y_d" placeholder="例 1.2"><div class="hint">建議填近 12 個月實際配息總額</div></div>
+    <div class="fg"><label>年配息（每股／原幣）</label><input id="y_d" placeholder="例 1.2"><div class="hint">全年總額，非單次配息；可填近 12 個月實配合計。設定長期沿用，直到手動修改。</div></div>
     <div id="incomeEditor"></div>
     <div class="fg"><label>股價</label><input id="y_p" placeholder="例 22.5（可留空）"></div>
     <div class="fg"><label>每領1元成本</label><input id="y_cost" type="number" step="any" placeholder="有年配息與股價時自動計算"></div>
@@ -1129,7 +1131,7 @@ function yldSave(){
   }
   save();closeYld();renderYield();
   // 新標的且沒手填股價 → 立刻向 Sheet 抓一次，抓不到就明確提醒（新掛牌／主動式 ETF 常是 Sheet 端沒報價）
-  if(isNew&&(p==null||p<=0)&&sheetUrl)autoPullNewYield(c);
+  // Manual income setup does not trigger a price or dividend lookup.
 }
 async function autoPullNewYield(code){
   try{
@@ -1755,7 +1757,7 @@ function exportXLSX(){
     wsa['!cols']=ws['!cols'];
     XLSX.utils.book_append_sheet(wb,wsa,lbl);
   });
-  XLSX.writeFile(wb,`資產追蹤_${stamp()}.xlsx`);
+  XLSX.writeFile(wb,`StockTracker_${stamp()}.xlsx`);
 }
 
 
@@ -1934,5 +1936,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=fcbdf318c4a7cb63"></script><script src="setup-assets.js?v=412bad2f5a585ba4"></script><script src="interface.js?v=1cc2b6835c743984"></script><script src="dividends.js?v=bb315baf596654a1"></script></body>
+<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=3172b39ffd00e3b5"></script><script src="setup-assets.js?v=d9089ef9327ac785"></script><script src="interface.js?v=1cc2b6835c743984"></script><script src="dividends.js?v=01ae9eb9f484575e"></script></body>
 </html>

@@ -11,7 +11,7 @@ async function callDriveService(connection,method,args=[]){
  if(!response.ok)throw Error('服務連線失敗，請檢查部署網址與存取設定');
  let result;try{result=await response.json();}catch{throw Error('服務未回傳資料，請確認部署存取權為「任何人」');}
  if(!result.ok)throw Error(result.error||'同步失敗');
- if(method==='info'&&(result.service!=='stock-tracker-drive'||result.api!==1))throw Error('這不是資產追蹤同步服務');
+ if(method==='info'&&(result.service!=='stock-tracker-drive'||result.api!==1))throw Error('這不是 StockTracker 同步服務');
  if(method!=='info'&&(!Number.isInteger(result.revision)||result.revision<0))throw Error('服務版本資訊不正確');
  return result;
  }catch(e){if(e.name==='AbortError')throw Error('連線逾時，資料留在本機；請重試');throw e;}finally{clearTimeout(timer);}

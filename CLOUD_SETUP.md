@@ -1,6 +1,6 @@
 # 電腦與手機同步設定
 
-日常兩台都使用原本的 GitHub Pages 網址。同步資料存於你自己的 Google Drive「Stock Tracker Sync/data.json」，不必切換到另一個私人網頁。第一次需要建立 Google Apps Script 同步服務；程式已備妥，但尚未替你部署或建立雲端資料夾。
+日常兩台都使用原本的 GitHub Pages 網址。同步資料存於你自己的 Google Drive「StockTracker Sync/data.json」，不必切換到另一個私人網頁。第一次需要建立 Google Apps Script 同步服務；程式已備妥，但尚未替你部署或建立雲端資料夾。
 
 ## 一次性設定
 

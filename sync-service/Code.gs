@@ -30,7 +30,7 @@ function dataFile_(){
  if(id){const file=DriveApp.getFileById(id);if(file.isTrashed())throw Error('同步資料檔已移至垃圾桶，請先還原');return file;}
  let folder;const folderId=props.getProperty('SYNC_FOLDER_ID');
  if(folderId){folder=DriveApp.getFolderById(folderId);if(folder.isTrashed())throw Error('同步資料夾已移至垃圾桶，請先還原');}
- else{folder=DriveApp.createFolder('Stock Tracker Sync');props.setProperty('SYNC_FOLDER_ID',folder.getId());}
+ else{folder=DriveApp.createFolder('StockTracker Sync');props.setProperty('SYNC_FOLDER_ID',folder.getId());}
  const files=folder.getFilesByName('data.json');let file=files.hasNext()?files.next():folder.createFile('data.json',JSON.stringify({revision:0,payload:null,updatedAt:null}),MimeType.PLAIN_TEXT);
  props.setProperty('SYNC_FILE_ID',file.getId());return file;
 }
