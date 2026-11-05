@@ -18,7 +18,7 @@ function incomeShort(currency,value){return (INCOME_SYMBOL[currency]||safeText(c
 function incomeTotals(map){const e=Object.entries(map).sort(([a],[b])=>(a==='TWD'?-1:b==='TWD'?1:a.localeCompare(b)));return e.map(([c,v])=>incomeMoney(c,v)).join(' / ');}
 function incomeActualKey(month){return new Date().getFullYear()+'-'+String(month).padStart(2,'0');}
 function incomeActual(y,month){const v=y.actual&&typeof y.actual==='object'?y.actual[incomeActualKey(month)]:null;return v==null||v===''||!Number.isFinite(Number(v))?null:Number(v);}
-function incomeRows(month){return YIELD.map((y,index)=>({y,index})).filter(({y})=>y.calendarEnabled!==false&&incomeMonths(y).includes(month));}
+function incomeRows(month){return YIELD.map((y,index)=>({y,index})).filter(({y})=>!y.trackingHidden&&y.calendarEnabled!==false&&incomeMonths(y).includes(month));}
 function incomeMonthModel(month){
  const rows=incomeRows(month).map(({y,index})=>({y,index,cur:incomeCurrency(y),shares:incomeShares(y),est:incomeAmount(y),act:incomeActual(y,month)}));
  rows.forEach(r=>{if(r.shares<=0)r.est=null;});
@@ -43,14 +43,14 @@ function saveIncomeActual(i,month){
 function addIncomeMonth(month){
  const y=YIELD[Number(document.getElementById('incomeAddSel')?.value)];if(!y)return;
  const months=[...new Set([...incomeMonths(y),month])].sort((a,b)=>a-b);
- y.frequency=Math.max(incomeFrequency(y),months.length);y.months=months;y.calendarEnabled=true;
+ y.frequency=Math.max(incomeFrequency(y),months.length);y.months=months;y.calendarEnabled=true;y.trackingHidden=false;
  incomeRefresh();manageIncomeMonth(month);
 }
 function manageIncomeMonth(month){
  const model=incomeMonthModel(month),year=new Date().getFullYear();
- const addable=YIELD.map((y,i)=>({y,i})).filter(({y})=>!incomeMonths(y).includes(month)||y.calendarEnabled===false);
- const row=r=>`<div class="income-manage-row"><div class="im-main"><strong>${safeText(r.y.c)}</strong> ${safeText(r.y.n)}<span class="muted"> · 庫存 ${numberText(r.shares)} 股 · ${r.est===null?'年配息未設定':'預估 '+incomeShort(r.cur,r.est)}</span></div><div class="im-actual"><label for="incomeActual${r.index}">${year} 年 ${month} 月實際入帳（${safeText(r.cur)}）</label><input id="incomeActual${r.index}" type="number" min="0" step="any" value="${r.act===null?'':r.act}" placeholder="${r.est===null?'':Math.round(r.est*100)/100}"><button class="text-btn" onclick="saveIncomeActual(${r.index},${month})">記錄</button></div><div class="im-actions"><button class="text-btn" onclick="incomeEdit(${r.index})">編輯設定</button><button class="text-btn" onclick="removeIncomeMonth(${r.index},${month})">只移出本月</button><button class="text-btn danger" onclick="cancelIncomeTracking(${r.index},${month})">完全取消追蹤</button></div></div>`;
- openExtra(month+'月配息管理',`<p class="muted">配息資料統一在殖利率追蹤維護。「只移出本月」保留追蹤與其他月份；「完全取消追蹤」會刪除該標的全部配息設定。實際入帳選填，與預估分開顯示。</p><div class="income-manage">${model.rows.map(row).join('')||'<p class="muted">本月沒有標的。可從下方加入已追蹤的標的。</p>'}</div>${addable.length?`<div class="income-add"><select id="incomeAddSel" aria-label="加入本月的標的">${addable.map(({y,i})=>`<option value="${i}">${safeText(y.c)} ${safeText(y.n)}</option>`).join('')}</select><button class="text-btn" onclick="addIncomeMonth(${month})">加入 ${month} 月</button></div>`:''}`);
+ const addable=YIELD.map((y,i)=>({y,i})).filter(({y})=>!incomeMonths(y).includes(month)||!y.trackingHidden&&y.calendarEnabled===false);
+ const row=r=>`<div class="income-manage-row"><div class="im-main"><strong>${safeText(r.y.c)}</strong> ${safeText(r.y.n)}<span class="muted"> · 庫存 ${numberText(r.shares)} 股 · ${r.est===null?'年配息未設定':'預估 '+incomeShort(r.cur,r.est)}</span></div><div class="im-actual"><label for="incomeActual${r.index}">${year} 年 ${month} 月實際入帳（${safeText(r.cur)}）</label><input id="incomeActual${r.index}" type="number" min="0" step="any" value="${r.act===null?'':r.act}" placeholder="${r.est===null?'':Math.round(r.est*100)/100}"><button class="text-btn" onclick="saveIncomeActual(${r.index},${month})">記錄</button></div><div class="im-actions"><button class="text-btn" onclick="incomeEdit(${r.index})">編輯設定</button><button class="text-btn" onclick="removeIncomeMonth(${r.index},${month})">只移出本月</button><button class="text-btn danger" onclick="cancelIncomeTracking(${r.index},${month})">刪除配息設定</button></div></div>`;
+ openExtra(month+'月配息管理',`<p class="muted">配息資料統一在殖利率追蹤維護。「只移出本月」保留追蹤與其他月份；「刪除配息設定」會刪除該標的全部配息設定。實際入帳選填，與預估分開顯示。</p><div class="income-manage">${model.rows.map(row).join('')||'<p class="muted">本月沒有標的。可從下方加入已追蹤的標的。</p>'}</div>${addable.length?`<div class="income-add"><select id="incomeAddSel" aria-label="加入本月的標的">${addable.map(({y,i})=>`<option value="${i}">${safeText(y.c)} ${safeText(y.n)}</option>`).join('')}</select><button class="text-btn" onclick="addIncomeMonth(${month})">加入 ${month} 月</button></div>`:''}`);
 }
 
 /* ── 行事曆（緊湊版）── */
@@ -63,12 +63,12 @@ renderCal=function(){
    const value=r.act!==null?`<i class="income-badge" title="已記錄實際入帳">實</i>${incomeShort(r.cur,r.act)}`:r.shares<=0?'無庫存':r.est===null?'待設定':incomeShort(r.cur,r.est);
    const tip=`${r.y.n||''} · 庫存 ${numberText(r.shares)} 股`+(r.est===null?'':` · 預估 ${incomeShort(r.cur,r.est)}（年配息 ${numberText(r.y.d)} ÷ ${incomeFrequency(r.y)} 次）`);
    return `<li class="income-entry${r.act!==null?' is-actual':''}" title="${safeText(tip)}"><span class="income-code">${safeText(r.y.c)}</span><span class="income-name">${safeText(r.y.n)}</span><span class="income-value">${value}</span></li>`;}).join('');
-  return `<section class="cal-m ${month===now?'now':''}"><div class="income-month-head"><div class="mo">${month}月${month===now?'<span class="n">本月</span>':''}</div><button class="text-btn income-menu" onclick="manageIncomeMonth(${month})" aria-label="管理 ${month} 月配息">⋯</button></div><div class="income-total">預估 ${incomeTotals(m.est)||'—'}</div>${m.received?`<div class="income-actual">實際 ${incomeTotals(m.act)}（${m.received}/${m.rows.length} 檔）</div>`:''}${m.unknown?`<small class="income-warning">${m.unknown} 檔未設定年配息，未計入</small>`:''}${entries?`<ul class="income-list">${entries}</ul>`:'<div class="income-empty">未設定標的</div>'}</section>`;
+  return `<section class="cal-m ${month===now?'now':''}"><div class="income-month-head"><div class="mo">${month}月${month===now?'<span class="n">本月</span>':''}</div><button class="text-btn income-menu" onclick="manageIncomeMonth(${month})" aria-label="管理 ${month} 月配息">編輯</button></div><div class="income-total">${Object.entries(m.est).map(([cur,value])=>`<div><small>預估 ${safeText(cur)}</small> <strong>${incomeNum(cur,value)}</strong></div>`).join('')||'<small>預估</small> —'}</div>${m.received?`<div class="income-actual">實際 ${incomeTotals(m.act)}（${m.received}/${m.rows.length} 檔）</div>`:''}${m.unknown?`<small class="income-warning">${m.unknown} 檔未設定年配息，未計入</small>`:''}${entries?`<ul class="income-list">${entries}</ul>`:'<div class="income-empty">未設定標的</div>'}</section>`;
  }).join('');
  const summary=document.getElementById('incomeSummary');
  if(summary)summary.innerHTML=`<span><b>全年預估</b> ${incomeTotals(yearEst)||'—'}</span>${Object.keys(yearAct).length?`<span><b>已記錄實際</b> ${incomeTotals(yearAct)}</span>`:''}<span class="muted">估算值，各幣別分開，不含未設定年配息的標的</span>`;
- const missing=YIELD.map((y,i)=>({y,i})).filter(({y})=>y.calendarEnabled!==false&&(!incomeMonths(y).length||incomeFrequency(y)!==incomeMonths(y).length));
- const hidden=YIELD.map((y,i)=>({y,i})).filter(({y})=>y.calendarEnabled===false);
+ const missing=YIELD.map((y,i)=>({y,i})).filter(({y})=>!y.trackingHidden&&y.calendarEnabled!==false&&(!incomeMonths(y).length||incomeFrequency(y)!==incomeMonths(y).length));
+ const hidden=YIELD.map((y,i)=>({y,i})).filter(({y})=>!y.trackingHidden&&y.calendarEnabled===false);
  const chips=list=>list.map(({y,i})=>`<button class="text-btn" onclick="incomeEdit(${i})">${safeText(y.c)}</button>`).join('');
  document.getElementById('incomeUnscheduled').innerHTML=(missing.length?'<p class="muted">月份未完整設定（未分配部分不計入行事曆）：'+chips(missing)+'</p>':'')+(hidden.length?'<p class="muted">已追蹤但未顯示於行事曆（編輯後勾選「顯示於配息行事曆」）：'+chips(hidden)+'</p>':'');
  document.getElementById('legacyCalendar').hidden=!CAL.length;
@@ -89,7 +89,7 @@ openYieldEdit=function(i){
   document.getElementById('incomeEditor').innerHTML=`<div class="fg"><label for="incomeCurrency">配息幣別</label><select id="incomeCurrency"><option value="TWD">TWD 台幣</option><option value="USD">USD 美元</option></select></div><div class="fg"><label for="incomeFrequency">每年發放次數</label><input id="incomeFrequency" type="number" min="1" max="12" step="1" value="${incomeFrequency(y)||''}" placeholder="未填時依勾選月份數"><div class="hint">單次每股 = 全年每股配息 ÷ 年發放次數；再乘以目前股數。各次平均估算，非實際入帳。</div></div><fieldset class="income-months"><legend>發放月份（可複選）</legend>${Array.from({length:12},(_,m)=>`<label><input type="checkbox" value="${m+1}" ${months.includes(m+1)?'checked':''}>${m+1}月</label>`).join('')}</fieldset><div class="hint" id="incomePreview"></div><label class="income-toggle"><input id="incomeEnabled" type="checkbox" ${y.calendarEnabled!==false?'checked':''}>顯示於配息行事曆</label><div class="fg"><label for="incomeNote">配息備註</label><textarea id="incomeNote" rows="2">${safeText(y.incomeNote||'')}</textarea></div><p class="muted" id="incomeProvenance">${safeText(y.dividendBasis||'手動維護；建議使用近12個月已發放每股現金配息。')}${y.dividendAsOf?' · 資料截至 '+safeText(y.dividendAsOf):''}</p>`;
   document.getElementById('incomeCurrency').value=incomeCurrency(y);
   if(y.dividendSource&&/^https:\/\//.test(y.dividendSource)){const a=document.createElement('a');a.href=y.dividendSource;a.target='_blank';a.rel='noopener noreferrer';a.textContent=' 查詢來源';document.getElementById('incomeProvenance').append(a);}
-  document.getElementById('yldDelBtn').textContent='完全取消追蹤';
+  document.getElementById('yldDelBtn').textContent='刪除配息設定';
   ['y_d','y_code'].forEach(id=>{document.getElementById(id).oninput=incomePreview;});
   const editor=document.getElementById('incomeEditor');editor.oninput=incomePreview;editor.onchange=incomePreview;incomePreview();
 };
@@ -112,27 +112,27 @@ const incomeOriginalDelete=yldDel;
 yldDel=function(){incomeOriginalDelete();incomeRefresh();};
 const incomeOriginalRenderYield=renderYield;
 renderYield=function(){incomeOriginalRenderYield();document.querySelectorAll('#ybody tr').forEach((tr,i)=>{
-  const y=YIELD[i];if(!y)return;const sub=document.createElement('small');sub.className='income-summary';sub.textContent=incomeCurrency(y)+' · '+(y.calendarEnabled===false?'已移出行事曆':incomeMonths(y).length?'發放 '+incomeMonths(y).join('、')+' 月':'待設定月份');tr.cells[0].append(sub);
+  const y=YIELD[Number(tr.dataset.yieldIndex)];if(!y)return;const sub=document.createElement('small');sub.className='income-summary';sub.textContent=incomeCurrency(y)+' · '+(y.calendarEnabled===false?'已移出行事曆':incomeMonths(y).length?'發放 '+incomeMonths(y).join('、')+' 月':'待設定月份');tr.cells[0].append(sub);
   const button=tr.querySelector('button');if(button){button.className='income-edit';button.textContent='編輯';button.setAttribute('aria-label','編輯 '+y.c);}
 });};
 
-/* ── 從庫存加入追蹤：勾選＝目前確實在 YIELD 裡；勾選與取消都立即同步並存檔 ── */
+/* ── 從庫存加入追蹤：勾選控制顯示狀態；取消勾選保留 YIELD 配息資料 ── */
 function openIncomeImport(){
   const held=[...new Map(data.filter(r=>!['現金','貸款'].includes(r.cls)&&Number(r.shares)>0).map(r=>[incomeKey(r.code),r])).values()];
   const heldKeys=new Set(held.map(r=>incomeKey(r.code)));
   const tags=y=>[y.calendarEnabled===false?'未顯示於行事曆':'',y&&(y.d==null||y.d==='')?'未設定年配息':'',!y||incomeMonths(y).length?'':'未設定月份'].filter(Boolean).join(' · ');
-  const line=(code,name,note,tracked)=>`<label><input type="checkbox" data-code="${safeText(code)}" ${tracked?'checked':''} onchange="toggleIncomeTracking(this)"><span>${safeText(code)} ${safeText(name)}${note?` <span class="im-tag">· ${safeText(note)}</span>`:''}</span></label>`;
-  const heldHtml=held.map(r=>{const y=YIELD.find(y=>incomeKey(y.c)===incomeKey(r.code));return line(r.code,r.name,y?tags(y):'',!!y);}).join('');
-  const extraHtml=YIELD.filter(y=>!heldKeys.has(incomeKey(y.c))).map(y=>line(y.c,y.n,'目前無庫存'+(tags(y)?' · '+tags(y):''),true)).join('');
-  openExtra('從庫存加入配息追蹤',`<p class="muted">勾選＝已追蹤，取消勾選會（經確認後）刪除該標的的配息設定，變更立即生效。</p><div class="income-import-list">${heldHtml||'<p>目前沒有可加入的庫存。</p>'}${extraHtml?`<h4 class="im-sub">已追蹤但目前無庫存</h4>${extraHtml}`:''}</div><button class="btn" type="button" onclick="document.getElementById('extraDialog').close()">完成</button>`);
+  const line=(code,name,note,tracked)=>`<label><input type="checkbox" data-code="${safeText(code)}" ${tracked?'checked':''} onchange="toggleIncomeTracking(this)"><span>${safeText(code)} ${safeText(name)}${note?` <span class="im-tag">· ${safeText(note)}</span>`:''}</span></label>${YIELD.some(y=>incomeKey(y.c)===incomeKey(code))?`<button class="text-btn" onclick="incomeEdit(${YIELD.findIndex(y=>incomeKey(y.c)===incomeKey(code))})">編輯設定</button>`:''}`;
+  const heldHtml=held.map(r=>{const y=YIELD.find(y=>incomeKey(y.c)===incomeKey(r.code));return line(r.code,r.name,y?tags(y):'',!!y&&!y.trackingHidden);}).join('');
+  const extraHtml=YIELD.filter(y=>!heldKeys.has(incomeKey(y.c))).map(y=>line(y.c,y.n,'目前無庫存'+(tags(y)?' · '+tags(y):''),!y.trackingHidden)).join('');
+  openExtra('從庫存加入配息追蹤',`<p class="muted">勾選顯示標的；取消勾選只隱藏，所有配息設定與入帳紀錄均保留。重新勾選即可恢復；刪除請使用「編輯設定」內的刪除按鈕。</p><div class="income-import-list">${heldHtml||'<p>目前沒有可加入的庫存。</p>'}${extraHtml?`<h4 class="im-sub">已追蹤但目前無庫存</h4>${extraHtml}`:''}</div><button class="btn" type="button" onclick="document.getElementById('extraDialog').close()">完成</button>`);
 }
 function toggleIncomeTracking(el){
   const code=el.dataset.code,index=YIELD.findIndex(y=>incomeKey(y.c)===incomeKey(code));
   if(el.checked){
+    if(index>=0)YIELD[index].trackingHidden=false;
     if(index<0){const r=data.find(r=>incomeKey(r.code)===incomeKey(code)&&!['現金','貸款'].includes(r.cls));if(r)YIELD.push({c:r.code,n:r.name,p:r.price,d:null,y:null,cost:null,g:null,currency:r.cls==='美股'?'USD':'TWD',months:[],calendarEnabled:true,dividendBasis:'手動維護'});}
   }else if(index>=0){
-    if(!confirm('取消追蹤 '+YIELD[index].c+'？\n將刪除它的年配息、發放月份、備註與實際入帳紀錄；庫存不受影響。')){el.checked=true;return;}
-    YIELD.splice(index,1);
+    YIELD[index].trackingHidden=true;
   }
   const top=document.querySelector('.income-import-list')?.scrollTop||0;
   incomeRefresh();openIncomeImport();

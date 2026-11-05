@@ -138,3 +138,21 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 @media(min-width:1180px){#cal{grid-template-columns:repeat(6,minmax(0,1fr))}}
 @media(max-width:899px){#cal{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:640px){#cal{grid-template-columns:1fr}.income-list{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}#cal .income-entry{font-size:13px;padding:4px 0}#cal .income-name{display:none}.income-menu{min-height:36px;min-width:44px}.im-actual input{width:100px!important}}
+/* Monthly amounts lead; preserve the existing calendar grid and card padding. */
+#cal .income-month-head{min-height:24px}#cal .mo{font-size:15px;font-weight:600}
+#cal .income-menu{font-size:12px!important;color:var(--ink2);min-height:28px}
+#cal .income-total{margin:2px 0 4px;line-height:1.25}
+#cal .income-total>div{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+#cal .income-total strong{font-size:22px;font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#cal .income-total small{font-size:11px;font-weight:400;color:var(--ink2);white-space:nowrap}
+#cal .income-entry{grid-template-columns:minmax(0,1fr) auto;column-gap:8px}
+#cal .income-name{display:none}#cal .income-code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cal .income-value{font-size:12px}#cal .income-badge{font-size:11px}
+.yield-filter{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px}
+.yield-filter select{min-height:36px;max-width:100%;font:inherit}
+.income-import-list{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
+.income-import-list>h4,.income-import-list>p{grid-column:1/-1}
+.income-import-list>label{grid-column:1}.income-import-list>.text-btn{grid-column:2}
+@media(max-width:640px){.yield-filter select{min-height:44px}#cal .income-menu{min-height:36px}}
+.yield-filter select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 28px 6px 10px;color-scheme:dark}
+.yield-filter select:focus-visible,.income-menu:focus-visible{outline:2px solid var(--gold);outline-offset:2px}

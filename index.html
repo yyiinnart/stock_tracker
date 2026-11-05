@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="c4c8cbd8929634b6">
+<meta name="app-version" content="41486f13129274ee">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=00d4b949c81ca58b">
+<link rel="stylesheet" href="interface.css?v=6ae75c63e44bbc61">
 </head>
 <body>
 <div class="wrap">
@@ -358,18 +358,19 @@
     </div><div id="analysisIncome">
     <div class="card">
       <h2>配息行事曆<span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button></span></h2>
-      <p class="muted">金額＝全年每股配息 ÷ 年發放次數 × 目前庫存股數（平均分配的估算，非實際入帳）。台幣 NT$、美元 US$ 分開加總；「實」為手動記錄的實際入帳。每月 ⋯ 管理，配息資料由殖利率追蹤維護。</p><div class="income-summary-bar" id="incomeSummary"></div><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
+      <p class="muted">金額＝全年每股配息 ÷ 年發放次數 × 目前庫存股數（平均分配的估算，非實際入帳）。台幣 NT$、美元 US$ 分開加總；「實」為手動記錄的實際入帳。每月「編輯」管理，配息資料由殖利率追蹤維護。</p><div class="income-summary-bar" id="incomeSummary"></div><div class="calmini" id="cal"></div><div id="incomeUnscheduled"></div><details id="legacyCalendar" hidden><summary>舊版月份筆記（未轉換）</summary><div id="legacyCalendarText"></div></details>
     </div>
     <div class="card">
       <h2 id="yieldHeading">殖利率追蹤
         <span class="act"><button class="text-btn" onclick="openIncomeImport()">從庫存加入</button><button class="text-btn" onclick="openYieldEdit(-1)">新增標的</button></span></h2>
+      <div class="yield-filter"><label for="yieldGroup">板塊</label><select id="yieldGroup" onchange="renderYield()"><option value="all">全部板塊</option><option value="b1">板塊一：一般股票</option><option value="b2" selected>板塊二：高股息</option><option value="b3">板塊三</option><option value="b4">板塊四</option><option value="exit">出場程序中</option></select></div>
       <div class="tscroll">
       <table class="ytable">
         <thead><tr><th class="l">標的</th><th class="hide-sm">年配息</th><th class="hide-sm">股價</th><th class="hide-sm">每領1元成本</th><th>殖利率</th><th class="l">簡評</th><th></th></tr></thead>
         <tbody id="ybody"></tbody>
       </table>
       </div>
-      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息或殖利率都能直接修改年配息（建議填近 12 個月實配），輸入後殖利率自動重算。按「編輯」可設定發放月份、策略板塊或刪除標的。</div>
+      <div class="hint" style="margin-top:8px">殖利率 = 年配息 ÷ 股價，股價更新時自動重算；點年配息修改全年配息；點殖利率直接輸入百分比，有股價時會同步換算年配息。按「編輯」可設定發放月份、策略板塊或刪除標的。</div>
     </div>
     <div class="card">
       <h2 onclick="toggleStrat()" style="cursor:pointer">殖利率策略地圖<span class="tag" id="stratToggle">展開</span></h2>
@@ -986,7 +987,7 @@ function renderStrat(){
   const host=document.getElementById('stratMap');if(!host)return;
   // 把目前 YIELD 表中、屬於各板塊的標的即時殖利率帶進註腳
   host.innerHTML=STRAT.map(s=>{
-    const members=YIELD.filter(y=>y.g===s.id);
+    const members=YIELD.filter(y=>!y.trackingHidden&&y.g===s.id);
     const codes=members.map(y=>y.c);
     const live=members.map(y=>{
       const v0=yldOf(y);
@@ -1027,46 +1028,49 @@ function renderYield(){
   if(!YIELD.length){yb.innerHTML='<tr><td colspan="7" class="l" style="color:var(--ink3)">尚無殖利率資料 — 按「匯入備份」載入備份，或按上方「＋ 增減標的」手動新增。</td></tr>';renderStrat();return;}
   YIELD.forEach(syncDerived);
   yb.innerHTML=YIELD.map((y,i)=>{
+    const group=document.getElementById("yieldGroup")?.value||"b2";
+    if(y.trackingHidden||(group!=="all"&&(y.g||"b1")!==group))return "";
     const vd=verdict(y);
-    const noteTxt=vd?vd.text:(y.g?(y.note||'—'):'未指定板塊（按編輯設定）');
+    const noteTxt=vd?vd.text:(y.note||'—');
     const noteCol=vd?verdictColor(vd.cls):(y.g?'var(--ink2)':'var(--ink3)');
     const yv=yldOf(y),cv=costOf(y),auto=hasDP(y);
-    const tip=auto?'點一下修改年配息（殖利率自動計算）':'點一下手動修改殖利率';
+    const tip='點一下修改殖利率（%）';
     const marked=(y.yUp===curMonth());
     const mark=`<span onclick="event.stopPropagation();toggleYieldMark(${i})" title="${marked?'本月已更新（點一下取消）':'點一下標記本月已更新'}" style="cursor:pointer;margin-right:5px;color:${marked?'var(--gain)':'var(--ink3)'}">${marked?'✓':'○'}</span>`;
     const yldCell=yv!=null
       ? `${mark}<span class="yld yld-cell" onclick="editYield(${i})" title="${tip}">${(yv*100).toFixed(2)}%</span>`
       : `${mark}<span class="yld-cell" onclick="editYield(${i})" style="color:var(--ink3)" title="${tip}">—</span>`;
     const sub=auto?`<div class="yld-sub">年配 ${y.d} ÷ 價 ${y.p}</div>`:'';
-    return `<tr>
+    return `<tr data-yield-index="${i}">
     <td class="l"><span class="code">${escapeIncomeText(y.c)}</span><div class="nm">${escapeIncomeText(y.n)}</div></td>
     <td class="hide-sm" id="yd${i}"><span class="yld-cell" onclick="editDivCell(${i})" title="點一下修改年配息"${(y.d!=null&&y.d!=='')?'':' style="color:var(--ink3)"'}>${(y.d!=null&&y.d!=='')?y.d:'—'}</span></td><td class="hide-sm">${(y.p!=null&&y.p!=='')?y.p:'—'}</td><td class="hide-sm">${cv!=null?cv:'—'}</td>
     <td id="yc${i}">${yldCell}${sub}</td>
     <td class="l" style="font-family:var(--sans);color:${noteCol}">${noteTxt}</td>
     <td><button class="mini-btn x" onclick="openYieldEdit(${i})" title="編輯／刪除">⚙</button></td>
   </tr>`;}).join('');
+  if(!yb.innerHTML)yb.innerHTML='<tr><td colspan="7" class="l">此板塊尚無顯示中的標的，可切換板塊或從庫存加入。</td></tr>';
   renderStrat();
 }
 function verdictColor(cls){return {['v-buy']:'var(--gain)',['v-hold']:'var(--ink2)',['v-watch']:'var(--gold)',['v-warn']:'#ff9d72',['v-sell']:'var(--loss)',['v-low']:'#9ca3af'}[cls]||'var(--ink2)';}
 function editYield(i){
   const cell=document.getElementById('yc'+i);if(!cell)return;
   const y=YIELD[i];
-  const byD=typeof y.p==='number'&&y.p>0;   // 有股價 → 改年配息，殖利率自動算
-  const cur=byD?(y.d??''):(y.y!=null?(y.y*100).toFixed(2):'');
-  cell.innerHTML=byD
-    ? `<span class="yld-edit-wrap"><span class="lbl">年配息</span><input class="yld-edit" type="number" step="any" value="${cur}" placeholder="元" title="輸入年配息（元），殖利率會用股價自動計算"><span class="lbl">元</span></span>`
-    : `<span class="yld-edit-wrap"><span class="lbl">殖利率</span><input class="yld-edit" type="number" step="0.01" value="${cur}" title="輸入百分比，例 5.9"><span class="lbl">%</span></span>`;
+  const cur=yldOf(y)==null?'':Number((yldOf(y)*100).toFixed(6));
+  cell.innerHTML=`<span class="yld-edit-wrap"><input class="yld-edit" aria-label="殖利率百分比" type="number" min="0" step="any" value="${cur}"><span class="lbl">%</span></span>`;
   const inp=cell.querySelector('input');inp.focus();inp.select();
-  const commit=()=>byD?setDiv(i,inp.value):setYield(i,inp.value);
+  const commit=()=>setYield(i,inp.value);
   inp.addEventListener('blur',commit);
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.removeEventListener('blur',commit);renderYield();}});
 }
 function setYield(i,val){
-  const v=String(val).trim();
-  const before=YIELD[i].y;
-  YIELD[i].y=v===''?null:(isNaN(parseFloat(v))?YIELD[i].y:parseFloat(v)/100);   // 介面用百分比，內部存小數
-  if(YIELD[i].y!==before)YIELD[i].yUp=curMonth();   // 有實際變動才蓋本月戳記
+  const v=String(val).trim(),y=YIELD[i];
+  if(v!==''&&(!Number.isFinite(Number(v))||Number(v)<0)){alert('殖利率請填入零或正數');renderYield();return;}
+  if(Number.isFinite(y.p)&&y.p>0){setDiv(i,v===''?'':Number((Number(v)/100*y.p).toPrecision(12)));return;}
+  const before=y.y;y.y=v===''?null:Number(v)/100;
+  y.cost=y.y>0?Math.round(100/y.y)/100:null;
+  if(y.y!==before)y.yUp=curMonth();
   save();renderYield();
+
 }
 function editDivCell(i){
   const cell=document.getElementById('yd'+i);if(!cell)return;
@@ -1101,9 +1105,9 @@ function openYieldEdit(idx){
   document.getElementById('y_cost').value=(y&&y.cost!=null)?y.cost:'';
   document.getElementById('y_y').value=(y&&y.y!=null)?(y.y*100).toFixed(2):'';
   const gs=document.getElementById('y_g');
-  gs.innerHTML='<option value="">不套用</option>'+STRAT.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')+
+  gs.innerHTML='<option value="b1">板塊一：一般股票</option>'+STRAT.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')+
     `<option value="${EXIT_GROUP}">出場程序中</option>`;
-  gs.value=y&&y.g?y.g:'';
+  gs.value=y&&y.g?y.g:'b1';
   document.getElementById('ovYld').classList.add('show');
 }
 function closeYld(){document.getElementById('ovYld').classList.remove('show');}
@@ -1146,7 +1150,7 @@ async function autoPullNewYield(code){
     if(y){y.p=px;save();renderYield();}
   }catch(err){/* 靜默：手動按更新股價時仍會再試 */}
 }
-function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個殖利率標的？')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
+function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個標的及全部配息設定、月份、備註與實際入帳紀錄？此操作無法復原，庫存不受影響。')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
 document.getElementById('ovYld').addEventListener('click',e=>{if(e.target.id==='ovYld')closeYld();});
 
 const CLR={現金:'#c9ced8',美股:'#63c8d8',台股:'#83b6ff',債券:'#edcd8c',貸款:'#b5a6cf'};
@@ -1936,5 +1940,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=3172b39ffd00e3b5"></script><script src="setup-assets.js?v=d9089ef9327ac785"></script><script src="interface.js?v=1cc2b6835c743984"></script><script src="dividends.js?v=01ae9eb9f484575e"></script></body>
+<script src="portfolio-core.js?v=2311bb5fb7c0f2f8"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=3172b39ffd00e3b5"></script><script src="setup-assets.js?v=9f0cb60d9f2d38d7"></script><script src="interface.js?v=1cc2b6835c743984"></script><script src="dividends.js?v=281687af0e2504c0"></script></body>
 </html>
