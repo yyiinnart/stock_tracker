@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="62a3e641ebd006a7">
+<meta name="app-version" content="43ea5e8541af5e4f">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=e0ee35a63904fcc4">
+<link rel="stylesheet" href="interface.css?v=c8805b7598c05532">
 </head>
 <body>
 <div class="wrap">
@@ -331,8 +331,8 @@
     <div class="subnav" aria-label="分析分類"><button data-analysis="compare" onclick="showAnalysis('compare')">價格比較</button><button data-analysis="charts" onclick="showAnalysis('charts')">資產分析</button><button data-analysis="income" onclick="showAnalysis('income')">配息與筆記</button></div>
     <section class="card" id="comparisonPanel">
       <div class="comparison-title"><h2>歷史價格比較</h2><button class="icon-action" data-icon="info" title="計算說明" aria-label="計算說明" aria-expanded="false" aria-controls="comparisonHelp" onclick="toggleComparisonHelp(this)"></button><button class="icon-action snapshot-manage" data-icon="folder" title="管理快照" aria-label="管理快照" onclick="openSnap()"></button></div>
-      <p id="comparisonHelp" class="comparison-help" hidden>價格漲跌幅＝（左側價格 − 右側基準價）÷ 右側基準價。持倉相對損益＝原幣價差 × 左側時間點股數 × 左側時間點匯率（TWD），不含配息、匯差或分割調整，非已實現損益。左側時間點已無持股的項目不計持倉相對損益；缺少任一端報價時顯示空值。缺少排序數值的項目固定列於最後，同值依標的代碼排列。</p>
-      <div class="comparison-baseline"><div class="snapshot-stepper"><button type="button" class="icon-action" id="compareTargetSnapshotOlder" data-icon="chevronLeft" title="較早的比較時間" aria-label="較早的比較時間" onclick="stepSnapshot('compareTargetDate',-1)"></button><select id="compareTargetDate" aria-label="比較時間" onchange="showCompare()"><option value="live">目前報價</option></select><button type="button" class="icon-action" id="compareTargetSnapshotNewer" data-icon="chevronRight" title="較新的比較時間" aria-label="較新的比較時間" onclick="stepSnapshot('compareTargetDate',1)"></button></div><span aria-hidden="true">↔</span><div class="snapshot-stepper"><button type="button" class="icon-action" id="compareSnapshotOlder" data-icon="chevronLeft" title="較早的比較快照" aria-label="較早的比較快照" onclick="stepSnapshot('compareDate',-1)"></button><select id="compareDate" aria-label="比較快照" onchange="showCompare()"></select><button type="button" class="icon-action" id="compareSnapshotNewer" data-icon="chevronRight" title="較新的比較快照" aria-label="較新的比較快照" onclick="stepSnapshot('compareDate',1)"></button></div><span class="comparison-baseline-suffix">快照</span></div><p id="comparisonQuoteStamp" class="comparison-quote-stamp"></p>
+      <p id="comparisonHelp" class="comparison-help" hidden>價格漲跌幅＝（終點價 − 起點價）÷ 起點價。持倉相對損益＝原幣價差 × 終點時間點股數 × 終點時間點匯率（TWD），不含配息、匯差或分割調整，非已實現損益。終點時間點已無持股的項目不計持倉相對損益；缺少任一端報價時顯示空值。缺少排序數值的項目固定列於最後，同值依標的代碼排列。</p>
+      <div class="comparison-baseline"><div class="comparison-endpoint"><span class="comparison-endpoint-label">起點</span><div class="snapshot-stepper"><button type="button" class="icon-action" id="compareSnapshotOlder" data-icon="chevronLeft" title="較早的起點快照" aria-label="較早的起點快照" onclick="stepSnapshot('compareDate',-1)"></button><select id="compareDate" aria-label="起點快照" onchange="showCompare()"></select><button type="button" class="icon-action" id="compareSnapshotNewer" data-icon="chevronRight" title="較新的起點快照" aria-label="較新的起點快照" onclick="stepSnapshot('compareDate',1)"></button></div></div><span aria-hidden="true">→</span><div class="comparison-endpoint"><span class="comparison-endpoint-label">終點</span><div class="snapshot-stepper"><button type="button" class="icon-action" id="compareTargetSnapshotOlder" data-icon="chevronLeft" title="較早的終點時間" aria-label="較早的終點時間" onclick="stepSnapshot('compareTargetDate',-1)"></button><select id="compareTargetDate" aria-label="終點時間" onchange="showCompare()"><option value="live">目前報價</option></select><button type="button" class="icon-action" id="compareTargetSnapshotNewer" data-icon="chevronRight" title="較新的終點時間" aria-label="較新的終點時間" onclick="stepSnapshot('compareTargetDate',1)"></button></div></div></div>
       <div class="comparison-options"><div class="comparison-filter" role="group" aria-label="漲跌篩選"><button data-direction="all" aria-pressed="true" onclick="setCompareDirection('all')">全部</button><button data-direction="up" aria-pressed="false" onclick="setCompareDirection('up')">上漲</button><button data-direction="down" aria-pressed="false" onclick="setCompareDirection('down')">下跌</button></div>
         <input type="hidden" id="compareDirection" value="all">
         <div class="comparison-sort-controls"><label for="compareSort">排序</label><select id="compareSort" onchange="showCompare()"><option value="rate">價格漲跌幅</option><option value="pnl">持倉相對損益</option><option value="code">標的代碼</option></select><button type="button" id="compareSortOrder" class="compare-order" aria-label="排序方向：高到低" onclick="toggleComparisonOrder()">↓ 高到低</button></div>
@@ -1850,5 +1850,5 @@ document.getElementById('trendRange').addEventListener('click',e=>{
 });
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
 </script>
-<script src="portfolio-core.js?v=11325b5874cd4356"></script><script src="enhancements.js?v=002a72a29a45dd21"></script><script src="cloud-sync.js?v=7e97b124a53817ed"></script><script src="setup-assets.js?v=6faa79baa2f9e310"></script><script src="interface.js?v=f66c8c54a5e1f19f"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=11325b5874cd4356"></script><script src="enhancements.js?v=002a72a29a45dd21"></script><script src="cloud-sync.js?v=7e97b124a53817ed"></script><script src="setup-assets.js?v=d463aee9d47cdf58"></script><script src="interface.js?v=7f52453e5871285d"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>

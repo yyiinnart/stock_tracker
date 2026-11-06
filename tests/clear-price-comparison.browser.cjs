@@ -21,7 +21,7 @@ await page.locator('#compareTargetDate').selectOption('261104');
 assert.equal(await page.locator('[data-code=AAA] .now .compare-price').innerText(),'100');
 assert.match(await page.locator('[data-code=AAA] .delta').innerText(),/11.11%/);
 assert.match(await page.locator('[data-code=AAA] .now .label').innerText(),/2026\/11\/04/);
-assert.match(await page.locator('[data-code=SOLD]').innerText(),/比較端新增持倉/);
+assert.match(await page.locator('[data-code=SOLD]').innerText(),/新增持倉/);
 await page.evaluate(()=>refreshComparison());assert.equal(await page.locator('#compareTargetDate').inputValue(),'261104');
 await page.locator('#compareTargetSnapshotOlder').click();
 assert.equal(await page.locator('#compareTargetDate').inputValue(),'261103');
@@ -29,6 +29,14 @@ assert.match(await page.locator('[data-code=AAA] .delta').innerText(),/持平/);
 await page.locator('#compareTargetSnapshotNewer').click();await page.locator('#compareTargetSnapshotNewer').click();
 assert.equal(await page.locator('#compareTargetDate').inputValue(),'live');
 for(const width of [1440,390]){await page.setViewportSize({width,height:900});await page.screenshot({path:path.join(root,'work/interval-comparison-'+width+'.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+await page.locator('#compareTargetDate').selectOption('261103');
+await page.locator('#compareDate').selectOption('261104');
+assert.equal(await page.locator('#compareDate').inputValue(),'261103');
+assert.equal(await page.locator('#compareTargetDate').inputValue(),'261104');
+assert.match(await page.locator('[data-code=AAA] .delta').innerText(),/11.11%/);
+assert.deepEqual(await page.locator('.comparison-baseline select').evaluateAll(els=>els.map(e=>e.id)),['compareDate','compareTargetDate']);
+assert.match(await page.locator('.compare-heading').innerText(),/起點價.*2026\/11\/03.*終點價.*2026\/11\/04/s);
+for(const width of [1440,390]){await page.setViewportSize({width,height:900});await page.screenshot({path:path.join(root,'work/ordered-comparison-'+width+'.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
 await page.evaluate(()=>{archives={};refreshComparison();});assert.equal(await page.locator('#compareTargetDate').inputValue(),'live');assert.equal(await page.locator('#compareDate').isDisabled(),true);
 assert.deepEqual(errors,[]);console.log('PASS: explicit current/historical prices, sold/new states, missing quotes, quote timestamps, stable ascending/descending sorting, filters and responsive layout');
 }finally{if(browser)await browser.close();server.close();}

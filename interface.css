@@ -352,3 +352,7 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
 @media(max-width:760px){.comparison-options{gap:12px}.comparison-sort-controls{width:100%;flex-wrap:nowrap}.comparison-sort-controls select{flex:1;min-width:0}.compare-order{min-width:100px;padding:8px}.comparison-baseline .snapshot-stepper{flex-basis:calc(100% - 48px)}.compare-row .comparison-position-status{margin-top:4px}.comparison-price-time{font-size:12px}}
 
 @media(min-width:761px){.compare-row .delta{text-align:right}}
+
+.comparison-endpoint{display:flex;flex-direction:column;gap:6px;min-width:0}
+.comparison-endpoint-label{color:var(--ink2);font-size:12px}
+@media(max-width:760px){.comparison-baseline{align-items:center;column-gap:8px}.comparison-endpoint{flex:1 1 100%}.comparison-baseline .comparison-endpoint .snapshot-stepper{width:100%;min-width:0;flex-basis:auto}.comparison-baseline>span[aria-hidden]{display:none}}
