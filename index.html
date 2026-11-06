@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="0e2fa2392563a944">
+<meta name="app-version" content="ceed4fd99c36e534">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=2ade3649bc3777f3">
+<link rel="stylesheet" href="interface.css?v=e97e17938d272b52">
 </head>
 <body>
 <div class="wrap">
@@ -392,7 +392,7 @@
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
   </div></div>
-  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2></div><p class="muted">依實際交易日期核對。每筆可修改或撤銷，後續交易會重新計算，最新報價保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>交易日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
+  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><div class="audit-list-tools"><button type="button" class="text-btn" id="showCancelledAudit" aria-pressed="false" onclick="toggleCancelledAudit()">顯示已撤銷</button><button type="button" class="icon-action" id="purgeCancelledAudit" data-icon="trash" title="清除已撤銷紀錄" aria-label="清除已撤銷紀錄" onclick="purgeCancelledAudit()"></button></div></div><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>交易日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
   <section class="page" id="page-plans"><p class="page-intro">定期投資與每月收支集中管理。規則在開啟頁面時補記到期月份。</p>    <div class="card" id="dcaCard">
       <div class="dca-head">
         <h2 style="flex:1">定期定額快捷</h2>
@@ -1840,5 +1840,5 @@ document.getElementById('trendRange').addEventListener('click',e=>{
 });
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
 </script>
-<script src="portfolio-core.js?v=d602308655fea8d3"></script><script src="enhancements.js?v=906f1bfad9897492"></script><script src="cloud-sync.js?v=58791a5ac27adc52"></script><script src="setup-assets.js?v=d492ed73ee73d8f7"></script><script src="interface.js?v=225c9dd38de8bf16"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=183ab281f0ab6330"></script><script src="enhancements.js?v=002a72a29a45dd21"></script><script src="cloud-sync.js?v=7e97b124a53817ed"></script><script src="setup-assets.js?v=1557599bbd798495"></script><script src="interface.js?v=7f298a772ca4f1da"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>

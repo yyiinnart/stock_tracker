@@ -40,7 +40,7 @@ saveRow=function(){
   }catch(e){alert(e.message);}
 };
 delRow=function(){if(isLive())recordAction(originalDelRow,'刪除部位',null);};
-function undoLastTrade(){const i=audit.findLastIndex(a=>!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length);if(i>=0)undoAuditEntry(i);else alert('沒有可撤銷的操作');}
+function undoLastTrade(){const i=audit.findLastIndex(a=>!a.checkpoint&&!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length);if(i>=0)undoAuditEntry(i);else alert('沒有可撤銷的操作');}
 function localDate(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function commitTrade(row,t,input){
   ensureRowIds();const before=clone(data),next=clone(data),r=next.find(r=>r._id===row._id);

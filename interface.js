@@ -67,14 +67,48 @@ function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
 function auditDay(a){const day=a.input?.tradeDate||a.tradeDate;if(PortfolioCore.validDate(day))return day;if(a.createdAt){const d=new Date(a.createdAt);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}const m=(a.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
-function renderAuditPage(){
-  const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;
-  const entries=audit.map((a,index)=>({a,index})).filter(({a})=>(!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day)).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
-  document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index},i)=>{
-    const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a);
-    return `<details class="audit-entry" data-audit-index="${index}" ${i===0?'open':''}><summary><strong>${safeText(a.label)}${a.undone?' · 已撤銷':a.revisedAt?' · 已修改':''}</strong><span class="audit-date">${safeText((a.input?.tradeDate||a.tradeDate)?auditDay(a):'登錄日 '+auditDay(a))}<small>登錄 ${safeText(a.at)}</small></span></summary>${actionable?`<div class="audit-entry-actions">${editable?iconAction('edit','修改交易',`editAuditTrade(${index})`):''}${iconAction('undo','撤銷這筆',`undoAuditEntry(${index})`)}</div>`:''}<p>${auditDetails(a)}</p></details>`;
-  }).join(''):'<p class="empty-note">'+(audit.length?'沒有符合的操作紀錄。':'尚無操作紀錄。下次加減碼或編輯後，會在這裡保留修改前後的內容。')+'</p>';
+let showCancelledAudit=false;
+function cancelledAudit(a){if(a.undone)return true;const seen=new Set();let ref=a.revisionOf||a.undoOf;while(ref&&!seen.has(ref)){seen.add(ref);const parent=audit.find(e=>e.id===ref);if(!parent)return false;if(parent.undone)return true;ref=parent.revisionOf||parent.undoOf;}return false;}
+function auditMatches(a){const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;return (!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day);}
+function cancelledRoots(){return audit.filter(a=>!a.checkpoint&&a.undone&&!a.undoOf&&!a.revisionOf&&auditMatches(a));}
+function toggleCancelledAudit(){showCancelledAudit=!showCancelledAudit;renderAuditPage();}
+function auditPosition(a){const parent=a.revisionOf||a.undoOf?audit.find(e=>e.id===(a.revisionOf||a.undoOf)):null;const c=a.changes?.[0]||parent?.changes?.[0];return c?.after||c?.before||data.find(r=>r._id===a.subjectId)||{};}
+function auditSummary(a){
+  const t=PortfolioCore.tradeInput(a),i=a.input||{};
+  if(t){const amount=t.direction==='sell'?i.proceeds:i.total??i.cost;const price=t.price??((i.gross??(t.total-t.fee*t.fx))/(t.shares*t.fx));return `${numberText(t.shares)} 股 × ${numberText(price)}　｜　${t.direction==='sell'?'實收':'支出'} ${numberText(amount)} TWD`;}
+  if(a.revisionOf){const names={tradeDate:'日期',shares:'股數',price:'成交價',fx:'匯率',total:'總支出'},keys=Object.keys(names).filter(k=>JSON.stringify(a.beforeInput?.[k])!==JSON.stringify(a.afterInput?.[k]));return '修改了'+(keys.map(k=>names[k]).join('、')||'交易內容');}
+  if(a.undoOf)return '已撤銷原操作，後續交易已重算';
+  const c=a.changes?.[0];if(!c)return '舊版紀錄';
+  if(!c.before)return '新增持倉';if(!c.after)return '刪除持倉';
+  return Object.keys(fieldNames).filter(k=>k!=='lastUp'&&JSON.stringify(c.before[k])!==JSON.stringify(c.after[k])).map(k=>fieldNames[k]).join('、')||'扣款狀態更新';
 }
+function renderAuditPage(){
+  const entries=audit.map((a,index)=>({a,index})).filter(({a})=>!a.checkpoint&&auditMatches(a)&&(showCancelledAudit||!cancelledAudit(a))).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
+  const toggle=document.getElementById('showCancelledAudit');toggle.setAttribute('aria-pressed',String(showCancelledAudit));toggle.textContent=showCancelledAudit?'隱藏已撤銷':'顯示已撤銷';
+  const purge=document.getElementById('purgeCancelledAudit'),count=cancelledRoots().length;purge.disabled=!count;purge.title=`永久清除符合篩選的 ${count} 筆已撤銷紀錄`;purge.setAttribute('aria-label',purge.title);
+  document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index})=>{
+    const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a),r=auditPosition(a),t=PortfolioCore.tradeInput(a);
+    const kind=t?(t.direction==='sell'?'−':'＋'):a.revisionOf?'修改':a.undoOf?'撤銷':a.label;
+    const title=`${safeText(kind)} <span class="audit-code">${safeText(r.code||'')}</span> ${safeText(r.name||'')}`;
+    const status=a.undone&&!a.undoOf?'已撤銷':a.revisedAt?'已修改':'';
+    const day=auditDay(a),shortDay=(day.startsWith(localDate().slice(0,4))?day.slice(5):day).replaceAll('-','/'),date=(a.input?.tradeDate||a.tradeDate)?shortDay:'登錄 '+shortDay;
+    const action=(icon,label,fn)=>iconAction(icon,label,`event.preventDefault();event.stopPropagation();${fn}`);
+    return `<details class="audit-entry" data-audit-index="${index}"><summary><span class="audit-row-copy"><strong style="--category:${CLR[r.cls]||'var(--ink)'}">${title}${status?`<span class="audit-status">${status}</span>`:''}</strong><small>${safeText(auditSummary(a))}</small></span><span class="audit-row-date" title="${safeText(day)}">${safeText(date)}</span><span class="audit-row-actions">${editable?action('edit','修改交易',`editAuditTrade(${index})`):''}${actionable?action('undo','撤銷這筆',`undoAuditEntry(${index})`):''}</span></summary><div class="audit-detail">${auditCompactDetails(a)}<div class="audit-detail-footer"><span>登錄 ${safeText(a.at||a.createdAt||'—')}</span>${a.undone&&!a.undoOf&&!a.revisionOf?iconAction('trash','永久刪除這筆紀錄',`purgeAuditEntry(${index})`):actionable?'<button class="icon-action" disabled title="先撤銷這筆操作，才能永久刪除" aria-label="先撤銷才能永久刪除">'+actionIcon('trash')+'</button>':''}</div></div></details>`;
+  }).join(''):'<p class="empty-note">'+(audit.some(a=>!a.checkpoint)?'沒有符合的紀錄。可調整篩選或顯示已撤銷紀錄。':'尚無操作紀錄。')+'</p>';
+}
+function auditCompactDetails(a){
+  const value=v=>safeText(typeof v==='number'?numberText(v):v??'—');
+  const table=rows=>rows.length?`<table class="audit-change-table"><thead><tr><th>項目</th><th>變更前</th><th>變更後</th></tr></thead><tbody>${rows.map(([label,b,n])=>`<tr><td>${label}</td><td>${value(b)}</td><td>${value(n)}</td></tr>`).join('')}</tbody></table>`:'';
+  if(a.revisionOf){const labels={tradeDate:'交易日期',shares:'股數',price:'成交價',fee:'手續費',fx:'匯率',total:'總支出 TWD'},b=a.beforeInput||{},n=a.afterInput||{};return table(Object.keys(labels).filter(k=>JSON.stringify(b[k])!==JSON.stringify(n[k])).map(k=>[labels[k],b[k],n[k]]));}
+  const t=PortfolioCore.tradeInput(a),keys=t?['shares','prin','avg']:Object.keys(fieldNames).filter(k=>k!=='lastUp');
+  let html=(a.changes||[]).map(c=>table(keys.filter(k=>JSON.stringify(c.before?.[k])!==JSON.stringify(c.after?.[k])).map(k=>[fieldNames[k],c.before?.[k],c.after?.[k]]))).join('');
+  if(!html&&!t){const c=a.changes?.[0];html=c&&c.before?.lastUp!==c.after?.lastUp?table([['扣款狀態',c.before?.lastUp,c.after?.lastUp]]):safeText(a.detail||'沒有持倉數值變動');}
+  if(t){const i=a.input;html+=`<div class="audit-fee">手續費 <span>${numberText(i.fee??0)} ${safeText(i.currency||(t.fx>1.5?'USD':'TWD'))}</span></div><details class="audit-more"><summary>詳細資料</summary><dl><div><dt>交易日期</dt><dd>${value(t.tradeDate||'未提供')}</dd></div><div><dt>成交金額</dt><dd>${value(i.gross)} TWD</dd></div><div><dt>交易匯率</dt><dd>${value(t.fx)}</dd></div><div><dt>輸入方式</dt><dd>${safeText(i.source||'—')}</dd></div></dl></details>`;}
+  return html;
+}
+function purgeAuditEntry(index){const a=audit[index];if(a)purgeAuditRecords([a.id]);}
+function purgeCancelledAudit(){purgeAuditRecords(cancelledRoots().map(a=>a.id));}
+function purgeAuditRecords(ids){try{const plan=PortfolioCore.purge(data,audit,ids);if(!confirm(`永久刪除 ${plan.roots} 筆已撤銷紀錄及相關歷程，共 ${plan.removed} 筆？\n持倉數字不變，其餘交易仍可修改或撤銷。這項刪除無法復原。`))return;audit=plan.audit;save();persistNow();renderAuditPage();showToast(`已永久刪除 ${plan.removed} 筆紀錄`,null);}catch(e){alert(e.message);}}
 
 function renderSettings(){document.getElementById('quoteConnectionState').textContent=sheetUrl?'已設定報價來源':'尚未設定報價來源';renderCloudSetup();}
 function chooseSetup(value){setupChoice=value;renderCloudSetup();}

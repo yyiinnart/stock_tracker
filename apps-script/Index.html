@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="0e2fa2392563a944">
+<meta name="app-version" content="ceed4fd99c36e534">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -564,6 +564,34 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
 #extraDialog:has(.audit-trade-form){margin:auto;width:min(520px,calc(100vw - 32px))!important;background:var(--panel)!important;border-radius:6px!important;box-sizing:border-box}
 @media(max-width:980px){.audit-date{text-align:left}}
 
+/* Compact history ledger: two lines by default, details on demand. */
+.audit-list-tools{display:flex;align-items:center;gap:12px}
+#auditList>.audit-entry{padding:0;border-bottom:1px solid var(--line)}
+#auditList>.audit-entry>summary{display:grid;grid-template-columns:minmax(0,1fr) auto 88px;gap:16px;align-items:center;min-height:80px;padding:12px 0;box-sizing:border-box;cursor:pointer}
+#auditList .audit-row-copy{min-width:0;display:flex;flex-direction:column;gap:5px}
+#auditList .audit-row-copy strong{font-size:14px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#auditList .audit-code{color:var(--category);font-size:14px}
+#auditList .audit-row-copy>small{display:block;font-size:13px;color:var(--ink2);padding-left:24px;line-height:1.5}
+#auditList .audit-status{font-size:12px;color:var(--ink2);margin-left:10px;font-weight:400}
+#auditList .audit-row-date{font-size:13px;color:var(--ink2);white-space:nowrap;text-align:right}
+#auditList .audit-row-actions{display:flex;justify-content:flex-end;gap:6px;min-width:0}
+#auditList .audit-row-actions:empty{min-width:88px}
+#auditList .audit-detail{padding:0 0 16px 24px;max-width:760px}
+.audit-change-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.audit-change-table th,.audit-change-table td{padding:5px 8px;text-align:right;border:0;font-size:13px;overflow-wrap:anywhere}
+.audit-change-table th{color:var(--ink2);font-weight:400}
+.audit-change-table th:first-child,.audit-change-table td:first-child{text-align:left;width:30%;padding-left:0}
+.audit-change-table td{font-variant-numeric:tabular-nums}
+.audit-fee{display:flex;gap:16px;justify-content:space-between;padding:8px 8px 8px 0;font-size:13px;color:var(--ink2)}
+.audit-more{font-size:13px;color:var(--ink2)}
+#auditList .audit-more>summary{display:block;padding:6px 0;min-height:32px;font-size:13px;color:var(--ink2)}
+.audit-more dl{padding:6px 0}.audit-more dl>div{display:flex;justify-content:space-between;gap:16px;margin:5px 0}
+.audit-more dd{text-align:right;overflow-wrap:anywhere}
+.audit-detail-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;font-size:12px;color:var(--ink2)}
+.audit-detail-footer>.icon-action{width:36px;height:36px;flex-basis:36px;color:#f2a1a8}
+#auditList>.audit-entry>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:640px){#auditList>.audit-entry>summary{grid-template-columns:minmax(0,1fr) 88px;gap:4px 8px;min-height:92px;padding:10px 0}#auditList .audit-row-copy{grid-column:1;grid-row:1/3}#auditList .audit-row-date{grid-column:2;grid-row:1}#auditList .audit-row-actions{grid-column:2;grid-row:2}#auditList .audit-row-copy strong{white-space:normal;line-height:1.5}#auditList .audit-row-copy>small{padding-left:0;font-size:12px}#auditList .audit-row-actions .icon-action{width:40px;height:40px;flex-basis:40px}#auditList .audit-detail{padding-left:0}.audit-list-tools{gap:8px}.audit-list-tools .text-btn{font-size:13px}.audit-detail-footer{align-items:flex-start}}
+
 </style>
 </head>
 <body>
@@ -688,7 +716,7 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
   </div></div>
-  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2></div><p class="muted">依實際交易日期核對。每筆可修改或撤銷，後續交易會重新計算，最新報價保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>交易日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
+  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><div class="audit-list-tools"><button type="button" class="text-btn" id="showCancelledAudit" aria-pressed="false" onclick="toggleCancelledAudit()">顯示已撤銷</button><button type="button" class="icon-action" id="purgeCancelledAudit" data-icon="trash" title="清除已撤銷紀錄" aria-label="清除已撤銷紀錄" onclick="purgeCancelledAudit()"></button></div></div><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>交易日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
   <section class="page" id="page-plans"><p class="page-intro">定期投資與每月收支集中管理。規則在開啟頁面時補記到期月份。</p>    <div class="card" id="dcaCard">
       <div class="dca-head">
         <h2 style="flex:1">定期定額快捷</h2>
@@ -2339,7 +2367,7 @@ try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById(
   // Rebuild only the affected position. Original changes remain available for audit.
   function revise(rows,history,index,replacement=null){
     const entries=copy(history),target=entries[index];
-    if(!target||target.undone||target.undoOf||target.revisionOf||target.changes?.length!==1)throw Error('這筆紀錄無法修改或撤銷');
+    if(!target||target.checkpoint||target.undone||target.undoOf||target.revisionOf||target.changes?.length!==1)throw Error('這筆紀錄無法修改或撤銷');
     if(replacement&&!tradeInput(target))throw Error('這筆舊紀錄缺少交易明細，無法直接修改交易');
     const id=target.changes[0].id,related=entries.filter(e=>e.changes?.some(c=>c.id===id)||e.subjectId===id);
     const source=related.filter(e=>!e.undoOf&&!e.revisionOf&&e.changes?.some(c=>c.id===id));
@@ -2392,7 +2420,31 @@ try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById(
     const tail=related.at(-1);tail.settledAfter=out.find(r=>r._id===id)||null;
     return {rows:out,audit:entries,subjectId:id};
   }
-  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise};
+  function purge(rows,history,ids){
+    const roots=new Set(ids),remove=new Set(ids),entries=copy(history);
+    if(!roots.size)throw Error('沒有可刪除的已撤銷紀錄');
+    for(const id of roots){if(entries.filter(e=>e.id===id).length!==1)throw Error('紀錄識別碼重複或不存在，請先核對資料');const e=entries.find(e=>e.id===id);if(!e||!e.undone||e.undoOf||e.revisionOf||e.checkpoint)throw Error('有效交易須先撤銷，才能永久刪除');}
+    let changed=true;
+    while(changed){changed=false;for(const e of entries)if(!remove.has(e.id)&&(remove.has(e.undoOf)||remove.has(e.revisionOf))){remove.add(e.id);changed=true;}}
+    const subjects=new Set(entries.filter(e=>remove.has(e.id)).flatMap(e=>[...(e.changes||[]).map(c=>c.id),e.subjectId].filter(Boolean)));
+    let remaining=entries.filter(e=>!remove.has(e.id));
+    for(const id of subjects){
+      const prior=entries.filter(e=>e.changes?.some(c=>c.id===id)),first=prior.find(e=>!e.undoOf&&!e.revisionOf);
+      const active=remaining.some(e=>!e.checkpoint&&!e.undone&&!e.undoOf&&!e.revisionOf&&e.changes?.some(c=>c.id===id));
+      const current=rows.find(r=>r._id===id)||null;
+      const last=entries.findLast(e=>e.subjectId===id||e.changes?.some(c=>c.id===id)),expected=last?.settledAfter!==undefined?last.settledAfter:last?.changes?.find(c=>c.id===id)?.after;
+      const same=(a,b)=>typeof a==='number'&&typeof b==='number'?Math.abs(a-b)<=1e-7+Number.EPSILON*16*Math.max(Math.abs(a),Math.abs(b)):equal(a,b);
+      if(!!current!==!!expected||current&&['shares','prin','avg','code','name','cls','note','lastUp'].some(k=>!same(current[k],expected[k])))throw Error('部位已有未記錄的變更，請先核對再刪除紀錄');
+      const basis=active?(first?.originalChanges||first?.changes)?.find(c=>c.id===id)?.before:current;
+      remaining=remaining.filter(e=>!(e.checkpoint&&e.subjectId===id));
+      if(active||current){
+        remaining.unshift({id:'basis:'+id,checkpoint:true,subjectId:id,changes:[{id,before:copy(basis??null),after:copy(basis??null),index:first?.changes?.find(c=>c.id===id)?.index??0}]});
+        const tail=remaining.findLast(e=>e.subjectId===id||e.changes?.some(c=>c.id===id));tail.settledAfter=copy(current);
+      }
+    }
+    return {audit:remaining,removed:entries.filter(e=>remove.has(e.id)).length,roots:roots.size};
+  }
+  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise,purge};
   if(typeof module!=='undefined')module.exports=root.PortfolioCore;
 })(globalThis);
 
@@ -2439,7 +2491,7 @@ saveRow=function(){
   }catch(e){alert(e.message);}
 };
 delRow=function(){if(isLive())recordAction(originalDelRow,'刪除部位',null);};
-function undoLastTrade(){const i=audit.findLastIndex(a=>!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length);if(i>=0)undoAuditEntry(i);else alert('沒有可撤銷的操作');}
+function undoLastTrade(){const i=audit.findLastIndex(a=>!a.checkpoint&&!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length);if(i>=0)undoAuditEntry(i);else alert('沒有可撤銷的操作');}
 function localDate(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function commitTrade(row,t,input){
   ensureRowIds();const before=clone(data),next=clone(data),r=next.find(r=>r._id===row._id);
@@ -2525,7 +2577,7 @@ openExtra('雲端同步',`<p>狀態：${safeText(document.getElementById('cloudS
 function showCloudConflict(remote){
 cloudConflict=remote;
 const localHas=portfolioHasData(portfolioPayload()),remoteHas=portfolioHasData(remote.payload);
-const summary=(o)=>`${o?.live?.length||0} 筆持倉 · ${Object.keys(o?.archives||{}).length} 份快照 · ${o?.audit?.length||0} 筆紀錄`;
+const summary=(o)=>`${o?.live?.length||0} 筆持倉 · ${Object.keys(o?.archives||{}).length} 份快照 · ${o?.audit?.filter(a=>!a.checkpoint).length||0} 筆紀錄`;
 const title=remoteHas?(localHas?'同步版本需要確認':'載入雲端資料'):(localHas?'首次雲端同步':'尚無同步資料');
 cloudStatus(title);
 const intro=remoteHas&&!localHas?'這台裝置尚無資料。載入雲端版本即可繼續使用，不會覆蓋雲端紀錄。':localHas&&remoteHas?'兩邊都有資料，請確認要保留的版本。取代前會自動下載被取代的資料備份。':localHas?'將這台裝置的資料建立為雲端版本，之後手機就能載入。':'先匯入備份或新增第一筆持倉，再建立雲端資料。';
@@ -2628,14 +2680,48 @@ function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
 function auditDay(a){const day=a.input?.tradeDate||a.tradeDate;if(PortfolioCore.validDate(day))return day;if(a.createdAt){const d=new Date(a.createdAt);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}const m=(a.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
-function renderAuditPage(){
-  const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;
-  const entries=audit.map((a,index)=>({a,index})).filter(({a})=>(!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day)).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
-  document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index},i)=>{
-    const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a);
-    return `<details class="audit-entry" data-audit-index="${index}" ${i===0?'open':''}><summary><strong>${safeText(a.label)}${a.undone?' · 已撤銷':a.revisedAt?' · 已修改':''}</strong><span class="audit-date">${safeText((a.input?.tradeDate||a.tradeDate)?auditDay(a):'登錄日 '+auditDay(a))}<small>登錄 ${safeText(a.at)}</small></span></summary>${actionable?`<div class="audit-entry-actions">${editable?iconAction('edit','修改交易',`editAuditTrade(${index})`):''}${iconAction('undo','撤銷這筆',`undoAuditEntry(${index})`)}</div>`:''}<p>${auditDetails(a)}</p></details>`;
-  }).join(''):'<p class="empty-note">'+(audit.length?'沒有符合的操作紀錄。':'尚無操作紀錄。下次加減碼或編輯後，會在這裡保留修改前後的內容。')+'</p>';
+let showCancelledAudit=false;
+function cancelledAudit(a){if(a.undone)return true;const seen=new Set();let ref=a.revisionOf||a.undoOf;while(ref&&!seen.has(ref)){seen.add(ref);const parent=audit.find(e=>e.id===ref);if(!parent)return false;if(parent.undone)return true;ref=parent.revisionOf||parent.undoOf;}return false;}
+function auditMatches(a){const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;return (!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day);}
+function cancelledRoots(){return audit.filter(a=>!a.checkpoint&&a.undone&&!a.undoOf&&!a.revisionOf&&auditMatches(a));}
+function toggleCancelledAudit(){showCancelledAudit=!showCancelledAudit;renderAuditPage();}
+function auditPosition(a){const parent=a.revisionOf||a.undoOf?audit.find(e=>e.id===(a.revisionOf||a.undoOf)):null;const c=a.changes?.[0]||parent?.changes?.[0];return c?.after||c?.before||data.find(r=>r._id===a.subjectId)||{};}
+function auditSummary(a){
+  const t=PortfolioCore.tradeInput(a),i=a.input||{};
+  if(t){const amount=t.direction==='sell'?i.proceeds:i.total??i.cost;const price=t.price??((i.gross??(t.total-t.fee*t.fx))/(t.shares*t.fx));return `${numberText(t.shares)} 股 × ${numberText(price)}　｜　${t.direction==='sell'?'實收':'支出'} ${numberText(amount)} TWD`;}
+  if(a.revisionOf){const names={tradeDate:'日期',shares:'股數',price:'成交價',fx:'匯率',total:'總支出'},keys=Object.keys(names).filter(k=>JSON.stringify(a.beforeInput?.[k])!==JSON.stringify(a.afterInput?.[k]));return '修改了'+(keys.map(k=>names[k]).join('、')||'交易內容');}
+  if(a.undoOf)return '已撤銷原操作，後續交易已重算';
+  const c=a.changes?.[0];if(!c)return '舊版紀錄';
+  if(!c.before)return '新增持倉';if(!c.after)return '刪除持倉';
+  return Object.keys(fieldNames).filter(k=>k!=='lastUp'&&JSON.stringify(c.before[k])!==JSON.stringify(c.after[k])).map(k=>fieldNames[k]).join('、')||'扣款狀態更新';
 }
+function renderAuditPage(){
+  const entries=audit.map((a,index)=>({a,index})).filter(({a})=>!a.checkpoint&&auditMatches(a)&&(showCancelledAudit||!cancelledAudit(a))).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
+  const toggle=document.getElementById('showCancelledAudit');toggle.setAttribute('aria-pressed',String(showCancelledAudit));toggle.textContent=showCancelledAudit?'隱藏已撤銷':'顯示已撤銷';
+  const purge=document.getElementById('purgeCancelledAudit'),count=cancelledRoots().length;purge.disabled=!count;purge.title=`永久清除符合篩選的 ${count} 筆已撤銷紀錄`;purge.setAttribute('aria-label',purge.title);
+  document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index})=>{
+    const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a),r=auditPosition(a),t=PortfolioCore.tradeInput(a);
+    const kind=t?(t.direction==='sell'?'−':'＋'):a.revisionOf?'修改':a.undoOf?'撤銷':a.label;
+    const title=`${safeText(kind)} <span class="audit-code">${safeText(r.code||'')}</span> ${safeText(r.name||'')}`;
+    const status=a.undone&&!a.undoOf?'已撤銷':a.revisedAt?'已修改':'';
+    const day=auditDay(a),shortDay=(day.startsWith(localDate().slice(0,4))?day.slice(5):day).replaceAll('-','/'),date=(a.input?.tradeDate||a.tradeDate)?shortDay:'登錄 '+shortDay;
+    const action=(icon,label,fn)=>iconAction(icon,label,`event.preventDefault();event.stopPropagation();${fn}`);
+    return `<details class="audit-entry" data-audit-index="${index}"><summary><span class="audit-row-copy"><strong style="--category:${CLR[r.cls]||'var(--ink)'}">${title}${status?`<span class="audit-status">${status}</span>`:''}</strong><small>${safeText(auditSummary(a))}</small></span><span class="audit-row-date" title="${safeText(day)}">${safeText(date)}</span><span class="audit-row-actions">${editable?action('edit','修改交易',`editAuditTrade(${index})`):''}${actionable?action('undo','撤銷這筆',`undoAuditEntry(${index})`):''}</span></summary><div class="audit-detail">${auditCompactDetails(a)}<div class="audit-detail-footer"><span>登錄 ${safeText(a.at||a.createdAt||'—')}</span>${a.undone&&!a.undoOf&&!a.revisionOf?iconAction('trash','永久刪除這筆紀錄',`purgeAuditEntry(${index})`):actionable?'<button class="icon-action" disabled title="先撤銷這筆操作，才能永久刪除" aria-label="先撤銷才能永久刪除">'+actionIcon('trash')+'</button>':''}</div></div></details>`;
+  }).join(''):'<p class="empty-note">'+(audit.some(a=>!a.checkpoint)?'沒有符合的紀錄。可調整篩選或顯示已撤銷紀錄。':'尚無操作紀錄。')+'</p>';
+}
+function auditCompactDetails(a){
+  const value=v=>safeText(typeof v==='number'?numberText(v):v??'—');
+  const table=rows=>rows.length?`<table class="audit-change-table"><thead><tr><th>項目</th><th>變更前</th><th>變更後</th></tr></thead><tbody>${rows.map(([label,b,n])=>`<tr><td>${label}</td><td>${value(b)}</td><td>${value(n)}</td></tr>`).join('')}</tbody></table>`:'';
+  if(a.revisionOf){const labels={tradeDate:'交易日期',shares:'股數',price:'成交價',fee:'手續費',fx:'匯率',total:'總支出 TWD'},b=a.beforeInput||{},n=a.afterInput||{};return table(Object.keys(labels).filter(k=>JSON.stringify(b[k])!==JSON.stringify(n[k])).map(k=>[labels[k],b[k],n[k]]));}
+  const t=PortfolioCore.tradeInput(a),keys=t?['shares','prin','avg']:Object.keys(fieldNames).filter(k=>k!=='lastUp');
+  let html=(a.changes||[]).map(c=>table(keys.filter(k=>JSON.stringify(c.before?.[k])!==JSON.stringify(c.after?.[k])).map(k=>[fieldNames[k],c.before?.[k],c.after?.[k]]))).join('');
+  if(!html&&!t){const c=a.changes?.[0];html=c&&c.before?.lastUp!==c.after?.lastUp?table([['扣款狀態',c.before?.lastUp,c.after?.lastUp]]):safeText(a.detail||'沒有持倉數值變動');}
+  if(t){const i=a.input;html+=`<div class="audit-fee">手續費 <span>${numberText(i.fee??0)} ${safeText(i.currency||(t.fx>1.5?'USD':'TWD'))}</span></div><details class="audit-more"><summary>詳細資料</summary><dl><div><dt>交易日期</dt><dd>${value(t.tradeDate||'未提供')}</dd></div><div><dt>成交金額</dt><dd>${value(i.gross)} TWD</dd></div><div><dt>交易匯率</dt><dd>${value(t.fx)}</dd></div><div><dt>輸入方式</dt><dd>${safeText(i.source||'—')}</dd></div></dl></details>`;}
+  return html;
+}
+function purgeAuditEntry(index){const a=audit[index];if(a)purgeAuditRecords([a.id]);}
+function purgeCancelledAudit(){purgeAuditRecords(cancelledRoots().map(a=>a.id));}
+function purgeAuditRecords(ids){try{const plan=PortfolioCore.purge(data,audit,ids);if(!confirm(`永久刪除 ${plan.roots} 筆已撤銷紀錄及相關歷程，共 ${plan.removed} 筆？\n持倉數字不變，其餘交易仍可修改或撤銷。這項刪除無法復原。`))return;audit=plan.audit;save();persistNow();renderAuditPage();showToast(`已永久刪除 ${plan.removed} 筆紀錄`,null);}catch(e){alert(e.message);}}
 
 function renderSettings(){document.getElementById('quoteConnectionState').textContent=sheetUrl?'已設定報價來源':'尚未設定報價來源';renderCloudSetup();}
 function chooseSetup(value){setupChoice=value;renderCloudSetup();}

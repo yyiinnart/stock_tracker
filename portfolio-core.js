@@ -73,7 +73,7 @@
   // Rebuild only the affected position. Original changes remain available for audit.
   function revise(rows,history,index,replacement=null){
     const entries=copy(history),target=entries[index];
-    if(!target||target.undone||target.undoOf||target.revisionOf||target.changes?.length!==1)throw Error('這筆紀錄無法修改或撤銷');
+    if(!target||target.checkpoint||target.undone||target.undoOf||target.revisionOf||target.changes?.length!==1)throw Error('這筆紀錄無法修改或撤銷');
     if(replacement&&!tradeInput(target))throw Error('這筆舊紀錄缺少交易明細，無法直接修改交易');
     const id=target.changes[0].id,related=entries.filter(e=>e.changes?.some(c=>c.id===id)||e.subjectId===id);
     const source=related.filter(e=>!e.undoOf&&!e.revisionOf&&e.changes?.some(c=>c.id===id));
@@ -126,6 +126,30 @@
     const tail=related.at(-1);tail.settledAfter=out.find(r=>r._id===id)||null;
     return {rows:out,audit:entries,subjectId:id};
   }
-  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise};
+  function purge(rows,history,ids){
+    const roots=new Set(ids),remove=new Set(ids),entries=copy(history);
+    if(!roots.size)throw Error('沒有可刪除的已撤銷紀錄');
+    for(const id of roots){if(entries.filter(e=>e.id===id).length!==1)throw Error('紀錄識別碼重複或不存在，請先核對資料');const e=entries.find(e=>e.id===id);if(!e||!e.undone||e.undoOf||e.revisionOf||e.checkpoint)throw Error('有效交易須先撤銷，才能永久刪除');}
+    let changed=true;
+    while(changed){changed=false;for(const e of entries)if(!remove.has(e.id)&&(remove.has(e.undoOf)||remove.has(e.revisionOf))){remove.add(e.id);changed=true;}}
+    const subjects=new Set(entries.filter(e=>remove.has(e.id)).flatMap(e=>[...(e.changes||[]).map(c=>c.id),e.subjectId].filter(Boolean)));
+    let remaining=entries.filter(e=>!remove.has(e.id));
+    for(const id of subjects){
+      const prior=entries.filter(e=>e.changes?.some(c=>c.id===id)),first=prior.find(e=>!e.undoOf&&!e.revisionOf);
+      const active=remaining.some(e=>!e.checkpoint&&!e.undone&&!e.undoOf&&!e.revisionOf&&e.changes?.some(c=>c.id===id));
+      const current=rows.find(r=>r._id===id)||null;
+      const last=entries.findLast(e=>e.subjectId===id||e.changes?.some(c=>c.id===id)),expected=last?.settledAfter!==undefined?last.settledAfter:last?.changes?.find(c=>c.id===id)?.after;
+      const same=(a,b)=>typeof a==='number'&&typeof b==='number'?Math.abs(a-b)<=1e-7+Number.EPSILON*16*Math.max(Math.abs(a),Math.abs(b)):equal(a,b);
+      if(!!current!==!!expected||current&&['shares','prin','avg','code','name','cls','note','lastUp'].some(k=>!same(current[k],expected[k])))throw Error('部位已有未記錄的變更，請先核對再刪除紀錄');
+      const basis=active?(first?.originalChanges||first?.changes)?.find(c=>c.id===id)?.before:current;
+      remaining=remaining.filter(e=>!(e.checkpoint&&e.subjectId===id));
+      if(active||current){
+        remaining.unshift({id:'basis:'+id,checkpoint:true,subjectId:id,changes:[{id,before:copy(basis??null),after:copy(basis??null),index:first?.changes?.find(c=>c.id===id)?.index??0}]});
+        const tail=remaining.findLast(e=>e.subjectId===id||e.changes?.some(c=>c.id===id));tail.settledAfter=copy(current);
+      }
+    }
+    return {audit:remaining,removed:entries.filter(e=>remove.has(e.id)).length,roots:roots.size};
+  }
+  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise,purge};
   if(typeof module!=='undefined')module.exports=root.PortfolioCore;
 })(globalThis);

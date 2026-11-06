@@ -29,7 +29,7 @@ openExtra('雲端同步',`<p>狀態：${safeText(document.getElementById('cloudS
 function showCloudConflict(remote){
 cloudConflict=remote;
 const localHas=portfolioHasData(portfolioPayload()),remoteHas=portfolioHasData(remote.payload);
-const summary=(o)=>`${o?.live?.length||0} 筆持倉 · ${Object.keys(o?.archives||{}).length} 份快照 · ${o?.audit?.length||0} 筆紀錄`;
+const summary=(o)=>`${o?.live?.length||0} 筆持倉 · ${Object.keys(o?.archives||{}).length} 份快照 · ${o?.audit?.filter(a=>!a.checkpoint).length||0} 筆紀錄`;
 const title=remoteHas?(localHas?'同步版本需要確認':'載入雲端資料'):(localHas?'首次雲端同步':'尚無同步資料');
 cloudStatus(title);
 const intro=remoteHas&&!localHas?'這台裝置尚無資料。載入雲端版本即可繼續使用，不會覆蓋雲端紀錄。':localHas&&remoteHas?'兩邊都有資料，請確認要保留的版本。取代前會自動下載被取代的資料備份。':localHas?'將這台裝置的資料建立為雲端版本，之後手機就能載入。':'先匯入備份或新增第一筆持倉，再建立雲端資料。';
