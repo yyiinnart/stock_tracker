@@ -12,9 +12,9 @@ await page.locator('[data-page=records]').click();await page.locator('#showCance
 await page.evaluate(()=>openCompare());assert.match(await page.locator('#compareResults').innerText(),/20.00%/);await page.locator('[data-direction=down]').click();assert.match(await page.locator('#compareResults').innerText(),/無符合資料/);await page.evaluate(()=>setTab('hold'));
 // Inventory-weighted comparison: FX, missing values, signed ordering, live inventory.
 await page.evaluate(()=>{data.push({_id:'usd',code:'USDTEST',name:'美元測試',cls:'美股',shares:10,price:90,fx:32,avg:100,prin:32000},{_id:'missing',code:'MISS',name:'缺少快照',cls:'台股',shares:10,price:20,fx:1});archives['261101'].push({code:'USDTEST',cls:'美股',price:100});openCompare();});
-await page.locator('[data-direction=all]').click();await page.locator('[data-sort=pnl]').click();
+await page.locator('[data-direction=all]').click();await page.locator('#compareSort').selectOption('pnl');
 assert.match(await page.locator('.comparison-pnl').first().innerText(),/20,000 元/);
-await page.locator('[data-sort=pnl]').click();assert.match(await page.locator('.comparison-pnl').first().innerText(),/-3,200 元/);assert.match(await page.locator('.compare-row').last().innerText(),/缺少快照/);
+await page.locator('#compareSortOrder').click();assert.match(await page.locator('.comparison-pnl').first().innerText(),/-3,200 元/);assert.match(await page.locator('.compare-row').last().innerText(),/缺少快照/);
 assert.equal(await page.evaluate(()=>comparisonPnl({shares:0,fx:32},{delta:10})),0);assert.equal(await page.evaluate(()=>comparisonPnl({shares:10,fx:null},{delta:10})),null);
 await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(root,'work/comparison-mobile.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
 await page.setViewportSize({width:1280,height:900});await page.screenshot({path:path.join(root,'work/comparison-desktop.png'),fullPage:true});
@@ -119,6 +119,6 @@ const b=await device({live:[],archives:{}});await b.getByText('載入我的雲�
 await a.evaluate(async()=>{notes='device A';save();await syncCloud(true);});assert.equal(remote.payload.notes,'device A');
 await b.evaluate(async()=>{notes='device B';save();await syncCloud(true);});assert.equal(remote.payload.notes,'device A');assert.equal(await b.locator('#extraDialog h3').innerText(),'同步版本需要確認');
 await b.getByText('保留雲端，更新本機',{exact:true}).click();await b.waitForFunction(()=>notes==='device A'&&!cloudBusy);
-await b.context().setOffline(true);await b.evaluate(async()=>{notes='offline change';save();persistNow();await syncCloud(true);});assert.equal(remote.payload.notes,'device A');assert.match(await b.locator('#cloudState').innerText(),/離線/);await b.context().setOffline(false);await b.waitForFunction(()=>!cloudBusy);await b.evaluate(()=>syncCloud(true));assert.equal(remote.payload.notes,'offline change');
+await b.context().setOffline(true);await b.evaluate(async()=>{notes='offline change';save();persistNow();await syncCloud(true);});assert.equal(remote.payload.notes,'device A');assert.match(await b.locator('#cloudState').innerText(),/離線/);await b.context().setOffline(false);await b.waitForFunction(()=>!cloudBusy);await b.evaluate(()=>syncCloud(true));await b.waitForFunction(()=>!cloudBusy&&cloudMeta.ack?.includes('offline change'));assert.equal(remote.payload.notes,'offline change');
 assert.deepEqual(errors,[]);console.log('PASS: first sync selection, two-device conflict, remote resolution, offline queue and reconnect');
 }finally{if(browser)await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

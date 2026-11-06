@@ -150,6 +150,35 @@
     }
     return {audit:remaining,removed:entries.filter(e=>remove.has(e.id)).length,roots:roots.size};
   }
-  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise,purge};
+  function comparisonRows(live,snapshot,snapshotDate=''){
+    const groups=new Map(),positive=n=>typeof n==='number'&&Number.isFinite(n)&&n>0;
+    const time=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:null;};
+    for(const [side,list] of [['live',live],['old',snapshot]])for(const r of list||[]){
+      if(['現金','貸款'].includes(r.cls))continue;
+      const key=JSON.stringify([r.code,r.cls]);if(!groups.has(key))groups.set(key,{live:[],old:[]});groups.get(key)[side].push(r);
+    }
+    return [...groups.values()].flatMap(g=>{
+      const held=g.live.some(r=>positive(r.shares)),had=g.old.some(r=>positive(r.shares)),unknownOld=g.old.some(r=>r.shares==null),unknownCurrent=g.live.some(r=>r.shares==null);
+      if(!held&&!had&&!unknownOld&&!unknownCurrent)return [];
+      const now=g.live.length===1?g.live[0]:null,old=g.old.length===1?g.old[0]:null,r=g.live[0]||g.old[0];
+      const status=!held&&!unknownCurrent&&had?'sold':held&&!had&&!unknownOld?'new':'';
+      const quoteTime=time(now?.quoteUpdatedAt),cutoff=time(old?.quoteUpdatedAt)??time(snapshotDate?snapshotDate+'T00:00:00':'');
+      const retained=quoteTime!=null&&(cutoff==null||quoteTime>=cutoff);
+      const currentPrice=positive(now?.price)&&(held||unknownCurrent||retained)?now.price:null,oldPrice=positive(old?.price)?old.price:null;
+      const candidate=currentPrice!=null&&oldPrice!=null?{old:oldPrice,now:currentPrice,delta:currentPrice-oldPrice,rate:(currentPrice-oldPrice)/oldPrice}:null,c=candidate&&Number.isFinite(candidate.delta)&&Number.isFinite(candidate.rate)?candidate:null;
+      const profit=held&&c&&positive(now?.shares)&&positive(now?.fx)?c.delta*now.shares*now.fx:null,pnl=Number.isFinite(profit)?profit:null;
+      return [{r,status,oldPrice,currentPrice,c,pnl,shares:now?now.shares??null:0,fx:now?.fx??null,quoteUpdatedAt:currentPrice!=null?now?.quoteUpdatedAt||'':null}];
+    });
+  }
+  function sortComparisons(rows,metric='rate',ascending=false){
+    const code=(a,b)=>String(a.r.code).localeCompare(String(b.r.code),'zh-TW',{numeric:true})||String(a.r.code).localeCompare(String(b.r.code))||String(a.r.cls).localeCompare(String(b.r.cls));
+    return [...rows].sort((a,b)=>{
+      const av=metric==='pnl'?a.pnl:metric==='code'?(a.c?0:null):a.c?.rate,bv=metric==='pnl'?b.pnl:metric==='code'?(b.c?0:null):b.c?.rate;
+      if(av==null||bv==null)return av==null?(bv==null?code(a,b):1):-1;
+      const delta=metric==='code'?code(a,b):av-bv;
+      return (ascending?delta:-delta)||code(a,b);
+    });
+  }
+  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise,purge,comparisonRows,sortComparisons};
   if(typeof module!=='undefined')module.exports=root.PortfolioCore;
 })(globalThis);

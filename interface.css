@@ -336,3 +336,19 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
 .hold-view-controls .snapshot-stepper .icon-action{width:40px;flex-basis:40px}
 @media(max-width:760px){.comparison-baseline .snapshot-stepper{flex:1;min-width:210px}.comparison-baseline .snapshot-stepper select{min-width:0;padding-left:6px;padding-right:6px}}
 @media(max-width:640px){.hold-view-controls .snapshot-stepper{flex:1}.hold-view-controls .snapshot-stepper select{padding-left:4px;padding-right:4px}}
+
+/* Explicit comparison sources, one sort control, and neutral inventory status. */
+.comparison-quote-stamp{font-size:12px;color:var(--ink2);margin:8px 0 0;line-height:1.6}
+.comparison-baseline-suffix{color:var(--ink2);font-size:13px}
+.comparison-sort-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.comparison-sort-controls select{color:var(--ink);border:1px solid transparent;border-radius:6px;min-height:44px;padding:8px;font:inherit;max-width:100%;color-scheme:dark}
+.compare-order{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;min-height:44px;min-width:96px;padding:8px 12px;font:inherit;cursor:pointer}
+.comparison-position-status{display:inline-block;margin-left:8px;padding:2px 6px;font-size:12px;line-height:1.5;font-weight:400;color:#bdc5d0;background:#242a34;border-radius:3px;white-space:nowrap}
+.comparison-position-status.new{color:#a7c9e7;background:#1b2733}
+.compare-row .old .compare-price{color:var(--ink2)}.compare-row .now .compare-price{color:var(--ink);font-weight:600}
+.comparison-price-time{display:block;margin-top:5px;color:var(--ink2);font:12px var(--sans);line-height:1.5}
+.compare-row .comparison-pnl small{line-height:1.5}
+@media(min-width:761px){.compare-heading,.compare-row{grid-template-columns:minmax(145px,1.5fr) minmax(95px,1fr) minmax(120px,1.2fr) minmax(95px,1fr) minmax(135px,1.2fr)}}
+@media(max-width:760px){.comparison-options{gap:12px}.comparison-sort-controls{width:100%;flex-wrap:nowrap}.comparison-sort-controls select{flex:1;min-width:0}.compare-order{min-width:100px;padding:8px}.comparison-baseline .snapshot-stepper{flex-basis:calc(100% - 48px)}.compare-row .comparison-position-status{margin-top:4px}.comparison-price-time{font-size:12px}}
+
+@media(min-width:761px){.compare-row .delta{text-align:right}}

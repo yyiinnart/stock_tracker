@@ -1,5 +1,5 @@
 /* Workspace navigation, responsive data views and guided setup. */
-let analysisSection='compare',setupChoice='new';
+let analysisSection='compare',setupChoice='new',comparisonAscending=false;
 const pageNames={hold:'我的持倉',analy:'比較與分析',records:'操作紀錄',plans:'投資計畫',settings:'設定'};
 function setTab(t){
   if(!pageNames[t])t='hold';tab=t;
@@ -33,13 +33,21 @@ function refreshComparison(){
 }
 showCompare=function(){
   updateSnapshotNav('compareDate');
-  const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;
-  const empty=document.getElementById('compareEmpty');empty.hidden=!!key;
+  const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value,sort=document.getElementById('compareSort').value;
+  document.getElementById('compareEmpty').hidden=!!key;
   document.querySelectorAll('[data-direction]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.direction===direction)));
-  const sort=document.getElementById('compareSort').value;
-  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>{const c=priceChange(r,key);return {r,c,pnl:comparisonPnl(r,c)};}).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>{const av=sort.startsWith('rate')?a.c?.rate:a.pnl,bv=sort.startsWith('rate')?b.c?.rate:b.pnl;if(av==null)return bv==null?0:1;if(bv==null)return -1;return sort.endsWith('Asc')?av-bv:bv-av;});
-  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading"><span>標的</span><span>快照價</span><span>現價</span>${compareSortHeading('rate','漲跌幅',sort)}${compareSortHeading('pnl','台幣相對損益',sort)}</div>`+rows.map(({r,c,pnl})=>`<article class="compare-row" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">台幣相對損益</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>庫存 ${numberText(r.shares)} 股 · 匯率 ${numberText(r.fx)}</small></div></article>`).join('');
+  const order=document.getElementById('compareSortOrder'),orderLabel=sort==='code'?(comparisonAscending?'代碼遞增':'代碼遞減'):(comparisonAscending?'低到高':'高到低');
+  order.textContent=(comparisonAscending?'↑ ':'↓ ')+orderLabel;order.setAttribute('aria-label','排序方向：'+orderLabel);
+  document.getElementById('comparisonQuoteStamp').textContent='目前報價最近取得時間：'+comparisonTime(quoteUpdatedAt)+'；各標的時間見下方。';
+  const date=fmtLabel(key),rows=PortfolioCore.sortComparisons(PortfolioCore.comparisonRows(data,archives[key]||[],/^\d{6}$/.test(key)?'20'+key.slice(0,2)+'-'+key.slice(2,4)+'-'+key.slice(4,6):''),sort,comparisonAscending).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0));
+  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading"><span>標的／狀態</span><span>${safeText(date)}<br>快照價</span><span>目前報價</span><span>價格漲跌幅</span><span>持倉相對損益 · TWD</span></div>`+rows.map(({r,c,pnl,status,oldPrice,currentPrice,shares,fx,quoteUpdatedAt:at})=>{
+    const missing=oldPrice==null&&currentPrice==null?'缺少兩端報價':oldPrice==null?'缺少快照價':'缺少目前報價';
+    return `<article class="compare-row" data-code="${safeText(r.code)}" data-status="${status}" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name||r.code)}</strong>${status?`<span class="comparison-position-status ${status}">${status==='sold'?'已賣出':'新增持倉'}</span>`:''}<small>${safeText(r.code)} · ${(fx??r.fx)>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${safeText(date)} 快照價</span><span class="compare-price">${numberText(oldPrice)}</span></div><div class="now"><span class="label">目前報價</span><span class="compare-price">${numberText(currentPrice)}</span><small class="comparison-price-time" title="${safeText(comparisonTime(at))}">${currentPrice==null?'目前無可用報價':comparisonTime(at,true)}</small></div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${c?changeLabel(c):'—'}<small>${c?'價差 '+signedNumber(c.delta):missing}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">持倉相對損益 · TWD</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>${status==='sold'?'已無目前持股':`目前 ${numberText(shares)} 股 · 匯率 ${numberText(fx)}`}</small></div></article>`;
+  }).join('');
 };
+function comparisonTime(value,short=false){const d=new Date(value||'');return Number.isFinite(+d)?d.toLocaleString('zh-TW',{year:!short||d.getFullYear()!==new Date().getFullYear()?'numeric':undefined,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):short?'取得時間未提供':'未提供';}
+function toggleComparisonOrder(){comparisonAscending=!comparisonAscending;showCompare();}
+
 function numberText(value){return value==null||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('zh-TW',{maximumFractionDigits:4});}
 function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value*10000)/10000);}
 renderKPI=function(){const t=totals(curData());document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="lbl">淨資產 · TWD</div><div class="val">${fmt(t.total)}</div><div class="delta">含現金，已扣除貸款</div></div><div class="kpi"><div class="lbl">未實現損益</div><div class="val ${t.pl>0?'pos':t.pl<0?'neg':''}">${signedNumber(t.pl)}</div><div class="delta">相對投入本金，不含息</div></div><div class="kpi"><div class="lbl">投入本金 · TWD</div><div class="val">${fmt(t.prin)}</div><div class="delta">投資部位，不含現金</div></div>`;};
@@ -247,8 +255,6 @@ openExtra=function(title,html){baseExtra(title,html);const b=document.querySelec
 
 function setCompareDirection(value){document.getElementById('compareDirection').value=value;showCompare();}
 function toggleComparisonHelp(button){const help=document.getElementById('comparisonHelp');help.hidden=!help.hidden;button.setAttribute('aria-expanded',String(!help.hidden));}
-function compareSortHeading(metric,label,sort){const active=metric==='rate'?sort.startsWith('rate'):sort.startsWith('pnl');const ascending=sort.endsWith('Asc');return `<span><button class="compare-sort" data-sort="${metric}" aria-label="${label}排序${active?(ascending?'，目前由低到高':'，目前由高到低'):''}" onclick="sortComparison('${metric}')">${label}${active?` <span aria-hidden="true">${ascending?'↑':'↓'}</span>`:''}</button></span>`;}
-function sortComparison(metric){const select=document.getElementById('compareSort');select.value=metric==='rate'?(select.value==='rate'?'rateAsc':'rate'):(select.value==='pnlDesc'?'pnlAsc':'pnlDesc');showCompare();}
 function setQuoteButton(label,busy=false,done=false){const b=document.getElementById('syncBtn');b.innerHTML=actionIcon(done?'check':'refresh');b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-busy',String(busy));}
 document.querySelectorAll('[data-icon]').forEach(b=>b.innerHTML=actionIcon(b.dataset.icon));
 
