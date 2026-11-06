@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="583959815cab47cc">
+<meta name="app-version" content="4cb38c01089e08ad">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -600,6 +600,14 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
 .hold-view-controls .icon-action{width:44px;height:44px;flex-basis:44px}
 @media(max-width:640px){.holdings-heading{gap:6px;margin-bottom:8px}.holdings-heading h2{width:100%;gap:6px}.hold-view-controls{margin-left:0;width:100%;justify-content:space-between}.hold-view-controls select{flex:1;min-width:0}.holdings-heading #hcount{margin-left:auto}.holdings-heading #holdingsTitle{font-size:15px}}
 
+/* Chronological snapshot navigation: older to the left, newer to the right. */
+.snapshot-stepper{display:flex;align-items:center;gap:4px;min-width:0}
+.snapshot-stepper select{min-width:0;flex:1}
+.snapshot-stepper .icon-action{width:40px;height:44px;flex-basis:40px}
+.hold-view-controls .snapshot-stepper .icon-action{width:40px;flex-basis:40px}
+@media(max-width:760px){.comparison-baseline .snapshot-stepper{flex:1;min-width:210px}.comparison-baseline .snapshot-stepper select{min-width:0;padding-left:6px;padding-right:6px}}
+@media(max-width:640px){.hold-view-controls .snapshot-stepper{flex:1}.hold-view-controls .snapshot-stepper select{padding-left:4px;padding-right:4px}}
+
 </style>
 </head>
 <body>
@@ -635,7 +643,7 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
     <div class="kpis" id="kpis"></div>
 
     <div class="card holdings-card" id="holdingsCard">
-      <div class="holdings-heading"><h2><span id="holdingsTitle">持倉明細</span><span class="tag" id="hcount"></span></h2><div class="hold-view-controls"><select id="holdViewSel" aria-label="持倉檢視時點" onchange="switchView(this.value)"><option value="live">目前持倉</option></select><button type="button" class="icon-action" id="holdReturnLive" data-icon="undo" title="返回目前持倉" aria-label="返回目前持倉" onclick="switchView('live')" hidden></button></div></div>
+      <div class="holdings-heading"><h2><span id="holdingsTitle">持倉明細</span><span class="tag" id="hcount"></span></h2><div class="hold-view-controls"><div class="snapshot-stepper"><button type="button" class="icon-action" id="holdSnapshotOlder" data-icon="chevronLeft" title="較早的持倉時點" aria-label="較早的持倉時點" onclick="stepSnapshot('holdViewSel',-1)"></button><select id="holdViewSel" aria-label="持倉檢視時點" onchange="switchView(this.value)"><option value="live">目前持倉</option></select><button type="button" class="icon-action" id="holdSnapshotNewer" data-icon="chevronRight" title="較新的持倉時點" aria-label="較新的持倉時點" onclick="stepSnapshot('holdViewSel',1)"></button></div><button type="button" class="icon-action" id="holdReturnLive" data-icon="undo" title="返回目前持倉" aria-label="返回目前持倉" onclick="switchView('live')" hidden></button></div></div>
       <div class="toolbar holding-actions">
         <button class="icon-action" onclick="openAdd()" id="addPositionBtn" data-icon="plus" title="新增部位" aria-label="新增部位"></button>
         <button class="icon-action" onclick="syncPrices()" id="syncBtn" data-icon="refresh" title="更新報價" aria-label="更新報價"></button>
@@ -664,7 +672,7 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
     <section class="card" id="comparisonPanel">
       <div class="comparison-title"><h2>歷史價格比較</h2><button class="icon-action" data-icon="info" title="計算說明" aria-label="計算說明" aria-expanded="false" aria-controls="comparisonHelp" onclick="toggleComparisonHelp(this)"></button><button class="icon-action snapshot-manage" data-icon="folder" title="管理快照" aria-label="管理快照" onclick="openSnap()"></button></div>
       <p id="comparisonHelp" class="comparison-help" hidden>台幣相對損益＝原幣價差 × 目前庫存股數 × 目前匯率；相對所選快照，不含配息、匯差或分割調整，非實際持有期間損益。</p>
-      <div class="comparison-baseline"><span>目前持倉報價</span><span aria-hidden="true">↔</span><select id="compareDate" aria-label="比較快照" onchange="showCompare()"></select></div>
+      <div class="comparison-baseline"><span>目前持倉報價</span><span aria-hidden="true">↔</span><div class="snapshot-stepper"><button type="button" class="icon-action" id="compareSnapshotOlder" data-icon="chevronLeft" title="較早的比較快照" aria-label="較早的比較快照" onclick="stepSnapshot('compareDate',-1)"></button><select id="compareDate" aria-label="比較快照" onchange="showCompare()"></select><button type="button" class="icon-action" id="compareSnapshotNewer" data-icon="chevronRight" title="較新的比較快照" aria-label="較新的比較快照" onclick="stepSnapshot('compareDate',1)"></button></div></div>
       <div class="comparison-options"><div class="comparison-filter" role="group" aria-label="漲跌篩選"><button data-direction="all" aria-pressed="true" onclick="setCompareDirection('all')">全部</button><button data-direction="up" aria-pressed="false" onclick="setCompareDirection('up')">上漲</button><button data-direction="down" aria-pressed="false" onclick="setCompareDirection('down')">下跌</button></div>
         <input type="hidden" id="compareDirection" value="all">
         <label class="comparison-mobile-sort">排序<select id="compareSort" onchange="showCompare()"><option value="rate">漲跌幅 ↓</option><option value="rateAsc">漲跌幅 ↑</option><option value="pnlDesc">台幣相對損益 ↓</option><option value="pnlAsc">台幣相對損益 ↑</option></select></label>
@@ -1139,10 +1147,21 @@ function totals(arr){
 
 /* ===== view switching / history ===== */
 function archLabels(){return Object.keys(archives).sort();}
+function updateSnapshotNav(id){
+  const sel=document.getElementById(id),prefix=id==='holdViewSel'?'hold':'compare',index=sel.selectedIndex;
+  document.getElementById(prefix+'SnapshotOlder').disabled=sel.disabled||index<0||index>=sel.options.length-1;
+  document.getElementById(prefix+'SnapshotNewer').disabled=sel.disabled||index<=0;
+}
+function stepSnapshot(id,direction){
+  const sel=document.getElementById(id),next=sel.selectedIndex-direction;
+  if(sel.disabled||next<0||next>=sel.options.length)return;
+  sel.selectedIndex=next;sel.dispatchEvent(new Event('change',{bubbles:true}));
+}
 function renderViewSel(){
   if(viewKey!=='live'&&!Array.isArray(archives[viewKey]))viewKey='live';
   const keys=['live',...archLabels().sort((a,b)=>b.localeCompare(a))];
   for(const id of ['viewSel','holdViewSel']){const sel=document.getElementById(id);if(!sel)continue;sel.replaceChildren(...keys.map(k=>new Option(k==='live'?'目前持倉':fmtLabel(k),k)));sel.value=viewKey;}
+  updateSnapshotNav('holdViewSel');
 }
 function fmtLabel(l){ // 260520 -> 2026/05/20
   if(/^\d{6}$/.test(l))return `20${l.slice(0,2)}/${l.slice(2,4)}/${l.slice(4,6)}`;
@@ -2652,6 +2671,7 @@ function refreshComparison(){
   select.disabled=!keys.length;showCompare();
 }
 showCompare=function(){
+  updateSnapshotNav('compareDate');
   const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;
   const empty=document.getElementById('compareEmpty');empty.hidden=!!key;
   document.querySelectorAll('[data-direction]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.direction===direction)));
@@ -2851,7 +2871,7 @@ function comparisonPnl(r,c){
 }
 
 // A single outline icon family; labels stay available to assistive technology and tooltips.
-function actionIcon(name){const paths={undo:'<path d="M9 5 3 11l6 6M3 11h11a6 6 0 0 1 6 6v2"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/>',sort:'<path d="M8 3v18m-4-4 4 4 4-4M16 21V3m-4 4 4-4 4 4"/>',check:'<path d="m5 12 4 4L19 6"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/>',folder:'<path d="M3 6h7l2 3h9v11H3Z"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z M13 7l4 4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.more}</svg>`;}
+function actionIcon(name){const paths={chevronLeft:'<path d="m15 6-6 6 6 6"/>',chevronRight:'<path d="m9 6 6 6-6 6"/>',undo:'<path d="M9 5 3 11l6 6M3 11h11a6 6 0 0 1 6 6v2"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/>',sort:'<path d="M8 3v18m-4-4 4 4 4-4M16 21V3m-4 4 4-4 4 4"/>',check:'<path d="m5 12 4 4L19 6"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/>',folder:'<path d="M3 6h7l2 3h9v11H3Z"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z M13 7l4 4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.more}</svg>`;}
 function iconAction(icon,label,handler){return `<button type="button" class="icon-action" title="${label}" aria-label="${label}" onclick="${handler}">${actionIcon(icon)}</button>`;}
 function closeExtra(){document.getElementById('extraDialog')?.close();}
 function positionMore(i){if(!isLive()||!data[i])return;closeExtra();openPositionEditor(i);}
