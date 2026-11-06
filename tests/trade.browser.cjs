@@ -18,8 +18,31 @@ await page.evaluate(()=>undoLastTrade());
 await page.evaluate(()=>{data.push({_id:'us',code:'VOO',name:'美國大型股',cls:'美股',shares:10,price:100,fx:32,prin:30000,avg:93.75},{_id:'bond',code:'00679B',name:'美國公債',cls:'債券',shares:100,price:30,fx:1,prin:3000,avg:30},{_id:'cash',code:'TWD',name:'台幣現金',cls:'現金',shares:5000,price:1,fx:1,prin:5000,avg:1},{_id:'loan',code:'LOAN',name:'房屋貸款',cls:'貸款',shares:-10000,price:1,fx:1,prin:-10000,avg:1});render();});
 for(const width of [1440,768,390]){await page.setViewportSize({width,height:900});await page.screenshot({path:path.join(root,'work/trade-list-'+width+'.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
 await page.locator('#hbody [aria-label="加碼"]').first().click();await page.locator('#a_shares').fill('200');await page.locator('#a_price').fill('97.3');await page.locator('#a_fee').fill('28');await page.screenshot({path:path.join(root,'work/trade-buy-'+width+'.png')});await page.getByRole('button',{name:'取消',exact:true}).click();}
-await page.locator('#hbody [aria-label="更多操作"]').first().click();await page.getByRole('button',{name:'編輯部位',exact:true}).click();assert.equal(await page.locator('#blockEdit').isVisible(),true);await page.getByRole('button',{name:'取消',exact:true}).click();
-await page.locator('#hbody [aria-label="更多操作"]').first().click();await page.locator('#extraDialog').getByRole('button',{name:'操作紀錄',exact:true}).click();assert.match(await page.locator('#auditList').textContent(),/手續費 28 TWD/);await page.evaluate(()=>setTab('hold'));
+// More opens the actual editor directly, with history and delete inside it.
+for(const width of [1440,768,390]){
+ await page.setViewportSize({width,height:900});
+ await page.locator('#hbody [aria-label="更多操作"]').first().click();
+ assert.equal(await page.locator('#blockEdit').isVisible(),true);
+ assert.equal(await page.evaluate(()=>!!document.getElementById('extraDialog')?.open),false);
+ assert.equal(await page.locator('#positionAuditBtn').isVisible(),true);
+ assert.equal(await page.locator('#delBtn').isVisible(),true);
+ assert.equal(await page.locator('#ov').evaluate(el=>el.classList.contains('position-editing')),true);
+ assert.notEqual(await page.locator('#f_note').evaluate(el=>getComputedStyle(el).borderTopColor),'rgba(0, 0, 0, 0)');
+ assert.equal(await page.locator('#toast').isVisible(),false);const saveRect=await page.locator('#saveBtn').boundingBox();assert.ok(saveRect.y+saveRect.height<=900);await page.screenshot({path:path.join(root,'work/position-editor-'+width+'.png')});
+ await page.locator('#f_note').fill('取消測試');await page.locator('#ov').getByRole('button',{name:'取消',exact:true}).click();
+ assert.equal(await page.evaluate(()=>data[0].note),'');
+ assert.equal(await page.locator('#ov').evaluate(el=>el.classList.contains('position-editing')),false);
+ assert.equal(await page.locator('#f_note').evaluate(el=>getComputedStyle(el).borderTopColor),'rgba(0, 0, 0, 0)');
+ assert.equal(await page.locator('#hbody input').count(),0);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+}
+await page.locator('#hbody [aria-label="更多操作"]').first().click();await page.locator('#f_note').fill('編輯儲存測試');await page.locator('#saveBtn').click();assert.equal(await page.evaluate(()=>data[0].note),'編輯儲存測試');assert.equal(await page.locator('#ov').evaluate(el=>el.classList.contains('position-editing')),false);
+await page.locator('#hbody [aria-label="更多操作"]').first().click();await page.locator('#positionAuditBtn').click();assert.equal(await page.locator('#ov').isVisible(),false);assert.equal(await page.locator('#page-records').isVisible(),true);assert.equal(await page.locator('#auditSearch').inputValue(),'AAA');assert.match(await page.locator('#auditList').textContent(),/手續費 28 TWD/);await page.evaluate(()=>setTab('hold'));
+// Cancelled deletion keeps the editor; confirmed deletion is recorded and closes it.
+await page.locator('#hbody [aria-label="更多操作"]').first().click();page.removeAllListeners('dialog');page.once('dialog',d=>d.dismiss());await page.locator('#delBtn').click();assert.equal(await page.locator('#blockEdit').isVisible(),true);assert.equal(await page.evaluate(()=>data[0].code),'AAA');await page.locator('#ov').getByRole('button',{name:'取消',exact:true}).click();page.on('dialog',d=>d.accept());
+await page.evaluate(()=>{data.push({_id:'delete-test',code:'DELETE',name:'刪除測試',cls:'台股',shares:1,price:1,fx:1,prin:1,avg:1});render();positionMore(data.length-1);});await page.locator('#delBtn').click();assert.equal(await page.locator('#ov').isVisible(),false);assert.equal(await page.evaluate(()=>data.some(r=>r.code==='DELETE')),false);assert.equal(await page.evaluate(()=>audit.at(-1).label),'刪除部位');
+await page.evaluate(()=>openAdd());assert.equal(await page.locator('#positionEditTools').isVisible(),false);await page.locator('#ov').getByRole('button',{name:'取消',exact:true}).click();
+await page.locator('#hbody [aria-label="加碼"]').first().click();assert.equal(await page.locator('#positionEditTools').isVisible(),false);assert.equal(await page.locator('#ov').evaluate(el=>el.classList.contains('position-editing')),false);await page.locator('#ov').getByRole('button',{name:'取消',exact:true}).click();
 await page.evaluate(()=>{dca=[{code:'AAA',amt:1000}];openDCA('AAA');});await page.locator('#a_fee').fill('28');assert.match(await page.locator('#addPrev').innerText(),/1,000/);await page.locator('#saveBtn').click();assert.equal(await page.evaluate(()=>audit.at(-1).input.total),1000);assert.equal(await page.evaluate(()=>audit.at(-1).input.gross),972);
 await page.evaluate(()=>openTrade(1));await page.locator('#a_shares').fill('2');await page.locator('#a_price').fill('100');await page.locator('#a_fee').fill('1.5');assert.match(await page.locator('#a_fee_label').innerText(),/USD/);assert.match(await page.locator('#addPrev').innerText(),/6,448/);await page.locator('#saveBtn').click();assert.equal(await page.evaluate(()=>audit.at(-1).input.feeTWD),48);
 await page.evaluate(()=>openEdit(3));assert.equal(await page.locator('#tradeFee').isVisible(),false);await page.locator('#a_cash').fill('6000');await page.locator('#saveBtn').click();assert.equal(await page.evaluate(()=>data[3].shares),6000);

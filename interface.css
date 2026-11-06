@@ -211,14 +211,12 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 .position-code,.category-label{color:var(--category)}
 .category-label{font-size:12px;font-weight:600;padding:1px 6px;background:color-mix(in srgb,var(--category) 12%,transparent);border-radius:3px}
 .position-name{border-left-width:4px}
-.position-actions,.detail-actions,.position-more-actions{display:flex;gap:6px;align-items:center;margin-top:9px}
+.position-actions,.detail-actions{display:flex;gap:6px;align-items:center;margin-top:9px}
 .icon-action{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;padding:9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink2);cursor:pointer}
 .icon-action svg{width:20px;height:20px;pointer-events:none}
 .icon-action:hover,.icon-action:focus-visible{background:var(--panel2);color:var(--ink);border-color:var(--ink2)}
 .icon-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .icon-action:active{transform:translateY(1px)}
-.position-more-actions{gap:16px;margin:24px 0 4px}.position-more-actions .icon-action{width:48px;height:48px;flex-basis:48px}
-.position-more-actions .icon-action:last-child{color:#f2a1a8}
 .trade-preview-row{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:2px 0}
 .trade-preview-row>span{color:var(--ink2);flex-shrink:0}.trade-preview-row strong{text-align:right;font-weight:600;overflow-wrap:anywhere}
 .trade-preview-row:nth-child(3){border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:6px}
@@ -231,3 +229,15 @@ thead th{color:var(--ink2);font-size:13px}.code{font-family:var(--sans);font-siz
 
 #hbody .chip{color:var(--category);background:color-mix(in srgb,var(--category) 12%,transparent)}
 #ov .modal-actions svg{width:22px;height:22px;vertical-align:middle}
+
+/* Field outlines belong only to an active position editor. */
+.position-edit-tools{display:flex;justify-content:flex-end;gap:8px;margin:0 0 14px}
+.position-edit-tools[hidden]{display:none}
+#positionEditTools #delBtn{color:#f2a1a8}
+#ov #blockEdit input,#ov #blockEdit select{border-color:transparent}
+#ov.position-editing #blockEdit input,#ov.position-editing #blockEdit select{border-color:#66758a}
+#ov.position-editing #blockEdit input:focus,#ov.position-editing #blockEdit select:focus{border-color:var(--accent)}
+
+#ov.position-editing .modal-actions{position:sticky;bottom:-24px;z-index:2;background:var(--panel);padding:12px 0 24px;margin-bottom:-24px}
+
+body:has(#ov.position-editing) #toast{visibility:hidden;transition:none}

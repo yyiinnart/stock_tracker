@@ -70,4 +70,4 @@ function updateTradeDirection(){
 const baseOpenEdit=openEdit;
 openEdit=function(i){document.getElementById('tradeDirection').value='buy';document.getElementById('a_fee').value='0';baseOpenEdit(i);document.getElementById('modeSeg').style.display='none';document.getElementById('delBtn').style.display='none';updateTradeDirection();};
 function openTrade(i,direction='buy'){openEdit(i);document.getElementById('tradeDirection').value=direction;updateTradeDirection();}
-function openPositionEditor(i){openEdit(i);setMode('edit');document.getElementById('mTitle').textContent='編輯 · '+data[i].code;}
+function openPositionEditor(i){if(!isLive()||!data[i])return;openEdit(i);setMode('edit');document.getElementById('mTitle').textContent=data[i].code+' '+data[i].name;document.querySelector('#ov .modal').scrollTop=0;document.getElementById('f_code').focus({preventScroll:true});}

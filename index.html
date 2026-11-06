@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="e3f40c364ede7799">
+<meta name="app-version" content="b5b287a87ef09d87">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=7b42f991caa73e29">
+<link rel="stylesheet" href="interface.css?v=7633b3418d7bc795">
 </head>
 <body>
 <div class="wrap">
@@ -448,6 +448,10 @@
       <div class="preview" id="addPrev"></div>
     </div>
     <div id="blockEdit" style="display:none">
+      <div id="positionEditTools" class="position-edit-tools" hidden>
+        <button type="button" class="icon-action" id="positionAuditBtn" title="操作紀錄" aria-label="操作紀錄" onclick="positionEditorAudit()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+        <button type="button" class="icon-action" id="delBtn" title="刪除部位" aria-label="刪除部位" onclick="delRow()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+      </div>
       <div class="frow">
         <div class="fg"><label>代碼</label><input id="f_code"></div>
         <div class="fg"><label>類別</label>
@@ -480,7 +484,6 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn danger" id="delBtn" onclick="delRow()">刪除</button>
       <button class="btn" title="取消" aria-label="取消" onclick="closeModal()">×</button>
       <button class="btn primary" id="saveBtn" title="確認儲存" aria-label="確認儲存" onclick="saveRow()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></button>
     </div>
@@ -1228,8 +1231,8 @@ function moveItem(from,to,after){
 }
 
 /* ===== position modal ===== */
-function show(){document.getElementById('ov').classList.add('show');}
-function closeModal(){document.getElementById('ov').classList.remove('show');}
+function show(){const ov=document.getElementById('ov');ov.classList.add('show');ov.classList.toggle('position-editing',mode==='edit');}
+function closeModal(){document.getElementById('ov').classList.remove('show','position-editing');}
 function openAdd(){
   if(!isLive())return;
   editIdx=-1;mode='edit';
@@ -1305,6 +1308,10 @@ function setMode(m){mode=m;
   document.getElementById('segEdit').classList.toggle('on',m==='edit');
   swapBlocks();if(m==='add')prev();}
 function swapBlocks(){
+  const editing=mode==='edit',ov=document.getElementById('ov');
+  ov.classList.toggle('position-editing',editing&&ov.classList.contains('show'));
+  document.getElementById('positionEditTools').hidden=!(editing&&editIdx>=0);
+  document.getElementById('delBtn').style.display=editing&&editIdx>=0?'inline-flex':'none';
   document.getElementById('blockAdd').style.display=(mode==='add')?'block':'none';
   document.getElementById('blockEdit').style.display=(mode==='edit')?'block':'none';}
 function fillEdit(r){
@@ -1833,5 +1840,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-<script src="portfolio-core.js?v=06393b189a7d7a01"></script><script src="enhancements.js?v=498abcea5020919a"></script><script src="cloud-sync.js?v=564c1e5b65ee0213"></script><script src="setup-assets.js?v=6d07f14a1148f83f"></script><script src="interface.js?v=a7334d1cb1d35e84"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=06393b189a7d7a01"></script><script src="enhancements.js?v=5cc5486c37354cc6"></script><script src="cloud-sync.js?v=564c1e5b65ee0213"></script><script src="setup-assets.js?v=bdf78f6500ef8936"></script><script src="interface.js?v=69a68f9760256f35"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>
