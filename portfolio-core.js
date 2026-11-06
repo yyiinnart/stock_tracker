@@ -150,7 +150,7 @@
     }
     return {audit:remaining,removed:entries.filter(e=>remove.has(e.id)).length,roots:roots.size};
   }
-  function comparisonRows(live,snapshot,snapshotDate=''){
+  function comparisonRows(live,snapshot,snapshotDate='',snapshotTarget=false){
     const groups=new Map(),positive=n=>typeof n==='number'&&Number.isFinite(n)&&n>0;
     const time=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:null;};
     for(const [side,list] of [['live',live],['old',snapshot]])for(const r of list||[]){
@@ -164,7 +164,7 @@
       const status=!held&&!unknownCurrent&&had?'sold':held&&!had&&!unknownOld?'new':'';
       const quoteTime=time(now?.quoteUpdatedAt),cutoff=time(old?.quoteUpdatedAt)??time(snapshotDate?snapshotDate+'T00:00:00':'');
       const retained=quoteTime!=null&&(cutoff==null||quoteTime>=cutoff);
-      const currentPrice=positive(now?.price)&&(held||unknownCurrent||retained)?now.price:null,oldPrice=positive(old?.price)?old.price:null;
+      const currentPrice=positive(now?.price)&&(snapshotTarget||held||unknownCurrent||retained)?now.price:null,oldPrice=positive(old?.price)?old.price:null;
       const candidate=currentPrice!=null&&oldPrice!=null?{old:oldPrice,now:currentPrice,delta:currentPrice-oldPrice,rate:(currentPrice-oldPrice)/oldPrice}:null,c=candidate&&Number.isFinite(candidate.delta)&&Number.isFinite(candidate.rate)?candidate:null;
       const profit=held&&c&&positive(now?.shares)&&positive(now?.fx)?c.delta*now.shares*now.fx:null,pnl=Number.isFinite(profit)?profit:null;
       return [{r,status,oldPrice,currentPrice,c,pnl,shares:now?now.shares??null:0,fx:now?.fx??null,quoteUpdatedAt:currentPrice!=null?now?.quoteUpdatedAt||'':null}];

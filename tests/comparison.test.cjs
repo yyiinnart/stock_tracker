@@ -1,5 +1,13 @@
 const test=require('node:test'),assert=require('node:assert/strict'),c=require('../portfolio-core.js');
 const row=(code,shares,price,extra={})=>({code,name:code,cls:'台股',shares,price,fx:1,...extra});
+test('快照區段採選定端股數匯率，較早快照的保存價格仍可比較',()=>{
+ const left=[row('A',5,120,{fx:32}),row('SOLD',0,60)],right=[row('A',10,100),row('SOLD',10,50)];
+ const rows=c.comparisonRows(left,right,'2026-11-04',true);
+ assert.equal(rows[0].pnl,3200);assert.equal(rows[0].c.rate,.2);
+ assert.equal(rows[1].currentPrice,60);assert.equal(rows[1].pnl,null);assert.equal(rows[1].status,'sold');
+ const reverse=c.comparisonRows(right,left,'2026-11-04',true);
+ assert.equal(reverse[0].c.delta,-20);assert.equal(reverse[0].pnl,-200);
+});
 test('聯集包含已賣出、新增持倉；缺少報價不以歷史價格補值',()=>{
  const rows=c.comparisonRows([row('HOLD',10,110),row('NEW',5,80),row('ZERO',0,60)], [row('HOLD',20,100),row('SOLD',10,50),row('ZERO',0,40)],'2026-11-04');
  assert.equal(rows.length,3);const sold=rows.find(r=>r.r.code==='SOLD');assert.equal(sold.status,'sold');assert.equal(sold.oldPrice,50);assert.equal(sold.currentPrice,null);assert.equal(sold.c,null);assert.equal(sold.pnl,null);

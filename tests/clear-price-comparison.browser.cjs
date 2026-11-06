@@ -8,7 +8,7 @@ try{browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrom
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());await page.goto(url);await page.getByText('▲ +15.00%',{exact:true}).waitFor();
 
 await page.evaluate(()=>{const q='2026-11-06T08:20:00Z';data=[{code:'AAA',name:'台股持倉',cls:'台股',shares:1000,price:120,fx:1,prin:50000,avg:50,quoteUpdatedAt:q},{code:'BBB',name:'下跌持倉',cls:'台股',shares:10,price:80,fx:1,prin:1000,avg:100,quoteUpdatedAt:q},{code:'ZERO',name:'清倉但仍有報價',cls:'台股',shares:0,price:60,fx:1,prin:0,avg:0,quoteUpdatedAt:'2026-11-05T08:00:00Z'},{code:'STALE',name:'清倉且報價過期',cls:'台股',shares:0,price:99,fx:1,prin:0,avg:0,quoteUpdatedAt:'2026-11-01T08:00:00Z'},{code:'NEW',name:'新買入標的',cls:'台股',shares:5,price:20,fx:1,prin:100,avg:20,quoteUpdatedAt:q}];archives={'261104':[{code:'AAA',cls:'台股',shares:100,price:100},{code:'BBB',cls:'台股',shares:10,price:100},{code:'ZERO',cls:'台股',shares:5,price:50},{code:'STALE',cls:'台股',shares:10,price:70},{code:'SOLD',name:'完全移除的已售持倉',cls:'台股',shares:8,price:30,fx:1}],'261103':[{code:'AAA',cls:'台股',shares:100,price:90}]};quoteUpdatedAt=q;render();setTab('analy');});
-assert.equal(await page.locator('.compare-row').count(),6);assert.match(await page.locator('#comparisonQuoteStamp').innerText(),/2026\/11\/06/);assert.match(await page.locator('.compare-heading').innerText(),/2026\/11\/04/);assert.match(await page.locator('#compareSortOrder').innerText(),/高到低/);
+assert.equal(await page.locator('.compare-row').count(),6);assert.equal(await page.locator('[data-code=AAA] .now small').count(),0);assert.match(await page.locator('.compare-heading').innerText(),/2026\/11\/04/);assert.match(await page.locator('#compareSortOrder').innerText(),/高到低/);
 const sold=page.locator('[data-code=SOLD]');assert.match(await sold.innerText(),/已賣出/);assert.equal(await sold.locator('.old .compare-price').innerText(),'30');assert.equal(await sold.locator('.now .compare-price').innerText(),'—');assert.match(await sold.locator('.comparison-pnl').innerText(),/^—/);
 assert.equal(await page.locator('[data-code=STALE] .now .compare-price').innerText(),'—');assert.equal(await page.locator('[data-code=ZERO] .now .compare-price').innerText(),'60');assert.match(await page.locator('[data-code=ZERO] .comparison-pnl').innerText(),/^—/);assert.match(await page.locator('[data-code=NEW]').innerText(),/新增持倉/);assert.equal(await page.locator('[data-code=NEW] .old .compare-price').innerText(),'—');
 assert.deepEqual(await page.locator('.compare-row').evaluateAll(els=>els.slice(0,3).map(e=>e.dataset.code)),['AAA','ZERO','BBB']);await page.locator('#compareSortOrder').click();assert.deepEqual(await page.locator('.compare-row').evaluateAll(els=>els.slice(0,3).map(e=>e.dataset.code)),['BBB','AAA','ZERO']);
@@ -17,6 +17,19 @@ await page.locator('#compareSort').selectOption('code');assert.match(await page.
 await page.locator('[data-direction=up]').click();assert.equal(await page.locator('.compare-row').count(),2);await page.locator('[data-direction=down]').click();assert.equal(await page.locator('.compare-row').count(),1);await page.locator('[data-direction=all]').click();
 for(const width of [1440,768,390]){await page.setViewportSize({width,height:900});assert.equal(await page.locator('#compareSort').isVisible(),true);await page.screenshot({path:path.join(root,'work/clear-price-comparison-'+width+'.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
 await page.locator('#compareSnapshotOlder').click();assert.equal(await page.locator('[data-code=SOLD]').count(),0);assert.match(await page.locator('[data-code=BBB]').innerText(),/新增持倉/);assert.match(await page.locator('.compare-row .old .label').first().textContent(),/2026\/11\/03/);
+await page.locator('#compareTargetDate').selectOption('261104');
+assert.equal(await page.locator('[data-code=AAA] .now .compare-price').innerText(),'100');
+assert.match(await page.locator('[data-code=AAA] .delta').innerText(),/11.11%/);
+assert.match(await page.locator('[data-code=AAA] .now .label').innerText(),/2026\/11\/04/);
+assert.match(await page.locator('[data-code=SOLD]').innerText(),/比較端新增持倉/);
+await page.evaluate(()=>refreshComparison());assert.equal(await page.locator('#compareTargetDate').inputValue(),'261104');
+await page.locator('#compareTargetSnapshotOlder').click();
+assert.equal(await page.locator('#compareTargetDate').inputValue(),'261103');
+assert.match(await page.locator('[data-code=AAA] .delta').innerText(),/持平/);
+await page.locator('#compareTargetSnapshotNewer').click();await page.locator('#compareTargetSnapshotNewer').click();
+assert.equal(await page.locator('#compareTargetDate').inputValue(),'live');
+for(const width of [1440,390]){await page.setViewportSize({width,height:900});await page.screenshot({path:path.join(root,'work/interval-comparison-'+width+'.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+await page.evaluate(()=>{archives={};refreshComparison();});assert.equal(await page.locator('#compareTargetDate').inputValue(),'live');assert.equal(await page.locator('#compareDate').isDisabled(),true);
 assert.deepEqual(errors,[]);console.log('PASS: explicit current/historical prices, sold/new states, missing quotes, quote timestamps, stable ascending/descending sorting, filters and responsive layout');
 }finally{if(browser)await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

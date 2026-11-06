@@ -29,23 +29,26 @@ function refreshComparison(){
   const keys=archLabels().filter(k=>/^\d{6}$/.test(k)).reverse();
   select.innerHTML=keys.length?keys.map(k=>`<option value="${k}">${fmtLabel(k)}</option>`).join(''):'<option value="">尚無快照</option>';
   if(keys.includes(previous))select.value=previous;
+  const target=document.getElementById('compareTargetDate'),targetPrevious=target.value;
+  target.innerHTML='<option value="live">目前報價</option>'+keys.map(k=>`<option value="${k}">${fmtLabel(k)}</option>`).join('');
+  target.value=keys.includes(targetPrevious)?targetPrevious:'live';
   select.disabled=!keys.length;showCompare();
 }
 showCompare=function(){
-  updateSnapshotNav('compareDate');
+  updateSnapshotNav('compareDate');updateSnapshotNav('compareTargetDate');
+  const targetKey=document.getElementById('compareTargetDate').value,targetLive=targetKey==='live',targetDate=targetLive?'目前報價':fmtLabel(targetKey),targetLabel=targetLive?'目前報價':targetDate+' 快照價',positionLabel=targetLive?'目前':targetDate;
   const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value,sort=document.getElementById('compareSort').value;
   document.getElementById('compareEmpty').hidden=!!key;
   document.querySelectorAll('[data-direction]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.direction===direction)));
   const order=document.getElementById('compareSortOrder'),orderLabel=sort==='code'?(comparisonAscending?'代碼遞增':'代碼遞減'):(comparisonAscending?'低到高':'高到低');
   order.textContent=(comparisonAscending?'↑ ':'↓ ')+orderLabel;order.setAttribute('aria-label','排序方向：'+orderLabel);
-  document.getElementById('comparisonQuoteStamp').textContent='目前報價最近取得時間：'+comparisonTime(quoteUpdatedAt)+'；各標的時間見下方。';
-  const date=fmtLabel(key),rows=PortfolioCore.sortComparisons(PortfolioCore.comparisonRows(data,archives[key]||[],/^\d{6}$/.test(key)?'20'+key.slice(0,2)+'-'+key.slice(2,4)+'-'+key.slice(4,6):''),sort,comparisonAscending).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0));
-  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading"><span>標的／狀態</span><span>${safeText(date)}<br>快照價</span><span>目前報價</span><span>價格漲跌幅</span><span>持倉相對損益 · TWD</span></div>`+rows.map(({r,c,pnl,status,oldPrice,currentPrice,shares,fx,quoteUpdatedAt:at})=>{
-    const missing=oldPrice==null&&currentPrice==null?'缺少兩端報價':oldPrice==null?'缺少快照價':'缺少目前報價';
-    return `<article class="compare-row" data-code="${safeText(r.code)}" data-status="${status}" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name||r.code)}</strong>${status?`<span class="comparison-position-status ${status}">${status==='sold'?'已賣出':'新增持倉'}</span>`:''}<small>${safeText(r.code)} · ${(fx??r.fx)>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${safeText(date)} 快照價</span><span class="compare-price">${numberText(oldPrice)}</span></div><div class="now"><span class="label">目前報價</span><span class="compare-price">${numberText(currentPrice)}</span><small class="comparison-price-time" title="${safeText(comparisonTime(at))}">${currentPrice==null?'目前無可用報價':comparisonTime(at,true)}</small></div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${c?changeLabel(c):'—'}<small>${c?'價差 '+signedNumber(c.delta):missing}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">持倉相對損益 · TWD</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>${status==='sold'?'已無目前持股':`目前 ${numberText(shares)} 股 · 匯率 ${numberText(fx)}`}</small></div></article>`;
+  document.getElementById('comparisonQuoteStamp').textContent=(targetLive?'':targetDate+' 快照 ↔ '+fmtLabel(key)+' 快照。')+' 漲跌以右側日期為基準。';
+  const date=fmtLabel(key),rows=PortfolioCore.sortComparisons(PortfolioCore.comparisonRows(targetLive?data:archives[targetKey]||[],archives[key]||[],/^\d{6}$/.test(key)?'20'+key.slice(0,2)+'-'+key.slice(2,4)+'-'+key.slice(4,6):'',!targetLive),sort,comparisonAscending).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0));
+  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading"><span>標的／狀態</span><span>${safeText(date)}<br>快照價</span><span>${safeText(targetLabel)}</span><span>價格漲跌幅</span><span>持倉相對損益 · TWD</span></div>`+rows.map(({r,c,pnl,status,oldPrice,currentPrice,shares,fx})=>{
+    const missing=oldPrice==null&&currentPrice==null?'缺少兩端報價':oldPrice==null?'缺少基準快照價':'缺少'+targetLabel;
+    return `<article class="compare-row" data-code="${safeText(r.code)}" data-status="${status}" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name||r.code)}</strong>${status?`<span class="comparison-position-status ${status}">${status==='sold'?(targetLive?'已賣出':'比較端已無持倉'):(targetLive?'新增持倉':'比較端新增持倉')}</span>`:''}<small>${safeText(r.code)} · ${(fx??r.fx)>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${safeText(date)} 快照價</span><span class="compare-price">${numberText(oldPrice)}</span></div><div class="now"><span class="label">${safeText(targetLabel)}</span><span class="compare-price">${numberText(currentPrice)}</span>${currentPrice==null?'<small class="comparison-price-time">此端無可用報價</small>':''}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${c?changeLabel(c):'—'}<small>${c?'價差 '+signedNumber(c.delta):missing}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">持倉相對損益 · TWD</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>${status==='sold'?'此端已無持股':`${positionLabel} ${numberText(shares)} 股 · 匯率 ${numberText(fx)}`}</small></div></article>`;
   }).join('');
 };
-function comparisonTime(value,short=false){const d=new Date(value||'');return Number.isFinite(+d)?d.toLocaleString('zh-TW',{year:!short||d.getFullYear()!==new Date().getFullYear()?'numeric':undefined,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):short?'取得時間未提供':'未提供';}
 function toggleComparisonOrder(){comparisonAscending=!comparisonAscending;showCompare();}
 
 function numberText(value){return value==null||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('zh-TW',{maximumFractionDigits:4});}
