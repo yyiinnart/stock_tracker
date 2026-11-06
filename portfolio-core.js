@@ -39,6 +39,25 @@
     }
     return out;
   }
-  root.PortfolioCore={validate,changes,undo};
+  function trade(row,{direction='buy',shares,price,fee=0,total=null}){
+    const fx=row.fx;
+    if(!['buy','sell'].includes(direction)||!Number.isFinite(shares)||shares<=0)throw Error('股數必須大於零');
+    if(!Number.isFinite(fee)||fee<0)throw Error('手續費必須為非負數');
+    if(!Number.isFinite(fx)||fx<=0)throw Error('請填有效匯率');
+    if(row.prin==null||!Number.isFinite(row.prin))throw Error('請先補上本金，再使用加減碼');
+    const feeTWD=fee*fx,sell=direction==='sell',fixed=!sell&&total!=null;
+    if(!fixed&&(!Number.isFinite(price)||price<=0))throw Error('請填有效成交價');
+    if(fixed&&(!Number.isFinite(total)||total<=0||feeTWD>=total))throw Error('含手續費總支出必須大於手續費');
+    if(sell&&shares>row.shares)throw Error('減碼股數不能超過目前持股');
+    const gross=fixed?total-feeTWD:shares*price*fx;
+    if(sell&&feeTWD>gross)throw Error('手續費不能超過成交金額');
+    const cost=sell?-row.prin*shares/row.shares:fixed?total:gross+feeTWD;
+    const nextShares=sell?row.shares-shares:row.shares+shares;
+    const principal=nextShares===0?0:row.prin+cost;
+    const result={shares:nextShares,prin:principal,avg:nextShares>0?principal/(fx*nextShares):0};
+    if(![gross,cost,result.shares,result.prin,result.avg].every(Number.isFinite))throw Error('交易數值超出範圍');
+    return {result,cost,gross,fee,feeTWD,currency:fx>1.5?'USD':'TWD',fx,price:fixed?gross/(shares*fx):price,...(sell?{proceeds:gross-feeTWD}:{total:cost})};
+  }
+  root.PortfolioCore={validate,changes,undo,trade};
   if(typeof module!=='undefined')module.exports=root.PortfolioCore;
 })(globalThis);

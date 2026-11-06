@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="faa29365f477da73">
+<meta name="app-version" content="e3f40c364ede7799">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=a56e98c459372164">
+<link rel="stylesheet" href="interface.css?v=7b42f991caa73e29">
 </head>
 <body>
 <div class="wrap">
@@ -439,11 +439,12 @@
       <!-- 一般 / DCA -->
       <div id="addNormal">
         <div class="frow">
-          <div class="fg"><label>本次買進股數 ＋</label><input id="a_shares" type="number" step="any" oninput="prev()" placeholder="例 123"></div>
+          <div class="fg"><label>股數</label><input id="a_shares" type="number" step="any" oninput="prev()" placeholder="例 123"></div>
           <div class="fg" id="fgPrice"><label>成交價（可留空）</label><input id="a_price" type="number" step="any" oninput="prev()"><div class="hint">留空＝用現價估算花費</div></div>
-          <div class="fg" id="fgCost" style="display:none"><label>本次花費 (TWD)</label><input id="a_cost" type="number" step="any" oninput="prev()"><div class="hint">定期定額固定金額，只要填股數</div></div>
+          <div class="fg" id="fgCost" style="display:none"><label>總支出（含手續費）· TWD</label><input id="a_cost" type="number" step="any" oninput="prev()"><div class="hint">固定總支出已含手續費，不重複加計</div></div>
         </div>
       </div>
+      <div class="fg" id="tradeFee"><label id="a_fee_label" for="a_fee">手續費 · TWD</label><input id="a_fee" type="number" min="0" step="any" value="0" oninput="prev()"></div>
       <div class="preview" id="addPrev"></div>
     </div>
     <div id="blockEdit" style="display:none">
@@ -480,8 +481,8 @@
     </div>
     <div class="modal-actions">
       <button class="btn danger" id="delBtn" onclick="delRow()">刪除</button>
-      <button class="btn" onclick="closeModal()">取消</button>
-      <button class="btn primary" id="saveBtn" onclick="saveRow()">儲存</button>
+      <button class="btn" title="取消" aria-label="取消" onclick="closeModal()">×</button>
+      <button class="btn primary" id="saveBtn" title="確認儲存" aria-label="確認儲存" onclick="saveRow()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></button>
     </div>
   </div>
 </div>
@@ -1059,7 +1060,7 @@ async function autoPullNewYield(code){
 function yldDel(){if(yldEditIdx>=0&&confirm('刪除這個標的及全部配息設定、月份、備註與實際入帳紀錄？此操作無法復原，庫存不受影響。')){YIELD.splice(yldEditIdx,1);save();closeYld();renderYield();}}
 document.getElementById('ovYld').addEventListener('click',e=>{if(e.target.id==='ovYld')closeYld();});
 
-const CLR={現金:'#c9ced8',美股:'#63c8d8',台股:'#83b6ff',債券:'#edcd8c',貸款:'#b5a6cf'};
+const CLR={現金:'#a5d6a7',美股:'#7cbeff',台股:'#f1c66e',債券:'#63d4c5',貸款:'#f2a1a8'};
 function renderCharts(){
   Object.values(charts).forEach(c=>c&&c.destroy());charts={};
   const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#b4b4b4',font:{size:11},padding:12,usePointStyle:true}}}};
@@ -1286,6 +1287,7 @@ function configAdd(r,plan){
   document.getElementById('segAdd').textContent=isSimple?'改餘額':'加碼（增量）';
   document.getElementById('addCash').style.display=isSimple?'block':'none';
   document.getElementById('addNormal').style.display=isSimple?'none':'block';
+  document.getElementById('tradeFee').hidden=isSimple;
   if(isSimple){
     const isLoan=r.cls==='貸款';
     document.getElementById('cashLabel').textContent=isLoan?'貸款餘額 (TWD)':'現金新餘額 (TWD)';
@@ -1831,5 +1833,5 @@ if(sheetUrl){
   },800);
 }
 </script>
-<script src="portfolio-core.js?v=e264ac0dbdb11767"></script><script src="enhancements.js?v=cdbd09abaf7af3a9"></script><script src="cloud-sync.js?v=564c1e5b65ee0213"></script><script src="setup-assets.js?v=7962cd806eb93a60"></script><script src="interface.js?v=7d1377937dbea658"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=06393b189a7d7a01"></script><script src="enhancements.js?v=498abcea5020919a"></script><script src="cloud-sync.js?v=564c1e5b65ee0213"></script><script src="setup-assets.js?v=6d07f14a1148f83f"></script><script src="interface.js?v=a7334d1cb1d35e84"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>

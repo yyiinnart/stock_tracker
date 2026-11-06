@@ -11,7 +11,7 @@ function openExtra(title,html){let d=document.getElementById('extraDialog');if(!
 function showCompare(){const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>({r,c:priceChange(r,key)})).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>(b.c?.rate??-Infinity)-(a.c?.rate??-Infinity));document.getElementById('compareResults').innerHTML=rows.map(({r,c})=>`<tr><td>${safeText(r.code)} ${safeText(r.name)}</td><td>${c?c.old:'—'}</td><td>${safeText(r.price)}</td><td>${c?c.delta.toFixed(2):'—'}</td><td style="color:${c?.delta>0?'#d33':c?.delta<0?'#198754':'inherit'}">${changeLabel(c)}</td></tr>`).join('')||'<tr><td colspan="5">無符合資料</td></tr>';}
 function openCompare(){const keys=archLabels().filter(k=>/^\d{6}$/.test(k)).reverse();openExtra('歷史價格比較',`<p>比較日期 <select id="compareDate" onchange="showCompare()">${keys.map(k=>`<option value="${k}">${fmtLabel(k)}</option>`).join('')}</select> <select id="compareDirection" onchange="showCompare()"><option value="all">全部（漲跌幅排序）</option><option value="up">上漲</option><option value="down">下跌</option></select></p><p>原幣價格比較，不含配息或分割調整。最近成功取得報價：${safeText(quoteUpdatedAt?new Date(quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}（部分標的可能未更新）</p><div style="overflow:auto"><table style="width:100%"><thead><tr><th>股票</th><th>歷史價格</th><th>目前價格</th><th>價差</th><th>漲跌幅</th></tr></thead><tbody id="compareResults"></tbody></table></div>`);showCompare();}
 const fieldNames={code:'代碼',name:'名稱',cls:'類別',shares:'股數／餘額',prin:'本金 TWD',avg:'均價',price:'現價',fx:'匯率',note:'備註',lastUp:'更新月份'};
-function auditDetails(a){if(!a.changes)return safeText(a.detail||'舊版紀錄');return a.changes.map(c=>{const b=c.before||{},n=c.after||{};return `<b>${safeText(n.code||b.code)} ${safeText(n.name||b.name)}</b><br>`+Object.keys(fieldNames).filter(k=>JSON.stringify(b[k])!==JSON.stringify(n[k])).map(k=>`${fieldNames[k]}：${safeText(b[k]??'—')} → ${safeText(n[k]??'—')}`).join('<br>');}).join('<hr>')+ (a.input?`<br>輸入方式：${safeText(a.input.source)}；股數 ${safeText(a.input.shares??'—')}；成交價 ${safeText(a.input.price??'—')}；金額 ${safeText(a.input.cost??'—')} TWD${a.input.proceeds!=null?`；估計賣出金額 ${safeText(a.input.proceeds)} TWD`:''}`:'');}
+function auditDetails(a){if(!a.changes)return safeText(a.detail||'舊版紀錄');return a.changes.map(c=>{const b=c.before||{},n=c.after||{};return `<b>${safeText(n.code||b.code)} ${safeText(n.name||b.name)}</b><br>`+Object.keys(fieldNames).filter(k=>JSON.stringify(b[k])!==JSON.stringify(n[k])).map(k=>`${fieldNames[k]}：${safeText(b[k]??'—')} → ${safeText(n[k]??'—')}`).join('<br>');}).join('<hr>')+ (a.input?`<br>輸入方式：${safeText(a.input.source)}；股數 ${safeText(a.input.shares??'—')}；成交價 ${safeText(a.input.price??'—')}；金額 ${safeText(a.input.cost??'—')} TWD${a.input.fee!=null?`；手續費 ${safeText(a.input.fee)} ${safeText(a.input.currency)}（${safeText(a.input.feeTWD)} TWD）；匯率 ${safeText(a.input.fx)}；成交金額 ${safeText(a.input.gross)} TWD`:''}${a.input.total!=null?`；總支出 ${safeText(a.input.total)} TWD`:''}${a.input.proceeds!=null?`；實收金額 ${safeText(a.input.proceeds)} TWD`:''}`:'');}
 function openAudit(id){const entries=audit.filter(a=>!id||a.changes?.some(c=>c.id===id));openExtra('操作紀錄',`<button class="mini-btn" onclick="undoLastTrade()">撤銷最近一次操作</button>${entries.slice().reverse().map(a=>`<section style="padding:14px 0;border-bottom:1px solid #aaa"><b>${safeText(a.at)} · ${safeText(a.label)}</b>${a.undone?'（已撤銷）':''}<p>${auditDetails(a)}</p></section>`).join('')||'<p>尚無操作紀錄</p>'}`);}
 const originalSaveRow=saveRow,originalDelRow=delRow;
 function recordAction(fn,label,input){ensureRowIds();const before=clone(data);fn();ensureRowIds();const changes=PortfolioCore.changes(before,data);if(!changes.length)return;audit.push({id:rowId(),createdAt:new Date().toISOString(),at:new Date().toLocaleString('zh-TW'),label,changes,input});save();persistNow();renderTable();showToast('已儲存，可在操作紀錄核對',undoLastTrade);}
@@ -22,17 +22,12 @@ saveRow=function(){
   try{
     if(mode==='add'&&editIdx>=0){const r=data[editIdx];
       if(['現金','貸款'].includes(r.cls)){if(numberInput('a_cash')<0)throw Error('請填非負數餘額');input={source:'直接更新餘額',cost:numberInput('a_cash')};}
-      else{const shares=numberInput('a_shares');if(shares<=0)throw Error('股數必須大於零');
-      if(document.getElementById('tradeDirection').value==='sell'){
-        if(shares>r.shares)throw Error('減碼股數不能超過目前持股');
-        if(r.prin==null||!Number.isFinite(r.prin))throw Error('請先補上本金，再使用減碼');
-        const price=numberInput('a_price',true)??r.price;
-        if(!(price>0)||!(r.fx>0))throw Error('請填有效成交價及匯率');
-        const removed=r.prin*shares/r.shares;
-        input={source:'減碼；本金按原持股比例扣除，非扣除售價',shares,price,cost:-removed,proceeds:shares*price*r.fx};
-        recordAction(()=>{r.shares-=shares;r.prin-=removed;r.avg=r.shares>0?r.prin/(r.fx*r.shares):0;save();closeModal();render();},'減碼',input);return;
+      else{
+        const trade=readTrade(r);
+        input={source:tradeSource(),shares:numberInput('a_shares'),...trade};
+        delete input.result;
+        recordAction(()=>{Object.assign(r,trade.result);if(document.getElementById('tradeDirection').value==='buy')r.lastUp=curMonth();save();closeModal();render();},document.getElementById('tradeDirection').value==='sell'?'減碼':'加碼',input);return;
       }
-const fixed=document.getElementById('fgCost').style.display!=='none';const entered=numberInput('a_price',true);const price=entered??r.price;const cost=fixed?numberInput('a_cost'):shares*price*r.fx;if(!(cost>0)||!Number.isFinite(cost)||!(r.fx>0))throw Error('請確認成交價、花費與匯率皆為有效正數');input={source:fixed?'固定投入金額':entered===null?'現價估算':'自行輸入成交價',shares,price:fixed?null:price,cost};}
     }else{
       const code=document.getElementById('f_code').value.trim(),cls=document.getElementById('f_cls').value;
       if(!code)throw Error('請填代碼');if(data.some((r,i)=>i!==editIdx&&r.code===code&&r.cls===cls))throw Error('已有同代碼及類別的部位，請編輯原部位');
@@ -49,16 +44,30 @@ const originalRenderTable=renderTable;
 renderTable=function(){originalRenderTable();if(!isLive())return;const key=latestBaseline();document.getElementById('hcount').textContent+=key?` · 較 ${fmtLabel(key)}`:' · 尚無快照';document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{const r=data[Number(tr.dataset.idx)];const history=document.createElement('button');history.className='mini-btn';history.textContent='◷';history.title='查看此部位操作紀錄';history.setAttribute('aria-label',r.code+' 操作紀錄');history.onclick=e=>{e.stopPropagation();openAudit(r._id);};tr.cells[0].append(history);if(['現金','貸款'].includes(r.cls))return;const c=priceChange(r,key),b=document.createElement('button');b.className='mini-btn';b.style.cssText='display:block;margin-top:5px';b.style.color=c?.delta>0?'#d33':c?.delta<0?'#198754':'inherit';b.textContent=changeLabel(c);b.title=c?`${fmtLabel(key)}：${c.old} → ${c.now}，價差 ${c.delta.toFixed(2)}\n報價取得時間：${r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無紀錄'}`:'該快照無有效價格';b.onclick=e=>{e.stopPropagation();alert(b.title);};tr.cells[0].append(b);});};
 
 
-// Sell reduces carrying principal proportionally; estimated proceeds are kept in the audit.
-const directionBox=document.createElement('div');directionBox.className='fg';directionBox.innerHTML='<label>操作</label><select id="tradeDirection" onchange="updateTradeDirection()"><option value="buy">加碼</option><option value="sell">減碼</option></select>';
+// Preview and save share the same fee-inclusive calculation.
+const directionBox=document.createElement('input');directionBox.type='hidden';directionBox.id='tradeDirection';directionBox.value='buy';
 document.getElementById('addNormal').prepend(directionBox);
+function tradeSource(){return document.getElementById('tradeDirection').value==='sell'?'減碼；本金按原持股比例扣除':document.getElementById('fgCost').style.display!=='none'?'固定投入金額（含手續費）':document.getElementById('a_price').value.trim()===''?'現價估算':'自行輸入成交價';}
+function readTrade(r){return PortfolioCore.trade(r,{direction:document.getElementById('tradeDirection').value,shares:numberInput('a_shares'),price:numberInput('a_price',true)??r.price,fee:numberInput('a_fee',true)??0,total:document.getElementById('fgCost').style.display!=='none'?numberInput('a_cost'):null});}
 const basePrev=prev;
 prev=function(){
-  if(editIdx<0||document.getElementById('tradeDirection').value!=='sell'||['現金','貸款'].includes(data[editIdx].cls)){basePrev();return;}
-  const r=data[editIdx],n=Number(document.getElementById('a_shares').value),price=Number(document.getElementById('a_price').value||r.price);
-  const remaining=r.shares-n,principal=r.shares>0?(r.prin||0)*remaining/r.shares:0;
-  document.getElementById('addPrev').innerHTML=`股數：${fmt(r.shares)} → ${fmt(remaining)}<br>本金：${fmt(r.prin)} → ${fmt(principal)} TWD<br>估計賣出金額：${fmt(n*price*(r.fx||1))} TWD<br><small>本金按持股比例扣除；賣出金額僅供核對，未自動加入現金。</small>`;
+  if(editIdx<0||['現金','貸款'].includes(data[editIdx].cls)){basePrev();return;}
+  const r=data[editIdx],pv=document.getElementById('addPrev'),sell=document.getElementById('tradeDirection').value==='sell';
+  if(!document.getElementById('a_shares').value){pv.textContent='填入股數後預覽';return;}
+  try{
+    const t=readTrade(r),n=t.result;
+    const line=(label,value)=>`<div class="trade-preview-row"><span>${label}</span><strong>${value}</strong></div>`;
+    pv.innerHTML=line('成交金額',numberText(t.gross)+' TWD')+line('手續費',numberText(t.fee)+' '+t.currency+(t.currency==='USD'?' ≈ '+numberText(t.feeTWD)+' TWD':''))+line(sell?'實收金額':'總支出',numberText(sell?t.proceeds:t.total)+' TWD')+line('股數',numberText(r.shares)+' → '+numberText(n.shares))+line('本金',numberText(r.prin)+' → '+numberText(n.prin)+' TWD')+line('平均成本',numberText(r.avg)+' → '+numberText(n.avg))+(tradeSource()==='現價估算'?'<small>以現價估算</small>':'')+(sell?'<small>本金按持股比例扣除；實收未自動加入現金。</small>':'');
+  }catch(e){pv.textContent=e.message;}
 };
-function updateTradeDirection(){const sell=document.getElementById('tradeDirection').value==='sell';document.querySelector('#a_shares').previousElementSibling.textContent=sell?'本次賣出股數':'本次買進股數';if(sell){document.getElementById('fgCost').style.display='none';document.getElementById('fgPrice').style.display='block';}prev();}
+function updateTradeDirection(){
+  if(editIdx<0)return;const r=data[editIdx],sell=document.getElementById('tradeDirection').value==='sell',simple=['現金','貸款'].includes(r.cls);
+  document.querySelector('#a_shares').previousElementSibling.textContent='股數';
+  document.getElementById('mTitle').textContent=(simple?'':sell?'− ':'＋ ')+r.code+' '+r.name;
+  document.getElementById('a_fee_label').textContent='手續費 · '+(r.fx>1.5?'USD':'TWD');
+  if(sell){document.getElementById('fgCost').style.display='none';document.getElementById('fgPrice').style.display='block';}prev();
+}
 const baseOpenEdit=openEdit;
-openEdit=function(i){document.getElementById('tradeDirection').value='buy';baseOpenEdit(i);updateTradeDirection();};
+openEdit=function(i){document.getElementById('tradeDirection').value='buy';document.getElementById('a_fee').value='0';baseOpenEdit(i);document.getElementById('modeSeg').style.display='none';document.getElementById('delBtn').style.display='none';updateTradeDirection();};
+function openTrade(i,direction='buy'){openEdit(i);document.getElementById('tradeDirection').value=direction;updateTradeDirection();}
+function openPositionEditor(i){openEdit(i);setMode('edit');document.getElementById('mTitle').textContent='編輯 · '+data[i].code;}

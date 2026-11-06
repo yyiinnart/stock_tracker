@@ -49,7 +49,8 @@ renderTable=function(){
   document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{
     const i=Number(tr.dataset.idx),r=arr[i],simple=['現金','貸款'].includes(r.cls),c=isLive()&&!simple?priceChange(r,key):null;
     tr.style.setProperty('--category',CLR[r.cls]||'#c9ced8');tr.removeAttribute('onclick');tr.classList.remove('clickable');
-    tr.cells[0].innerHTML=`<button class="position-name" onclick="${isLive()?'openEdit':'showPosition'}(${i})" aria-label="${safeText(r.code)} ${isLive()?'加減碼或編輯':'查看歷史部位'}"><span class="code">${safeText(r.name||r.code)}</span><small>${safeText(r.code)} · ${safeText(r.cls)}${isLive()?' · '+(simple?'更新餘額':'加減碼'):''}</small></button><div class="position-actions"><button class="text-btn" onclick="showPosition(${i})">詳情</button>${isLive()?`<button class="text-btn" onclick="openAuditForRow(${i})">紀錄</button>`:''}</div>`;
+    tr.cells[0].innerHTML=`<button class="position-name" onclick="showPosition(${i})" aria-label="${safeText(r.code)} 詳情"><span class="code">${safeText(r.name||r.code)}</span><small><span class="position-code">${safeText(r.code)}</span><span class="category-label">${safeText(r.cls)}</span></small></button>${isLive()?`<div class="position-actions">${simple?iconAction('edit','更新餘額',`openEdit(${i})`):iconAction('plus','加碼',`openTrade(${i},'buy')`)+iconAction('minus','減碼',`openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`;
+
     tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">現價 · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
     tr.cells[4].insertAdjacentHTML('afterbegin',`<span class="cell-label">${r.cls==='貸款'?'剩餘欠款':'市值'} · TWD</span>`);
     tr.cells[8].insertAdjacentHTML('afterbegin','<span class="cell-label">相對成本損益</span>');
@@ -60,7 +61,7 @@ renderTable=function(){
   if(tab==='records')renderAuditPage();
   if(tab==='analy'&&analysisSection==='compare')refreshComparison();
 };
-function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name,`<p>現價 ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<button class="btn primary" onclick="document.getElementById('extraDialog').close();openEdit(${i})">${['現金','貸款'].includes(r.cls)?'更新餘額':'加減碼或編輯'}</button>`:''}`);}
+function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name,`<p>現價 ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<div class="detail-actions">${['現金','貸款'].includes(r.cls)?iconAction('edit','更新餘額',`closeExtra();openEdit(${i})`):iconAction('plus','加碼',`closeExtra();openTrade(${i},'buy')`)+iconAction('minus','減碼',`closeExtra();openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`);}
 function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
@@ -180,3 +181,17 @@ function comparisonPnl(r,c){
   const shares=Number(r.shares),fx=Number(r.fx),value=c.delta*shares*fx;
   return Number.isFinite(shares)&&shares>=0&&Number.isFinite(fx)&&fx>0&&Number.isFinite(value)?value:null;
 }
+
+// A single outline icon family; labels stay available to assistive technology and tooltips.
+function actionIcon(name){const paths={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z M13 7l4 4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.more}</svg>`;}
+function iconAction(icon,label,handler){return `<button type="button" class="icon-action" title="${label}" aria-label="${label}" onclick="${handler}">${actionIcon(icon)}</button>`;}
+function closeExtra(){document.getElementById('extraDialog')?.close();}
+function positionMore(i){if(!isLive()||!data[i])return;openExtra(data[i].code+' '+data[i].name,`<div class="position-more-actions">${iconAction('edit','編輯部位',`closeExtra();openPositionEditor(${i})`)}${iconAction('clock','操作紀錄',`closeExtra();openAuditForRow(${i})`)}${iconAction('trash','刪除部位',`deletePosition(${i})`)}</div>`);}
+function deletePosition(i){if(!isLive()||!data[i])return;editIdx=i;delRow();closeExtra();}
+// Touch users can hold an icon to read its label without triggering its action.
+let iconHoldTimer,heldIcon=null;
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('.icon-action');if(!b||e.pointerType!=='touch')return;iconHoldTimer=setTimeout(()=>{heldIcon=b;let tip=document.getElementById('iconHint');if(!tip){tip=document.createElement('div');tip.id='iconHint';tip.setAttribute('role','status');document.body.append(tip);}tip.textContent=b.getAttribute('aria-label');const r=b.getBoundingClientRect();tip.style.left=Math.max(8,Math.min(innerWidth-140,r.left))+'px';tip.style.top=Math.max(8,r.top-38)+'px';tip.hidden=false;},500);});
+for(const event of ['pointerup','pointercancel','pointermove'])document.addEventListener(event,()=>clearTimeout(iconHoldTimer));
+document.addEventListener('click',e=>{if(heldIcon){const b=e.target.closest('.icon-action');if(b===heldIcon){e.preventDefault();e.stopImmediatePropagation();}heldIcon=null;}const tip=document.getElementById('iconHint');if(tip)tip.hidden=true;},true);
+const baseExtra=openExtra;
+openExtra=function(title,html){baseExtra(title,html);const b=document.querySelector('#extraDialog > button');b.innerHTML=actionIcon('close');b.className='icon-action';b.title='關閉';b.setAttribute('aria-label','關閉');};
