@@ -24,7 +24,7 @@ jobs:
       - run: node build-cloud.cjs
       - run: |
           mkdir -p public/licenses
-          cp index.html interface.css interface.js portfolio-core.js enhancements.js cloud-sync.js setup-assets.js version.json public/
+          cp index.html *.css *.js version.json favicon.svg public/
           cp licenses/* public/licenses/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
