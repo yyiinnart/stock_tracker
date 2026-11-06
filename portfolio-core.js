@@ -1,6 +1,6 @@
 /* Shared data rules, also exercised by node tests. */
 (function(root){
-  const copy=x=>JSON.parse(JSON.stringify(x));
+  const copy=x=>x===undefined?undefined:JSON.parse(JSON.stringify(x));
   const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
   function validate(o){
     if(!o||!Array.isArray(o.live))throw Error('資料缺少持倉清單');
@@ -58,6 +58,74 @@
     if(![gross,cost,result.shares,result.prin,result.avg].every(Number.isFinite))throw Error('交易數值超出範圍');
     return {result,cost,gross,fee,feeTWD,currency:fx>1.5?'USD':'TWD',fx,price:fixed?gross/(shares*fx):price,...(sell?{proceeds:gross-feeTWD}:{total:cost})};
   }
-  root.PortfolioCore={validate,changes,undo,trade};
+  function validDate(value){
+    if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+    const d=new Date(value+'T12:00:00Z');return Number.isFinite(+d)&&d.toISOString().slice(0,10)===value;
+  }
+  function tradeInput(entry){
+    const i=entry.input,c=entry.changes?.[0];
+    if(!i||!c?.before||!c.after)return null;
+    if(i.kind!=='trade'&&(!Number.isFinite(i.shares)||i.shares<=0))return null;
+    const direction=i.direction||(entry.label==='減碼'||i.source?.startsWith('減碼')?'sell':entry.label?.startsWith('加碼')?'buy':null);
+    if(!direction)return null;
+    return {direction,shares:i.shares,price:i.price,fee:i.fee??0,fx:i.fx??c.before.fx,fixed:i.fixed??(i.price==null||i.source?.includes('固定')),total:i.total??i.cost,tradeDate:i.tradeDate||entry.tradeDate||null};
+  }
+  // Rebuild only the affected position. Original changes remain available for audit.
+  function revise(rows,history,index,replacement=null){
+    const entries=copy(history),target=entries[index];
+    if(!target||target.undone||target.undoOf||target.revisionOf||target.changes?.length!==1)throw Error('這筆紀錄無法修改或撤銷');
+    if(replacement&&!tradeInput(target))throw Error('這筆舊紀錄缺少交易明細，無法直接修改交易');
+    const id=target.changes[0].id,related=entries.filter(e=>e.changes?.some(c=>c.id===id)||e.subjectId===id);
+    const source=related.filter(e=>!e.undoOf&&!e.revisionOf&&e.changes?.some(c=>c.id===id));
+    const last=related.at(-1),expected=last.settledAfter!==undefined?last.settledAfter:last.changes?.find(c=>c.id===id)?.after;
+    const current=rows.find(r=>r._id===id)||null;
+    const near=(a,b)=>typeof a==='number'&&typeof b==='number'?Math.abs(a-b)<=1e-7+Number.EPSILON*16*Math.max(Math.abs(a),Math.abs(b)):equal(a,b);
+    if(!!current!==!!expected)throw Error('部位已有未記錄的新增或刪除，請先核對資料');
+    for(const k of ['shares','prin','avg','code','name','cls','note','lastUp'])if(current&&!near(current[k],expected[k]))throw Error('部位已有未記錄的後續變更，請先核對資料');
+    const controlled=new Set();
+    for(const e of source){const c=(e.originalChanges||e.changes).find(c=>c.id===id);for(const k of new Set([...Object.keys(c.before||{}),...Object.keys(c.after||{})]))if(!equal(c.before?.[k],c.after?.[k]))controlled.add(k);}
+    if(replacement){if(!target.originalInput)target.originalInput=copy(target.input);if(!validDate(replacement.tradeDate))throw Error('請填寫有效交易日期');target.input={...target.input,...replacement};target.tradeDate=replacement.tradeDate;}
+    else target.undone=true;
+    let state=copy((source[0].originalChanges||source[0].changes).find(c=>c.id===id).before),block=[];
+    const apply=e=>{
+      const c=e.changes.find(c=>c.id===id),original=(e.originalChanges||e.changes).find(c=>c.id===id),before=state?copy(state):null;
+      if(!e.originalChanges)e.originalChanges=copy(e.changes);
+      const t=tradeInput(e);
+      if(t){
+        if(!state)throw Error('交易所需部位已不存在，無法重算');
+        const calc=trade({...state,fx:t.fx},{...t,total:t.fixed?t.total:null});
+        state={...state,...calc.result};
+        if(t.direction==='buy')state.lastUp=t.tradeDate?t.tradeDate.slice(0,7):c.after.lastUp;
+        if(!e.originalInput)e.originalInput=copy(e.input);
+        e.input={...e.input,...calc};delete e.input.result;
+        controlled.add('shares');controlled.add('prin');controlled.add('avg');controlled.add('lastUp');
+      }else if(!original.before){if(state)throw Error('部位已存在，無法重算新增紀錄');state=copy(original.after);}
+      else if(!original.after){if(!state)throw Error('部位已刪除，無法重算');state=null;}
+      else{
+        if(!state)throw Error('後續編輯需要此部位，請先處理後續紀錄');
+        for(const k of new Set([...Object.keys(original.before),...Object.keys(original.after)]))if(!equal(original.before[k],original.after[k])){if(k in original.after)state[k]=copy(original.after[k]);else delete state[k];}
+      }
+      c.before=before;c.after=state?copy(state):null;
+    };
+    const flush=()=>{
+      const key=e=>{const day=tradeInput(e).tradeDate;if(day)return day;const d=new Date(e.createdAt||'');if(Number.isFinite(+d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const m=(e.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';};
+      block.sort((a,b)=>key(a).localeCompare(key(b)));
+      block.forEach(apply);block=[];
+    };
+    for(const e of source){if(e.undone)continue;if(tradeInput(e))block.push(e);else{flush();apply(e);}}
+    flush();
+    const out=copy(rows),pos=out.findIndex(r=>r._id===id);
+    if(!state){if(pos>=0)out.splice(pos,1);}
+    else if(pos<0){if(out.some(r=>r.code===state.code&&r.cls===state.cls))throw Error('同代碼部位已重新建立，無法還原');out.splice(Math.max(0,target.changes[0].index),0,state);}
+    else{
+      for(const k of controlled){
+        if(k==='price'||k==='fx'||k==='quoteUpdatedAt'){if(!near(current[k],expected[k]))continue;}
+        if(k in state)out[pos][k]=copy(state[k]);else delete out[pos][k];
+      }
+    }
+    const tail=related.at(-1);tail.settledAfter=out.find(r=>r._id===id)||null;
+    return {rows:out,audit:entries,subjectId:id};
+  }
+  root.PortfolioCore={validate,changes,undo,trade,validDate,tradeInput,revise};
   if(typeof module!=='undefined')module.exports=root.PortfolioCore;
 })(globalThis);

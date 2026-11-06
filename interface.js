@@ -33,10 +33,10 @@ function refreshComparison(){
 showCompare=function(){
   const key=document.getElementById('compareDate').value,direction=document.getElementById('compareDirection').value;
   const empty=document.getElementById('compareEmpty');empty.hidden=!!key;
-  empty.textContent='還沒有歷史快照。先儲存今日快照，下次更新價格後就能看變化。';
+  document.querySelectorAll('[data-direction]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.direction===direction)));
   const sort=document.getElementById('compareSort').value;
-  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>{const c=priceChange(r,key);return {r,c,pnl:comparisonPnl(r,c)};}).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>{const av=sort==='rate'?a.c?.rate:a.pnl,bv=sort==='rate'?b.c?.rate:b.pnl;if(av==null)return bv==null?0:1;if(bv==null)return -1;return sort==='pnlAsc'?av-bv:bv-av;});
-  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading" aria-hidden="true"><span>標的</span><span>歷史價格</span><span>目前價格</span><span>價差</span><span>漲跌幅</span><span>台幣相對損益</span></div>`+rows.map(({r,c,pnl})=>`<article class="compare-row" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="difference">${c?signedNumber(c.delta):'—'}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">台幣相對損益</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>庫存 ${numberText(r.shares)} 股 · 匯率 ${numberText(r.fx)}</small></div></article>`).join('');
+  const rows=data.filter(r=>!['現金','貸款'].includes(r.cls)).map(r=>{const c=priceChange(r,key);return {r,c,pnl:comparisonPnl(r,c)};}).filter(x=>direction==='all'||x.c&&(direction==='up'?x.c.delta>0:x.c.delta<0)).sort((a,b)=>{const av=sort.startsWith('rate')?a.c?.rate:a.pnl,bv=sort.startsWith('rate')?b.c?.rate:b.pnl;if(av==null)return bv==null?0:1;if(bv==null)return -1;return sort.endsWith('Asc')?av-bv:bv-av;});
+  document.getElementById('compareResults').innerHTML=!key?'':!rows.length?'<p class="empty-note">無符合資料</p>':`<div class="compare-heading"><span>標的</span><span>快照價</span><span>現價</span>${compareSortHeading('rate','漲跌幅',sort)}${compareSortHeading('pnl','台幣相對損益',sort)}</div>`+rows.map(({r,c,pnl})=>`<article class="compare-row" style="--category:${CLR[r.cls]||'#c9ced8'}"><div class="compare-identity"><strong>${safeText(r.name)}</strong><small>${safeText(r.code)} · ${r.fx>1.5?'USD':'TWD'}</small></div><div class="old"><span class="label">${fmtLabel(key)}</span>${c?numberText(c.old):'—'}</div><div class="now"><span class="label">目前價格</span>${numberText(r.price)}</div><div class="delta ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}<small>${c?'價差 '+signedNumber(c.delta):'該快照沒有有效價格'}</small></div><div class="comparison-pnl ${pnl>0?'pos':pnl<0?'neg':''}"><span class="label">台幣相對損益</span>${pnl==null?'—':signedNumber(Math.round(pnl))+' 元'}<small>庫存 ${numberText(r.shares)} 股 · 匯率 ${numberText(r.fx)}</small></div></article>`).join('');
 };
 function numberText(value){return value==null||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('zh-TW',{maximumFractionDigits:4});}
 function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value*10000)/10000);}
@@ -46,6 +46,7 @@ renderTable=function(){
   document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):' · 歷史唯讀'}`;
   document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'快照日期 '+fmtLabel(viewKey);
   document.getElementById('addPositionBtn').disabled=!isLive();
+  document.getElementById('archiveBtn').disabled=!isLive();document.getElementById('reorderBtn').disabled=!isLive();
   document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{
     const i=Number(tr.dataset.idx),r=arr[i],simple=['現金','貸款'].includes(r.cls),c=isLive()&&!simple?priceChange(r,key):null;
     tr.style.setProperty('--category',CLR[r.cls]||'#c9ced8');tr.removeAttribute('onclick');tr.classList.remove('clickable');
@@ -55,7 +56,7 @@ renderTable=function(){
     tr.cells[4].insertAdjacentHTML('afterbegin',`<span class="cell-label">${r.cls==='貸款'?'剩餘欠款':'市值'} · TWD</span>`);
     tr.cells[8].insertAdjacentHTML('afterbegin','<span class="cell-label">相對成本損益</span>');
     const profit=pnl(r);if(profit==null||profit===0){tr.cells[8].className='';tr.cells[9].className='';}
-    if(reorderMode&&isLive()){tr.cells[0].insertAdjacentHTML('afterbegin','<span class="drag-handle">↕ 拖曳排列</span>');}
+    if(reorderMode&&isLive()){tr.cells[0].insertAdjacentHTML('afterbegin','<span class="drag-handle" title="拖曳排列" aria-label="拖曳排列">↕</span>');}
   });
   if(!arr.length){document.getElementById('hbody').innerHTML='<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>';}
   if(tab==='records')renderAuditPage();
@@ -65,8 +66,16 @@ function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r
 function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
-function auditDay(a){if(a.createdAt){const d=new Date(a.createdAt);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}const m=(a.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
-function renderAuditPage(){const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;const entries=audit.filter(a=>(!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day));document.getElementById('auditList').innerHTML=entries.length?entries.slice().reverse().map((a,i)=>`<details class="audit-entry" ${i===0?'open':''}><summary><strong>${safeText(a.label)}${a.undone?' · 已撤銷':''}</strong><span>${safeText(a.at)}</span></summary><p>${auditDetails(a)}</p></details>`).join(''):'<p class="empty-note">'+(audit.length?'沒有符合的操作紀錄。':'尚無操作紀錄。下次加減碼或編輯後，會在這裡保留修改前後的內容。')+'</p>';}
+function auditDay(a){const day=a.input?.tradeDate||a.tradeDate;if(PortfolioCore.validDate(day))return day;if(a.createdAt){const d=new Date(a.createdAt);if(!isNaN(d))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}const m=(a.at||'').match(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';}
+function renderAuditPage(){
+  const q=document.getElementById('auditSearch').value.trim().toLowerCase(),day=document.getElementById('auditDate').value;
+  const entries=audit.map((a,index)=>({a,index})).filter(({a})=>(!q||JSON.stringify(a).toLowerCase().includes(q))&&(!day||auditDay(a)===day)).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
+  document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index},i)=>{
+    const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a);
+    return `<details class="audit-entry" data-audit-index="${index}" ${i===0?'open':''}><summary><strong>${safeText(a.label)}${a.undone?' · 已撤銷':a.revisedAt?' · 已修改':''}</strong><span class="audit-date">${safeText((a.input?.tradeDate||a.tradeDate)?auditDay(a):'登錄日 '+auditDay(a))}<small>登錄 ${safeText(a.at)}</small></span></summary>${actionable?`<div class="audit-entry-actions">${editable?iconAction('edit','修改交易',`editAuditTrade(${index})`):''}${iconAction('undo','撤銷這筆',`undoAuditEntry(${index})`)}</div>`:''}<p>${auditDetails(a)}</p></details>`;
+  }).join(''):'<p class="empty-note">'+(audit.length?'沒有符合的操作紀錄。':'尚無操作紀錄。下次加減碼或編輯後，會在這裡保留修改前後的內容。')+'</p>';
+}
+
 function renderSettings(){document.getElementById('quoteConnectionState').textContent=sheetUrl?'已設定報價來源':'尚未設定報價來源';renderCloudSetup();}
 function chooseSetup(value){setupChoice=value;renderCloudSetup();}
 function savedPrivateUrl(){try{return localStorage.getItem('portfolio_private_url')||'';}catch{return '';}}
@@ -80,7 +89,7 @@ function renderCloudSetup(){
  <li><h3>建立專用 Google 專案</h3><p>不要覆蓋接案追蹤器或報價服務。只需要 Code.gs，不需要新增 Index.html。</p><a class="btn" href="https://script.google.com/home/start" target="_blank" rel="noopener noreferrer">開啟 Google Apps Script</a><div class="code-copy"><button class="btn" onclick="copySetupFile('server')">複製服務程式</button><button class="text-btn" onclick="downloadSetupFile('server')">下載 Code.gs</button></div><p id="setupCopyStatus" class="status-note" role="status"></p><details class="instructions"><summary>無法複製時，展開程式內容</summary><select id="setupCodeType" onchange="showSetupCode()" aria-label="部署檔案"><option value="server">Code.gs</option></select><textarea id="setupCodePreview" readonly aria-label="部署程式內容" onclick="this.select()"></textarea></details></li>
  <li><h3>設定同步驗證碼</h3><button class="btn" onclick="generateSyncToken()">產生新驗證碼</button><input id="generatedSyncToken" readonly aria-label="新產生的同步驗證碼" onclick="this.select()"><p>複製並自行保存。到 Google 專案「專案設定 → 指令碼屬性」新增 SYNC_TOKEN，值貼上驗證碼並儲存。不要把驗證碼貼進程式碼。</p></li>
  <li><h3>部署同步服務</h3><p>「部署 → 新增部署 → 網頁應用程式」，執行身分選「我」，誰可以存取選「任何人」。完成 Google 授權，再複製 /exec 網址填到上方。資料夾不需公開分享；服務會驗證每次請求的驗證碼。</p></li>
- <li><h3>連接電腦與手機</h3><p>電腦在上方測試連線後，選「建立我的雲端資料」。手機開啟同一個 GitHub 網址，填入相同服務網址與驗證碼，再選「載入我的雲端資料」。之後開啟、返回頁面及修改後會自動同步。</p></li></ol></details>`;
+ <li><h3>連接電腦與手機</h3><p>電腦在上方測試連線後，選「建立我的雲端資料」。手機開啟同一個 GitHub 網址，填入相同服務網址與驗證碼，再選「載入我的雲端資料」。之後只在實際編修或更新報價後同步。切換分頁不會同步；要載入另一裝置的最新資料，可按「立即同步」。</p></li></ol></details>`;
  showSetupCode();
 }
 function generateSyncToken(){const bytes=crypto.getRandomValues(new Uint8Array(32));const token=[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');document.getElementById('generatedSyncToken').value=token;document.getElementById('syncServiceToken').value=token;}
@@ -183,7 +192,7 @@ function comparisonPnl(r,c){
 }
 
 // A single outline icon family; labels stay available to assistive technology and tooltips.
-function actionIcon(name){const paths={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z M13 7l4 4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.more}</svg>`;}
+function actionIcon(name){const paths={undo:'<path d="M9 5 3 11l6 6M3 11h11a6 6 0 0 1 6 6v2"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-1l2 3M4 15l2 3a7 7 0 0 0 12-1"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3Z"/><circle cx="12" cy="13" r="4"/>',sort:'<path d="M8 3v18m-4-4 4 4 4-4M16 21V3m-4 4 4-4 4 4"/>',check:'<path d="m5 12 4 4L19 6"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/>',folder:'<path d="M3 6h7l2 3h9v11H3Z"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',edit:'<path d="m4 16-1 5 5-1L20 8l-4-4Z M13 7l4 4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>'};return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]||paths.more}</svg>`;}
 function iconAction(icon,label,handler){return `<button type="button" class="icon-action" title="${label}" aria-label="${label}" onclick="${handler}">${actionIcon(icon)}</button>`;}
 function closeExtra(){document.getElementById('extraDialog')?.close();}
 function positionMore(i){if(!isLive()||!data[i])return;closeExtra();openPositionEditor(i);}
@@ -195,3 +204,31 @@ for(const event of ['pointerup','pointercancel','pointermove'])document.addEvent
 document.addEventListener('click',e=>{if(heldIcon){const b=e.target.closest('.icon-action');if(b===heldIcon){e.preventDefault();e.stopImmediatePropagation();}heldIcon=null;}const tip=document.getElementById('iconHint');if(tip)tip.hidden=true;},true);
 const baseExtra=openExtra;
 openExtra=function(title,html){baseExtra(title,html);const b=document.querySelector('#extraDialog > button');b.innerHTML=actionIcon('close');b.className='icon-action';b.title='關閉';b.setAttribute('aria-label','關閉');};
+
+function setCompareDirection(value){document.getElementById('compareDirection').value=value;showCompare();}
+function toggleComparisonHelp(button){const help=document.getElementById('comparisonHelp');help.hidden=!help.hidden;button.setAttribute('aria-expanded',String(!help.hidden));}
+function compareSortHeading(metric,label,sort){const active=metric==='rate'?sort.startsWith('rate'):sort.startsWith('pnl');const ascending=sort.endsWith('Asc');return `<span><button class="compare-sort" data-sort="${metric}" aria-label="${label}排序${active?(ascending?'，目前由低到高':'，目前由高到低'):''}" onclick="sortComparison('${metric}')">${label}${active?` <span aria-hidden="true">${ascending?'↑':'↓'}</span>`:''}</button></span>`;}
+function sortComparison(metric){const select=document.getElementById('compareSort');select.value=metric==='rate'?(select.value==='rate'?'rateAsc':'rate'):(select.value==='pnlDesc'?'pnlAsc':'pnlDesc');showCompare();}
+function setQuoteButton(label,busy=false,done=false){const b=document.getElementById('syncBtn');b.innerHTML=actionIcon(done?'check':'refresh');b.title=label;b.setAttribute('aria-label',label);b.setAttribute('aria-busy',String(busy));}
+document.querySelectorAll('[data-icon]').forEach(b=>b.innerHTML=actionIcon(b.dataset.icon));
+
+let auditEditId=null;
+function editAuditTrade(index){
+  const entry=audit[index],t=PortfolioCore.tradeInput(entry);if(!t||entry.undone)return;
+  auditEditId=entry.id;const c=entry.changes[0],code=c.after?.code||c.before.code;
+  openExtra((t.direction==='sell'?'− ':'＋ ')+code+' · 修改交易',`<div class="audit-trade-form"><div class="frow"><label>交易日期<input id="txDate" type="date" value="${safeText(t.tradeDate||auditDay(entry))}" oninput="previewAuditTrade()"></label><label>股數<input id="txShares" type="number" step="any" min="0" value="${safeText(t.shares)}" oninput="previewAuditTrade()"></label></div><div class="frow"><label>${t.fixed?'總支出（含手續費）· TWD':'成交價'}<input id="txPrice" type="number" step="any" min="0" value="${safeText(t.fixed?t.total:t.price)}" oninput="previewAuditTrade()"></label><label>手續費 · ${t.fx>1.5?'USD':'TWD'}<input id="txFee" type="number" step="any" min="0" value="${safeText(t.fee)}" oninput="previewAuditTrade()"></label></div><label>交易匯率<input id="txFx" type="number" step="any" min="0" value="${safeText(t.fx)}" oninput="previewAuditTrade()"></label><div id="auditTradePreview" class="preview" aria-live="polite"></div><p id="auditTradeError" role="alert"></p><div class="audit-trade-actions">${iconAction('close','取消修改','closeExtra()')}${iconAction('check','確認修改交易','saveAuditTrade()')}</div></div>`);
+  document.getElementById('txDate').focus();previewAuditTrade();
+}
+function auditTradeDraft(){
+  const index=audit.findIndex(a=>a.id===auditEditId),entry=audit[index],t=PortfolioCore.tradeInput(entry);
+  if(!t||entry.undone)throw Error('這筆紀錄已變更，請重新開啟');
+  const tradeDate=document.getElementById('txDate').value;if(!PortfolioCore.validDate(tradeDate))throw Error('請填寫有效交易日期');
+  return {index,input:{...entry.input,...t,kind:'trade',tradeDate,shares:numberInput('txShares'),fee:numberInput('txFee',true)??0,fx:numberInput('txFx'),...(t.fixed?{total:numberInput('txPrice')}:{price:numberInput('txPrice')})}};
+}
+function previewAuditTrade(){
+  const box=document.getElementById('auditTradePreview'),error=document.getElementById('auditTradeError');
+  try{const {index,input}=auditTradeDraft(),plan=PortfolioCore.revise(data,audit,index,input),old=data.find(r=>r._id===plan.subjectId),next=plan.rows.find(r=>r._id===plan.subjectId);
+    box.innerHTML=`股數：${numberText(old?.shares)} → ${numberText(next?.shares)}<br>本金：${numberText(old?.prin)} → ${numberText(next?.prin)} TWD<br>平均成本：${numberText(old?.avg)} → ${numberText(next?.avg)}<br><small>按交易日期重算後續交易；最新報價保留。</small>`;error.textContent='';
+  }catch(e){box.textContent='';error.textContent=e.message;}
+}
+function saveAuditTrade(){try{const {index,input}=auditTradeDraft();applyAuditRevision(index,input);}catch(e){document.getElementById('auditTradeError').textContent=e.message;}}

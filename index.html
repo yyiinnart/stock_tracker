@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="b5b287a87ef09d87">
+<meta name="app-version" content="0e2fa2392563a944">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=7633b3418d7bc795">
+<link rel="stylesheet" href="interface.css?v=2ade3649bc3777f3">
 </head>
 <body>
 <div class="wrap">
@@ -306,11 +306,12 @@
       <h2>持倉明細<span class="tag" id="hcount"></span>
       </h2>
       <div class="toolbar holding-actions">
-        <button class="btn primary" onclick="openAdd()" id="addPositionBtn">新增部位</button>
-        <button class="btn" onclick="syncPrices()" id="syncBtn">更新報價</button>
-        <details class="more-actions"><summary>更多</summary><div><button class="btn" onclick="archiveNow()">儲存今日快照</button><button class="btn" onclick="toggleReorder()" id="reorderBtn">自訂排序</button></div></details>
+        <button class="icon-action" onclick="openAdd()" id="addPositionBtn" data-icon="plus" title="新增部位" aria-label="新增部位"></button>
+        <button class="icon-action" onclick="syncPrices()" id="syncBtn" data-icon="refresh" title="更新報價" aria-label="更新報價"></button>
+        <button class="icon-action" onclick="archiveNow()" id="archiveBtn" data-icon="camera" title="儲存今日快照" aria-label="儲存今日快照"></button>
+        <button class="icon-action" onclick="toggleReorder()" id="reorderBtn" data-icon="sort" title="自訂排序" aria-label="自訂排序" aria-pressed="false"></button>
       </div>
-      <div class="holding-context"><span id="quoteStamp"></span><button class="text-btn" onclick="openCompare()">完整價格比較</button></div>
+      <div class="holding-context"><span id="quoteStamp"></span></div>
       <div class="filt" id="filt" aria-label="持倉類別"></div>
       <div class="tscroll">
       <table id="htable">
@@ -329,9 +330,15 @@
   <!-- ===== 分析 PAGE ===== -->
   <div class="page" id="page-analy">
     <div class="subnav" aria-label="分析分類"><button data-analysis="compare" onclick="showAnalysis('compare')">價格比較</button><button data-analysis="charts" onclick="showAnalysis('charts')">資產分析</button><button data-analysis="income" onclick="showAnalysis('income')">配息與筆記</button></div>
-    <section class="card" id="comparisonPanel"><h2>歷史價格比較</h2><p class="muted">台幣相對損益＝原幣價差 × 目前庫存股數 × 目前匯率；相對所選快照，不含配息、匯差或分割調整，非實際持有期間損益。</p>
-      <div class="comparison-controls"><label>比較快照<select id="compareDate" onchange="showCompare()"></select></label><label>篩選<select id="compareDirection" onchange="showCompare()"><option value="all">全部</option><option value="up">上漲</option><option value="down">下跌</option></select></label><button class="btn" onclick="archiveNow()">儲存今日快照</button><label>排序<select id="compareSort" onchange="showCompare()"><option value="rate">漲跌幅：高到低</option><option value="pnlDesc">台幣相對損益：高到低</option><option value="pnlAsc">台幣相對損益：低到高</option></select></label><button class="btn" onclick="openSnap()">管理快照</button></div>
-      <p id="compareEmpty" class="empty-note" hidden></p><div id="compareResults"></div>
+    <section class="card" id="comparisonPanel">
+      <div class="comparison-title"><h2>歷史價格比較</h2><button class="icon-action" data-icon="info" title="計算說明" aria-label="計算說明" aria-expanded="false" aria-controls="comparisonHelp" onclick="toggleComparisonHelp(this)"></button><button class="icon-action snapshot-manage" data-icon="folder" title="管理快照" aria-label="管理快照" onclick="openSnap()"></button></div>
+      <p id="comparisonHelp" class="comparison-help" hidden>台幣相對損益＝原幣價差 × 目前庫存股數 × 目前匯率；相對所選快照，不含配息、匯差或分割調整，非實際持有期間損益。</p>
+      <div class="comparison-baseline"><span>目前持倉報價</span><span aria-hidden="true">↔</span><select id="compareDate" aria-label="比較快照" onchange="showCompare()"></select></div>
+      <div class="comparison-options"><div class="comparison-filter" role="group" aria-label="漲跌篩選"><button data-direction="all" aria-pressed="true" onclick="setCompareDirection('all')">全部</button><button data-direction="up" aria-pressed="false" onclick="setCompareDirection('up')">上漲</button><button data-direction="down" aria-pressed="false" onclick="setCompareDirection('down')">下跌</button></div>
+        <input type="hidden" id="compareDirection" value="all">
+        <label class="comparison-mobile-sort">排序<select id="compareSort" onchange="showCompare()"><option value="rate">漲跌幅 ↓</option><option value="rateAsc">漲跌幅 ↑</option><option value="pnlDesc">台幣相對損益 ↓</option><option value="pnlAsc">台幣相對損益 ↑</option></select></label>
+      </div>
+      <div id="compareEmpty" class="empty-note" hidden><p>還沒有歷史快照。先儲存今日快照，下次更新價格後就能看變化。</p><button class="btn" onclick="archiveNow()">建立第一筆快照</button></div><div id="compareResults"></div>
     </section>
     <div id="analysisCharts"><div class="analysis-scope">        <label class="viewsel"><span>檢視時點</span>
           <select id="viewSel" onchange="switchView(this.value)"></select></label>
@@ -385,7 +392,7 @@
       <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="copyAiReport()">複製分析資料與提示詞</button><button class="btn" onclick="downloadAiReport()">下載 .txt</button><button class="btn" onclick="refreshAiPreview()">重新產生</button></div>
     </div>
   </div></div>
-  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2><button class="btn" onclick="undoLastTrade()">撤銷最近一次操作</button></div><p class="muted">核對加減碼與編輯前後的數值。只撤銷最近一次操作，後續報價會保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
+  <section class="page" id="page-records"><div class="card"><div class="section-heading"><h2>操作紀錄</h2></div><p class="muted">依實際交易日期核對。每筆可修改或撤銷，後續交易會重新計算，最新報價保留。</p><div class="record-filters"><label>股票或操作<input id="auditSearch" type="search" placeholder="輸入代碼、名稱或操作" oninput="renderAuditPage()"></label><label>交易日期<input id="auditDate" type="date" onchange="renderAuditPage()"></label><button class="text-btn" onclick="clearAuditFilters()">清除篩選</button></div><div id="auditList"></div></div></section>
   <section class="page" id="page-plans"><p class="page-intro">定期投資與每月收支集中管理。規則在開啟頁面時補記到期月份。</p>    <div class="card" id="dcaCard">
       <div class="dca-head">
         <h2 style="flex:1">定期定額快捷</h2>
@@ -438,6 +445,7 @@
       </div>
       <!-- 一般 / DCA -->
       <div id="addNormal">
+        <div class="fg"><label for="a_date">交易日期</label><input id="a_date" type="date" oninput="prev()"></div>
         <div class="frow">
           <div class="fg"><label>股數</label><input id="a_shares" type="number" step="any" oninput="prev()" placeholder="例 123"></div>
           <div class="fg" id="fgPrice"><label>成交價（可留空）</label><input id="a_price" type="number" step="any" oninput="prev()"><div class="hint">留空＝用現價估算花費</div></div>
@@ -685,7 +693,7 @@ function fmtLabel(l){ // 260520 -> 2026/05/20
 }
 function switchView(k){
   viewKey=k;
-  if(k!=='live'&&reorderMode){reorderMode=false;const rb=document.getElementById('reorderBtn');rb.classList.remove('reordering');rb.textContent='⇅ 排序';}
+  if(k!=='live'&&reorderMode){reorderMode=false;const rb=document.getElementById('reorderBtn');rb.classList.remove('reordering');rb.innerHTML=actionIcon('sort');rb.setAttribute('aria-pressed','false');rb.title='自訂排序';rb.setAttribute('aria-label','自訂排序');}
   const b=document.getElementById('histBanner');
   if(k==='live'){b.classList.remove('show');}
   else{b.classList.add('show');document.getElementById('histLabel').textContent=fmtLabel(k);}
@@ -703,9 +711,9 @@ function archiveNow(){
     if(!confirm(`今天（${fmtLabel(lbl)}）已有快照，要覆蓋嗎？`))return;
   }
   archives[lbl]=clone(data);
-  save();renderViewSel();
-  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可從右上「檢視時點」回切查看。`);
-  if(tab==='analy')renderCharts();
+  save();renderViewSel();if(tab==='hold')renderTable();
+  alert(`已歸檔 ${fmtLabel(lbl)}　共 ${data.length} 筆部位，含當時股價。\n可到「比較分析」選擇此日期，或從快照管理查看。`);
+  if(tab==='analy'){refreshComparison();if(analysisSection==='charts'&&typeof Chart!=='undefined')renderCharts();}
 }
 function deleteSnapshot(){
   if(isLive()){alert('「即時」不是快照，無法刪除。請先從下拉切到要刪的歷史時點。');return;}
@@ -793,7 +801,7 @@ function undoSnapshots(){
   save();afterSnapChange(false);showToast(`已復原 ${n} 筆快照`,null);
 }
 function afterSnapChange(leaveView){
-  if(leaveView)switchView('live');else{renderViewSel();if(tab==='analy')renderCharts();}
+  if(leaveView)switchView('live');else{renderViewSel();if(tab==='analy'){refreshComparison();if(analysisSection==='charts'&&typeof Chart!=='undefined')renderCharts();}}
   if(document.getElementById('ovSnap').classList.contains('show'))renderSnap();
 }
 function showToast(msg,onUndo){
@@ -1185,7 +1193,7 @@ function toggleReorder(){
   reorderMode=!reorderMode;
   const btn=document.getElementById('reorderBtn');
   btn.classList.toggle('reordering',reorderMode);
-  btn.textContent=reorderMode?'✓ 完成排序':'⇅ 排序';
+  btn.innerHTML=actionIcon(reorderMode?'check':'sort');btn.setAttribute('aria-pressed',String(reorderMode));btn.title=reorderMode?'完成排序':'自訂排序';btn.setAttribute('aria-label',btn.title);
   renderTable();
 }
 const hbody=document.getElementById('hbody');
@@ -1486,8 +1494,8 @@ async function testSync(){
 async function syncPrices(){
   if(!isLive()){alert('請先回到「即時」再更新股價');return;}
   if(!sheetUrl){openSync();return;}
-  const btn=document.getElementById('syncBtn');const IDLE='更新報價';
-  btn.textContent='更新中…';btn.disabled=true;
+  const btn=document.getElementById('syncBtn');
+  setQuoteButton('更新中',true);btn.disabled=true;
   try{
     const j=await fetchSheet(sheetUrl);
     let hit=0,skip=0;
@@ -1524,10 +1532,10 @@ async function syncPrices(){
 
     if(hit||yHit)quoteUpdatedAt=new Date().toISOString();
     save();render();
-    btn.textContent=skip?`✓ 更新 ${hit}+${yHit} 檔（${skip} 檔報價無效已略過）`:`✓ 已更新 ${hit} 檔部位、${yHit} 檔殖利率標的`;
-    setTimeout(()=>{btn.textContent=IDLE;btn.disabled=false;},2500);
+    setQuoteButton(skip?`✓ 更新 ${hit}+${yHit} 檔（${skip} 檔報價無效已略過）`:`✓ 已更新 ${hit} 檔部位、${yHit} 檔殖利率標的`,false,true);
+    setTimeout(()=>{setQuoteButton('更新報價');btn.disabled=false;},2500);
   }catch(err){
-    btn.textContent=IDLE;btn.disabled=false;
+    setQuoteButton('更新報價');btn.disabled=false;
     alert('更新失敗：'+err.message+'\n\n（舊的價格已保留，不會被清掉）\n請按 ⚙ 測試連線，或確認 Web App 已部署為「任何人皆可存取」。');
   }
 }
@@ -1831,14 +1839,6 @@ document.getElementById('trendRange').addEventListener('click',e=>{
   renderCharts();
 });
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
-// 頁面載入後自動更新股價（如已設定 Sheet 網址）
-if(sheetUrl){
-  setTimeout(()=>{
-    const btn=document.getElementById('syncBtn');
-    if(btn)btn.textContent=' 自動更新中…';
-    syncPrices();
-  },800);
-}
 </script>
-<script src="portfolio-core.js?v=06393b189a7d7a01"></script><script src="enhancements.js?v=5cc5486c37354cc6"></script><script src="cloud-sync.js?v=564c1e5b65ee0213"></script><script src="setup-assets.js?v=bdf78f6500ef8936"></script><script src="interface.js?v=69a68f9760256f35"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=d602308655fea8d3"></script><script src="enhancements.js?v=906f1bfad9897492"></script><script src="cloud-sync.js?v=58791a5ac27adc52"></script><script src="setup-assets.js?v=d492ed73ee73d8f7"></script><script src="interface.js?v=225c9dd38de8bf16"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>

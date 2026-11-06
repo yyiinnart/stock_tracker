@@ -27,7 +27,7 @@ for(const width of [1440,768,390]){
  assert.equal(await page.locator('#positionAuditBtn').isVisible(),true);
  assert.equal(await page.locator('#delBtn').isVisible(),true);
  assert.equal(await page.locator('#ov').evaluate(el=>el.classList.contains('position-editing')),true);
- assert.notEqual(await page.locator('#f_note').evaluate(el=>getComputedStyle(el).borderTopColor),'rgba(0, 0, 0, 0)');
+ assert.equal(await page.locator('#f_note').evaluate(el=>getComputedStyle(el).borderTopColor),'rgba(0, 0, 0, 0)');
  assert.equal(await page.locator('#toast').isVisible(),false);const saveRect=await page.locator('#saveBtn').boundingBox();assert.ok(saveRect.y+saveRect.height<=900);await page.screenshot({path:path.join(root,'work/position-editor-'+width+'.png')});
  await page.locator('#f_note').fill('取消測試');await page.locator('#ov').getByRole('button',{name:'取消',exact:true}).click();
  assert.equal(await page.evaluate(()=>data[0].note),'');
