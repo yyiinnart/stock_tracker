@@ -61,7 +61,7 @@ await page.reload();assert.equal(await page.evaluate(()=>audit.length),2);
 await page.setViewportSize({width:390,height:844});await page.getByText('▲ +20.00%',{exact:true}).waitFor();await page.screenshot({path:path.join(root,'work/mobile.png'),fullPage:true,animations:'disabled'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
 await page.locator('#hbody .position-actions [aria-label=減碼]').first().click();await page.locator('#a_shares').fill('100');await page.locator('#a_price').fill('120');await page.locator('#saveBtn').click();assert.equal(await page.evaluate(()=>data[0].shares),900);assert.equal(await page.evaluate(()=>data[0].prin),45000);assert.equal(await page.evaluate(()=>audit.at(-1).input.proceeds),12000);
 // Settings assets work without fetching source files; mobile values stay visible.
-assert.ok((await page.locator('#hbody tr').first().boundingBox()).y<506);
+const firstHolding=await page.locator('#hbody tr').first().boundingBox();assert.ok(firstHolding.y+firstHolding.height<=await page.evaluate(()=>innerHeight-60));
 assert.notEqual(await page.locator('#hbody tr').first().locator('td').nth(3).evaluate(el=>getComputedStyle(el).display),'none');
 await page.locator('.sync-entry').click();await page.getByText('第一次設定 Google 同步服務',{exact:true}).waitFor();
 assert.equal(await page.evaluate(()=>setupFile('server').includes('function doGet')),true);

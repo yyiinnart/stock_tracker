@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="ceed4fd99c36e534">
+<meta name="app-version" content="583959815cab47cc">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -268,7 +268,7 @@
     .strat-blk .sb-row{flex-wrap:wrap} .strat-blk .sb-act{min-width:0;flex-basis:100%}
   }
 </style>
-<link rel="stylesheet" href="interface.css?v=e97e17938d272b52">
+<link rel="stylesheet" href="interface.css?v=07a0554617ede874">
 </head>
 <body>
 <div class="wrap">
@@ -303,8 +303,7 @@
     <div class="kpis" id="kpis"></div>
 
     <div class="card holdings-card" id="holdingsCard">
-      <h2>持倉明細<span class="tag" id="hcount"></span>
-      </h2>
+      <div class="holdings-heading"><h2><span id="holdingsTitle">持倉明細</span><span class="tag" id="hcount"></span></h2><div class="hold-view-controls"><select id="holdViewSel" aria-label="持倉檢視時點" onchange="switchView(this.value)"><option value="live">目前持倉</option></select><button type="button" class="icon-action" id="holdReturnLive" data-icon="undo" title="返回目前持倉" aria-label="返回目前持倉" onclick="switchView('live')" hidden></button></div></div>
       <div class="toolbar holding-actions">
         <button class="icon-action" onclick="openAdd()" id="addPositionBtn" data-icon="plus" title="新增部位" aria-label="新增部位"></button>
         <button class="icon-action" onclick="syncPrices()" id="syncBtn" data-icon="refresh" title="更新報價" aria-label="更新報價"></button>
@@ -666,7 +665,7 @@ const pnl=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:mv(r)-r.prin;
 const ret=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:pnl(r)/r.prin;
 
 // which dataset are we viewing
-function curData(){return viewKey==='live'?data:archives[viewKey];}
+function curData(){return viewKey==='live'?data:archives[viewKey]||[];}
 const isLive=()=>viewKey==='live';
 
 function totals(arr){
@@ -682,21 +681,21 @@ function totals(arr){
 /* ===== view switching / history ===== */
 function archLabels(){return Object.keys(archives).sort();}
 function renderViewSel(){
-  const opts=['<option value="live">目前資料</option>',
-    ...archLabels().sort((a,b)=>b.localeCompare(a)).map(l=>`<option value="${l}">${fmtLabel(l)}</option>`)];
-  const sel=document.getElementById('viewSel');
-  sel.innerHTML=opts.join('');sel.value=viewKey;
+  if(viewKey!=='live'&&!Array.isArray(archives[viewKey]))viewKey='live';
+  const keys=['live',...archLabels().sort((a,b)=>b.localeCompare(a))];
+  for(const id of ['viewSel','holdViewSel']){const sel=document.getElementById(id);if(!sel)continue;sel.replaceChildren(...keys.map(k=>new Option(k==='live'?'目前持倉':fmtLabel(k),k)));sel.value=viewKey;}
 }
 function fmtLabel(l){ // 260520 -> 2026/05/20
   if(/^\d{6}$/.test(l))return `20${l.slice(0,2)}/${l.slice(2,4)}/${l.slice(4,6)}`;
   return l;
 }
 function switchView(k){
-  viewKey=k;
+  k=k==='live'||Array.isArray(archives[k])?k:'live';viewKey=k;
+  if(filter!=='全部'&&!curData().some(r=>r.cls===filter))filter='全部';
   if(k!=='live'&&reorderMode){reorderMode=false;const rb=document.getElementById('reorderBtn');rb.classList.remove('reordering');rb.innerHTML=actionIcon('sort');rb.setAttribute('aria-pressed','false');rb.title='自訂排序';rb.setAttribute('aria-label','自訂排序');}
   const b=document.getElementById('histBanner');
   if(k==='live'){b.classList.remove('show');}
-  else{b.classList.add('show');document.getElementById('histLabel').textContent=fmtLabel(k);}
+  else{b.classList.toggle('show',tab==='analy'&&analysisSection==='charts');document.getElementById('histLabel').textContent=fmtLabel(k);}
   // lock editing UI in history mode
   document.getElementById('dcaCard').style.display=isLive()?'block':'none';
   render();
@@ -872,7 +871,7 @@ function toggleMarkRow(i){
   save();render();
 }
 function renderFilter(){
-  const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];
+  const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];if(!cls.includes(filter))filter='全部';
   document.getElementById('filt').innerHTML=cls.map(c=>
     `<button class="${filter===c?'on':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
 }
@@ -1840,5 +1839,5 @@ document.getElementById('trendRange').addEventListener('click',e=>{
 });
 try{if(localStorage.getItem('stratOpen')==='1'){const m=document.getElementById('stratMap'),t=document.getElementById('stratToggle');if(m){m.style.display='block';t.textContent='收合';}}}catch(e){}
 </script>
-<script src="portfolio-core.js?v=183ab281f0ab6330"></script><script src="enhancements.js?v=002a72a29a45dd21"></script><script src="cloud-sync.js?v=7e97b124a53817ed"></script><script src="setup-assets.js?v=1557599bbd798495"></script><script src="interface.js?v=7f298a772ca4f1da"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
+<script src="portfolio-core.js?v=183ab281f0ab6330"></script><script src="enhancements.js?v=002a72a29a45dd21"></script><script src="cloud-sync.js?v=7e97b124a53817ed"></script><script src="setup-assets.js?v=7a5a4251cb090f57"></script><script src="interface.js?v=6f6fbc9169b52729"></script><script src="dividends.js?v=39e24ccf868ea0a8"></script></body>
 </html>

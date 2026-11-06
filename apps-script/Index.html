@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta name="app-version" content="ceed4fd99c36e534">
+<meta name="app-version" content="583959815cab47cc">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StockTracker</title>
@@ -592,6 +592,14 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
 #auditList>.audit-entry>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:640px){#auditList>.audit-entry>summary{grid-template-columns:minmax(0,1fr) 88px;gap:4px 8px;min-height:92px;padding:10px 0}#auditList .audit-row-copy{grid-column:1;grid-row:1/3}#auditList .audit-row-date{grid-column:2;grid-row:1}#auditList .audit-row-actions{grid-column:2;grid-row:2}#auditList .audit-row-copy strong{white-space:normal;line-height:1.5}#auditList .audit-row-copy>small{padding-left:0;font-size:12px}#auditList .audit-row-actions .icon-action{width:40px;height:40px;flex-basis:40px}#auditList .audit-detail{padding-left:0}.audit-list-tools{gap:8px}.audit-list-tools .text-btn{font-size:13px}.audit-detail-footer{align-items:flex-start}}
 
+/* Historical holdings keep their own clear, read-only viewing context. */
+.holdings-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.holdings-heading h2{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0}
+.hold-view-controls{display:flex;align-items:center;gap:8px;margin-left:auto}
+.hold-view-controls select{max-width:100%;min-height:44px;padding:8px 10px;color:var(--ink);font:14px var(--sans);border:1px solid transparent;border-radius:6px;color-scheme:dark}
+.hold-view-controls .icon-action{width:44px;height:44px;flex-basis:44px}
+@media(max-width:640px){.holdings-heading{gap:6px;margin-bottom:8px}.holdings-heading h2{width:100%;gap:6px}.hold-view-controls{margin-left:0;width:100%;justify-content:space-between}.hold-view-controls select{flex:1;min-width:0}.holdings-heading #hcount{margin-left:auto}.holdings-heading #holdingsTitle{font-size:15px}}
+
 </style>
 </head>
 <body>
@@ -627,8 +635,7 @@ body:has(.audit-trade-form) #toast{visibility:hidden;transition:none}
     <div class="kpis" id="kpis"></div>
 
     <div class="card holdings-card" id="holdingsCard">
-      <h2>持倉明細<span class="tag" id="hcount"></span>
-      </h2>
+      <div class="holdings-heading"><h2><span id="holdingsTitle">持倉明細</span><span class="tag" id="hcount"></span></h2><div class="hold-view-controls"><select id="holdViewSel" aria-label="持倉檢視時點" onchange="switchView(this.value)"><option value="live">目前持倉</option></select><button type="button" class="icon-action" id="holdReturnLive" data-icon="undo" title="返回目前持倉" aria-label="返回目前持倉" onclick="switchView('live')" hidden></button></div></div>
       <div class="toolbar holding-actions">
         <button class="icon-action" onclick="openAdd()" id="addPositionBtn" data-icon="plus" title="新增部位" aria-label="新增部位"></button>
         <button class="icon-action" onclick="syncPrices()" id="syncBtn" data-icon="refresh" title="更新報價" aria-label="更新報價"></button>
@@ -1117,7 +1124,7 @@ const pnl=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:mv(r)-r.prin;
 const ret=r=>(r.cls==="現金"||r.cls==="貸款"||!r.prin)?null:pnl(r)/r.prin;
 
 // which dataset are we viewing
-function curData(){return viewKey==='live'?data:archives[viewKey];}
+function curData(){return viewKey==='live'?data:archives[viewKey]||[];}
 const isLive=()=>viewKey==='live';
 
 function totals(arr){
@@ -1133,21 +1140,21 @@ function totals(arr){
 /* ===== view switching / history ===== */
 function archLabels(){return Object.keys(archives).sort();}
 function renderViewSel(){
-  const opts=['<option value="live">目前資料</option>',
-    ...archLabels().sort((a,b)=>b.localeCompare(a)).map(l=>`<option value="${l}">${fmtLabel(l)}</option>`)];
-  const sel=document.getElementById('viewSel');
-  sel.innerHTML=opts.join('');sel.value=viewKey;
+  if(viewKey!=='live'&&!Array.isArray(archives[viewKey]))viewKey='live';
+  const keys=['live',...archLabels().sort((a,b)=>b.localeCompare(a))];
+  for(const id of ['viewSel','holdViewSel']){const sel=document.getElementById(id);if(!sel)continue;sel.replaceChildren(...keys.map(k=>new Option(k==='live'?'目前持倉':fmtLabel(k),k)));sel.value=viewKey;}
 }
 function fmtLabel(l){ // 260520 -> 2026/05/20
   if(/^\d{6}$/.test(l))return `20${l.slice(0,2)}/${l.slice(2,4)}/${l.slice(4,6)}`;
   return l;
 }
 function switchView(k){
-  viewKey=k;
+  k=k==='live'||Array.isArray(archives[k])?k:'live';viewKey=k;
+  if(filter!=='全部'&&!curData().some(r=>r.cls===filter))filter='全部';
   if(k!=='live'&&reorderMode){reorderMode=false;const rb=document.getElementById('reorderBtn');rb.classList.remove('reordering');rb.innerHTML=actionIcon('sort');rb.setAttribute('aria-pressed','false');rb.title='自訂排序';rb.setAttribute('aria-label','自訂排序');}
   const b=document.getElementById('histBanner');
   if(k==='live'){b.classList.remove('show');}
-  else{b.classList.add('show');document.getElementById('histLabel').textContent=fmtLabel(k);}
+  else{b.classList.toggle('show',tab==='analy'&&analysisSection==='charts');document.getElementById('histLabel').textContent=fmtLabel(k);}
   // lock editing UI in history mode
   document.getElementById('dcaCard').style.display=isLive()?'block':'none';
   render();
@@ -1323,7 +1330,7 @@ function toggleMarkRow(i){
   save();render();
 }
 function renderFilter(){
-  const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];
+  const arr=curData();const cls=['全部',...new Set(arr.map(r=>r.cls))];if(!cls.includes(filter))filter='全部';
   document.getElementById('filt').innerHTML=cls.map(c=>
     `<button class="${filter===c?'on':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
 }
@@ -2619,7 +2626,7 @@ function setTab(t){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+t));
   document.querySelectorAll('.app-nav button').forEach(b=>{if(b.dataset.page===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   document.getElementById('pageTitle').textContent=pageNames[t];
-  document.getElementById('histBanner').classList.toggle('show',!isLive()&&(t==='hold'||t==='analy'));
+  document.getElementById('histBanner').classList.toggle('show',!isLive()&&t==='analy'&&analysisSection==='charts');
   if(t==='analy'){showAnalysis(analysisSection);refreshAiPreview();}
   if(t==='records')renderAuditPage();
   if(t==='settings')renderSettings();
@@ -2628,6 +2635,7 @@ function setTab(t){
 }
 function showAnalysis(name){
   analysisSection=name;
+  document.getElementById('histBanner').classList.toggle('show',!isLive()&&tab==='analy'&&name==='charts');
   for(const [key,id] of Object.entries({compare:'comparisonPanel',charts:'analysisCharts',income:'analysisIncome'}))document.getElementById(id).hidden=key!==name;
   document.querySelectorAll('[data-analysis]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.analysis===name)));
   if(name==='compare')refreshComparison();
@@ -2656,8 +2664,12 @@ function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value
 renderKPI=function(){const t=totals(curData());document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="lbl">淨資產 · TWD</div><div class="val">${fmt(t.total)}</div><div class="delta">含現金，已扣除貸款</div></div><div class="kpi"><div class="lbl">未實現損益</div><div class="val ${t.pl>0?'pos':t.pl<0?'neg':''}">${signedNumber(t.pl)}</div><div class="delta">相對投入本金，不含息</div></div><div class="kpi"><div class="lbl">投入本金 · TWD</div><div class="val">${fmt(t.prin)}</div><div class="delta">投資部位，不含現金</div></div>`;};
 renderTable=function(){
   originalRenderTable();const arr=curData(),key=latestBaseline();
-  document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):' · 歷史唯讀'}`;
-  document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'快照日期 '+fmtLabel(viewKey);
+  document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):''}`;
+  document.querySelector('#htable thead th:nth-child(4)').textContent=isLive()?'現價':'快照價';
+  document.getElementById('holdingsTitle').textContent='持倉明細'+(isLive()?'':' · '+fmtLabel(viewKey));
+  document.querySelector('.holding-actions').hidden=!isLive();document.getElementById('holdReturnLive').hidden=isLive();
+  document.getElementById('syncBtn').disabled=!isLive()||document.getElementById('syncBtn').getAttribute('aria-busy')==='true';
+  document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'歷史快照 · 唯讀';
   document.getElementById('addPositionBtn').disabled=!isLive();
   document.getElementById('archiveBtn').disabled=!isLive();document.getElementById('reorderBtn').disabled=!isLive();
   document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{
@@ -2665,17 +2677,17 @@ renderTable=function(){
     tr.style.setProperty('--category',CLR[r.cls]||'#c9ced8');tr.removeAttribute('onclick');tr.classList.remove('clickable');
     tr.cells[0].innerHTML=`<button class="position-name" onclick="showPosition(${i})" aria-label="${safeText(r.code)} 詳情"><span class="code">${safeText(r.name||r.code)}</span><small><span class="position-code">${safeText(r.code)}</span><span class="category-label">${safeText(r.cls)}</span></small></button>${isLive()?`<div class="position-actions">${simple?iconAction('edit','更新餘額',`openEdit(${i})`):iconAction('plus','加碼',`openTrade(${i},'buy')`)+iconAction('minus','減碼',`openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`;
 
-    tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">現價 · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
+    tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">${isLive()?'現價':'快照價'} · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
     tr.cells[4].insertAdjacentHTML('afterbegin',`<span class="cell-label">${r.cls==='貸款'?'剩餘欠款':'市值'} · TWD</span>`);
     tr.cells[8].insertAdjacentHTML('afterbegin','<span class="cell-label">相對成本損益</span>');
     const profit=pnl(r);if(profit==null||profit===0){tr.cells[8].className='';tr.cells[9].className='';}
     if(reorderMode&&isLive()){tr.cells[0].insertAdjacentHTML('afterbegin','<span class="drag-handle" title="拖曳排列" aria-label="拖曳排列">↕</span>');}
   });
-  if(!arr.length){document.getElementById('hbody').innerHTML='<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>';}
+  if(!arr.length){document.getElementById('hbody').innerHTML=isLive()?'<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>':'<tr><td colspan="10"><div class="empty-note">這份快照沒有持倉資料。</div></td></tr>';}
   if(tab==='records')renderAuditPage();
   if(tab==='analy'&&analysisSection==='compare')refreshComparison();
 };
-function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name,`<p>現價 ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<div class="detail-actions">${['現金','貸款'].includes(r.cls)?iconAction('edit','更新餘額',`closeExtra();openEdit(${i})`):iconAction('plus','加碼',`closeExtra();openTrade(${i},'buy')`)+iconAction('minus','減碼',`closeExtra();openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`);}
+function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name+(isLive()?'':' · '+fmtLabel(viewKey)),`<p>${isLive()?'現價':'快照價'} ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<div class="detail-actions">${['現金','貸款'].includes(r.cls)?iconAction('edit','更新餘額',`closeExtra();openEdit(${i})`):iconAction('plus','加碼',`closeExtra();openTrade(${i},'buy')`)+iconAction('minus','減碼',`closeExtra();openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`);}
 function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}

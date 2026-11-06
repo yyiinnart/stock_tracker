@@ -6,7 +6,7 @@ function setTab(t){
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+t));
   document.querySelectorAll('.app-nav button').forEach(b=>{if(b.dataset.page===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   document.getElementById('pageTitle').textContent=pageNames[t];
-  document.getElementById('histBanner').classList.toggle('show',!isLive()&&(t==='hold'||t==='analy'));
+  document.getElementById('histBanner').classList.toggle('show',!isLive()&&t==='analy'&&analysisSection==='charts');
   if(t==='analy'){showAnalysis(analysisSection);refreshAiPreview();}
   if(t==='records')renderAuditPage();
   if(t==='settings')renderSettings();
@@ -15,6 +15,7 @@ function setTab(t){
 }
 function showAnalysis(name){
   analysisSection=name;
+  document.getElementById('histBanner').classList.toggle('show',!isLive()&&tab==='analy'&&name==='charts');
   for(const [key,id] of Object.entries({compare:'comparisonPanel',charts:'analysisCharts',income:'analysisIncome'}))document.getElementById(id).hidden=key!==name;
   document.querySelectorAll('[data-analysis]').forEach(b=>b.setAttribute('aria-current',String(b.dataset.analysis===name)));
   if(name==='compare')refreshComparison();
@@ -43,8 +44,12 @@ function signedNumber(value){return (value>0?'+':'')+numberText(Math.round(value
 renderKPI=function(){const t=totals(curData());document.getElementById('kpis').innerHTML=`<div class="kpi"><div class="lbl">淨資產 · TWD</div><div class="val">${fmt(t.total)}</div><div class="delta">含現金，已扣除貸款</div></div><div class="kpi"><div class="lbl">未實現損益</div><div class="val ${t.pl>0?'pos':t.pl<0?'neg':''}">${signedNumber(t.pl)}</div><div class="delta">相對投入本金，不含息</div></div><div class="kpi"><div class="lbl">投入本金 · TWD</div><div class="val">${fmt(t.prin)}</div><div class="delta">投資部位，不含現金</div></div>`;};
 renderTable=function(){
   originalRenderTable();const arr=curData(),key=latestBaseline();
-  document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):' · 歷史唯讀'}`;
-  document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'快照日期 '+fmtLabel(viewKey);
+  document.getElementById('hcount').textContent=`${arr.filter(r=>filter==='全部'||r.cls===filter).length} 檔${isLive()?(key?' · 較 '+fmtLabel(key):' · 尚無快照'):''}`;
+  document.querySelector('#htable thead th:nth-child(4)').textContent=isLive()?'現價':'快照價';
+  document.getElementById('holdingsTitle').textContent='持倉明細'+(isLive()?'':' · '+fmtLabel(viewKey));
+  document.querySelector('.holding-actions').hidden=!isLive();document.getElementById('holdReturnLive').hidden=isLive();
+  document.getElementById('syncBtn').disabled=!isLive()||document.getElementById('syncBtn').getAttribute('aria-busy')==='true';
+  document.getElementById('quoteStamp').textContent=isLive()?(quoteUpdatedAt?'報價取得 '+new Date(quoteUpdatedAt).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}):'報價時間尚無紀錄'):'歷史快照 · 唯讀';
   document.getElementById('addPositionBtn').disabled=!isLive();
   document.getElementById('archiveBtn').disabled=!isLive();document.getElementById('reorderBtn').disabled=!isLive();
   document.querySelectorAll('#hbody tr[data-idx]').forEach(tr=>{
@@ -52,17 +57,17 @@ renderTable=function(){
     tr.style.setProperty('--category',CLR[r.cls]||'#c9ced8');tr.removeAttribute('onclick');tr.classList.remove('clickable');
     tr.cells[0].innerHTML=`<button class="position-name" onclick="showPosition(${i})" aria-label="${safeText(r.code)} 詳情"><span class="code">${safeText(r.name||r.code)}</span><small><span class="position-code">${safeText(r.code)}</span><span class="category-label">${safeText(r.cls)}</span></small></button>${isLive()?`<div class="position-actions">${simple?iconAction('edit','更新餘額',`openEdit(${i})`):iconAction('plus','加碼',`openTrade(${i},'buy')`)+iconAction('minus','減碼',`openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`;
 
-    tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">現價 · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
+    tr.cells[3].innerHTML=simple?'<span class="price-unit">'+safeText(r.cls)+'</span>':`<span class="cell-label">${isLive()?'現價':'快照價'} · ${r.fx>1.5?'USD':'TWD'}</span><span class="price-main">${numberText(r.price)}</span>${isLive()?`<span class="price-change ${c?.delta>0?'pos':c?.delta<0?'neg':''}">${changeLabel(c)}</span>`:''}`;
     tr.cells[4].insertAdjacentHTML('afterbegin',`<span class="cell-label">${r.cls==='貸款'?'剩餘欠款':'市值'} · TWD</span>`);
     tr.cells[8].insertAdjacentHTML('afterbegin','<span class="cell-label">相對成本損益</span>');
     const profit=pnl(r);if(profit==null||profit===0){tr.cells[8].className='';tr.cells[9].className='';}
     if(reorderMode&&isLive()){tr.cells[0].insertAdjacentHTML('afterbegin','<span class="drag-handle" title="拖曳排列" aria-label="拖曳排列">↕</span>');}
   });
-  if(!arr.length){document.getElementById('hbody').innerHTML='<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>';}
+  if(!arr.length){document.getElementById('hbody').innerHTML=isLive()?'<tr><td colspan="10"><div class="empty-note">從第一筆持倉開始，或還原你已有的資料。<div class="empty-actions"><button class="btn primary" onclick="openAdd()">新增第一筆</button><button class="btn" onclick="focusSetting(\'backupPanel\')">還原備份</button></div></div></td></tr>':'<tr><td colspan="10"><div class="empty-note">這份快照沒有持倉資料。</div></td></tr>';}
   if(tab==='records')renderAuditPage();
   if(tab==='analy'&&analysisSection==='compare')refreshComparison();
 };
-function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name,`<p>現價 ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<div class="detail-actions">${['現金','貸款'].includes(r.cls)?iconAction('edit','更新餘額',`closeExtra();openEdit(${i})`):iconAction('plus','加碼',`closeExtra();openTrade(${i},'buy')`)+iconAction('minus','減碼',`closeExtra();openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`);}
+function showPosition(i){const r=curData()[i];if(!r)return;const c=priceChange(r,latestBaseline());openExtra(r.code+' '+r.name+(isLive()?'':' · '+fmtLabel(viewKey)),`<p>${isLive()?'現價':'快照價'} ${numberText(r.price)} ${r.fx>1.5?'USD':'TWD'}${isLive()&&c?' · '+changeLabel(c):''}</p><dl class="position-detail">${[['股數／餘額',r.shares],['平均成本',r.avg],['本金 TWD',r.prin],['匯率',r.fx],['市值 TWD',mv(r)],['損益 TWD',pnl(r)]].map(([k,v])=>`<div><dt>${k}</dt><dd>${numberText(v)}</dd></div>`).join('')}</dl><p class="muted">${safeText(r.note||'尚無備註')}</p><p class="muted">報價取得：${safeText(r.quoteUpdatedAt?new Date(r.quoteUpdatedAt).toLocaleString('zh-TW'):'尚無時間紀錄')}</p>${isLive()?`<div class="detail-actions">${['現金','貸款'].includes(r.cls)?iconAction('edit','更新餘額',`closeExtra();openEdit(${i})`):iconAction('plus','加碼',`closeExtra();openTrade(${i},'buy')`)+iconAction('minus','減碼',`closeExtra();openTrade(${i},'sell')`)}${iconAction('more','更多操作',`positionMore(${i})`)}</div>`:''}`);}
 function openAuditForRow(i){openAudit(data[i]?._id);}
 openAudit=function(id){setTab('records');document.getElementById('auditSearch').value=id?(data.find(r=>r._id===id)?.code||audit.flatMap(a=>a.changes||[]).find(c=>c.id===id)?.after?.code||''):'';document.getElementById('auditDate').value='';renderAuditPage();};
 function clearAuditFilters(){document.getElementById('auditSearch').value='';document.getElementById('auditDate').value='';renderAuditPage();}
