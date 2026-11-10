@@ -105,7 +105,7 @@ function auditSummary(a){
 function renderAuditPage(){
   const entries=audit.map((a,index)=>({a,index})).filter(({a})=>!a.checkpoint&&auditMatches(a)&&(showCancelledAudit||!cancelledAudit(a))).sort((x,y)=>auditDay(y.a).localeCompare(auditDay(x.a))||y.index-x.index);
   const toggle=document.getElementById('showCancelledAudit');toggle.setAttribute('aria-pressed',String(showCancelledAudit));toggle.textContent=showCancelledAudit?'隱藏已撤銷':'顯示已撤銷';
-  const purge=document.getElementById('purgeCancelledAudit'),count=cancelledRoots().length;purge.disabled=!count;purge.title=`永久清除符合篩選的 ${count} 筆已撤銷紀錄`;purge.setAttribute('aria-label',purge.title);
+  const purge=document.getElementById('purgeCancelledAudit'),count=cancelledRoots().length;purge.disabled=!count;purge.title=`永久清除符合篩選的 ${count} 筆已撤銷紀錄`;purge.setAttribute('aria-label',purge.title);const all=document.getElementById('purgeAllAudit');if(all){const total=audit.filter(a=>!a.checkpoint).length;all.disabled=!total;all.title=`永久清空全部 ${total} 筆操作紀錄`;}
   document.getElementById('auditList').innerHTML=entries.length?entries.map(({a,index})=>{
     const actionable=!a.undone&&!a.undoOf&&!a.revisionOf&&a.changes?.length===1,editable=actionable&&!!PortfolioCore.tradeInput(a),r=auditPosition(a),t=PortfolioCore.tradeInput(a);
     const kind=t?(t.direction==='sell'?'−':'＋'):a.revisionOf?'修改':a.undoOf?'撤銷':a.label;
@@ -128,6 +128,15 @@ function auditCompactDetails(a){
 }
 function purgeAuditEntry(index){const a=audit[index];if(a)purgeAuditRecords([a.id]);}
 function purgeCancelledAudit(){purgeAuditRecords(cancelledRoots().map(a=>a.id));}
+function purgeAllAudit(){
+  const n=audit.filter(a=>!a.checkpoint).length;
+  if(!n){alert('目前沒有操作紀錄');return;}
+  if(!confirm(`將永久刪除全部 ${n} 筆操作紀錄（包含尚未撤銷的交易）。\n持倉數字不變，但這些交易之後將無法再修改或撤銷。\n這項刪除無法復原。`))return;
+  if(!confirm('再確認一次：真的要清空所有操作紀錄嗎？\n系統會先自動下載一份備份檔。'))return;
+  try{download(new Blob([JSON.stringify({...portfolioPayload(),exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),`清空操作紀錄前備份_${stamp()}.json`);}
+  catch(e){alert('備份下載失敗，已停止清空：'+e.message);return;}
+  audit=[];save();persistNow();renderAuditPage();showToast(`已永久刪除 ${n} 筆紀錄`,null);
+}
 function purgeAuditRecords(ids){try{const plan=PortfolioCore.purge(data,audit,ids);if(!confirm(`永久刪除 ${plan.roots} 筆已撤銷紀錄及相關歷程，共 ${plan.removed} 筆？\n持倉數字不變，其餘交易仍可修改或撤銷。這項刪除無法復原。`))return;audit=plan.audit;save();persistNow();renderAuditPage();showToast(`已永久刪除 ${plan.removed} 筆紀錄`,null);}catch(e){alert(e.message);}}
 
 function renderSettings(){document.getElementById('quoteConnectionState').textContent=sheetUrl?'已設定報價來源':'尚未設定報價來源';renderCloudSetup();}
